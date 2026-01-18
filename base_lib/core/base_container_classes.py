@@ -12,6 +12,8 @@ from pandas import DataFrame
 # from file_process import FileObject
 import pandas as pd
 from base_lib.core.base_classes import *
+# from tp.lib.tp_classes import BaseTradePrice
+
 
 # from sympy import Symbol
 
@@ -216,6 +218,15 @@ class BaseSet(BaseContainer):
                 print(self.getBase()[id])
         return
 
+@dataclass
+class BaseTuple(BaseContainer):
+    def __post_init__(self):
+        self.setBase(tuple())
+        return
+
+    def append(self, obj):
+        self.getBase().append(obj)
+        return
 
 @dataclass
 class BuySellSet(BaseSet):
@@ -434,7 +445,7 @@ class BaseReaderWriter(BaseDF):
         self.colFormats = BaseDict()
         for member, mtype in self.getClassMembers(cls).items():
             frmt = None
-            if mtype in [BaseTradePrice, BasePercentage, BaseInt, BaseFloat]:
+            if mtype in [BaseMoney, BasePercentage, BaseInt, BaseFloat]:
                 frmt = mtype.format_str
                 self.colFormats.append(member, frmt)
         return

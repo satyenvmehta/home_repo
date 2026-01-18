@@ -1,10 +1,14 @@
 from datetime import timedelta
 
+from pandas import DataFrame
+
 from base_lib.core import common_include, files_include
 #from base_lib.core.files_include as files_include
 #from base_lib.core.common_include as common_include
 from base_lib.core.base_app_classes import getNoOfBusinessDaysFromDate
 from dateutil.utils import today
+
+from base_lib.core.files_include import alt_output_file
 
 threshold = 5
 
@@ -28,14 +32,14 @@ header_lines = 6
 # last_trade_date = 'last_date'
 from tp_include import *
 
-@dataclass
+@C.dataclass
 class History(BaseTrade):
     Symbol: BaseTradeSymbol = None
-    Date: BaseDate = None
-    Quantity: BaseFloat = None
+    Date: C.BaseDate = None
+    Quantity: C.BaseFloat = None
     Price: BaseTradePrice = None
     Amount: BaseTradePrice = None
-    Account: BaseString = None
+    Account:C.BaseString = None
     Description: BaseBuySell = None
 
     def getPrice(self):
@@ -82,7 +86,7 @@ class History(BaseTrade):
         return o
 from account import AccountManager
 
-@dataclass
+@C.dataclass
 class Historys(BaseTrades):
     def __post_init__(self):
         self.summary_df = None
@@ -101,19 +105,19 @@ class Historys(BaseTrades):
 
         self.all_symbols = df[Symbol].unique()
         self.prep_summ_df()
-        self._histSumm = BaseDict()
+        self._histSumm = C.BaseDict()
         # self.initHistorySummary()
         # self.idle_trade_qry(45)
         self.postDFProcess()
         return
 
     def getSummaryForSymbol(self, sym):
-        if isinstance(sym, BaseObject):
+        if isinstance(sym, C.BaseObject):
             sym = sym.getBase()
         return self._histSumm.getValue(sym)
 
     def getSummaryObjForSymbol(self, sym):
-        if isinstance(sym, BaseObject):
+        if isinstance(sym, C.BaseObject):
             sym = sym.getBase()
         return self._histSumm.getSummaryObj(sym)
 
@@ -169,7 +173,7 @@ class Historys(BaseTrades):
     def getActListToSell(self, sym, pos, no_of_days=30):
         # accts = self.boughtRecently(sym)
         accts = self.getHoldingAccounts()
-        actSellList = BaseList()
+        actSellList = C.BaseList()
         for act in accts.getBase():
             if not self.boughtInLastNDays(sym=sym, acct=act):
                 if pos.getCurrentObj(sym,  act):
@@ -195,7 +199,7 @@ class Historys(BaseTrades):
 
     def boughtRecently(self, sym, no_of_days=30):
         accts = self.getHoldingAccounts()
-        actBuyList = BaseList()
+        actBuyList = C.BaseList()
         for act in accts.getBase():
             if self.boughtRecentlyForAct(sym, no_of_days=no_of_days,  act=act):
                 actBuyList.append(act)
@@ -212,7 +216,7 @@ class Historys(BaseTrades):
         df[DateCol] = pd.to_datetime(df['Date'], format='%m/%d/%Y')
 
         # Define the date range (last six months from today)
-        end_date = datetime.now()
+        end_date = C.datetime.now()
         start_date = end_date - timedelta(days=no_of_days)
 
         recent_traded = df[(df[DateCol] >= start_date) & (df[DateCol] <= end_date)]
@@ -221,8 +225,8 @@ class Historys(BaseTrades):
         return self.idle_symbols
 
     def history_since(self, sdate="09/15/2024"):
-        self.buy_bucket = BaseSet()
-        self.sell_bucket = BaseSet()
+        self.buy_bucket = C.BaseSet()
+        self.sell_bucket = C.BaseSet()
         for item in self.getBase():
             if isinstance(item, History):
                 if (item.Date > sdate):
@@ -294,7 +298,7 @@ class Historys(BaseTrades):
             # if isinstance(val, bool):
             #     return val
         except Exception as e:
-            if isinstance(sym, BaseObject):
+            if isinstance(sym, C.BaseObject):
                 sym = sym.getBase()
             # print(f"getSummaryAttrForSymbolFromDF: ATTR : {attr} FOR SYMBOL : {sym} not found in summary_df")
             return None
@@ -325,7 +329,7 @@ class Historys(BaseTrades):
             qty_sell=('quantity', lambda x: x[x < 0].sum()),  # Sum of negative quantities for sell trades
             avg_buy_price=('price', lambda x: round(x[history_trades_df.loc[x.index, 'quantity'] > 0].mean(), 2)),
             avg_sell_price=('price', lambda x: round(x[history_trades_df.loc[x.index, 'quantity'] < 0].mean(), 2)),
-            isAnIdleSymbol=('trade_date', lambda x: (datetime.date(today()) - x.max().date() > timedelta(days=IdleSecurityDays))),
+            isAnIdleSymbol=('trade_date', lambda x: (C.datetime.date(today()) - x.max().date() > timedelta(days=IdleSecurityDays))),
             first_trade_price=('price', 'last'),  # Last trade price
 
             # if_last_trade_buy=('price', lambda x: True if x[history_trades_df.loc[x.index, ('quantity', 'first')] > 0]else False),
@@ -395,14 +399,14 @@ class Historys(BaseTrades):
         return self.all_symbols
 
     def getFloatValueForSymbol(self, sym,  attr):
-        if isinstance(sym, BaseObject):
+        if isinstance(sym, C.BaseObject):
             sym = sym.getBase()
         value = self.getSummaryAttrForSymbolFromDF(sym, attr)
         if not value:
             return 0.0
         return float("{:.2f}".format(value))
     def getIntValueForSymbol(self, sym,  attr):
-        if isinstance(sym, BaseObject):
+        if isinstance(sym, C.BaseObject):
             sym = sym.getBase()
         value = self.getSummaryAttrForSymbolFromDF(sym, attr)
         return int(value)
@@ -490,61 +494,3 @@ if __name__ == '__main__':
     ht.idle_trade_qry()
 
 
-    # df = ht.to_df()
-    # print(df)
-
-    # test_list = ['CRSP', 'CRM', 'CRWD', 'SRNE', 'INTC', 'CSCO', 'MCD']
-    # Sample Data (without 'trade_type', using quantity sign to differentiate buy/sell)
-    # data = {
-    #     'trade_id': [1, 2, 3, 4, 5],
-    #     'symbol': ['AAPL', 'GOOG', 'AAPL', 'GOOG', 'AMZN'],
-    #     'price': [150.0, 2800.0, 155.0, 2850.0, 3500.0],
-    #     'quantity': [10, -5, 15, -8, 2],  # Negative quantity for sell trades
-    #     'trade_date': ['2023-05-10', '2023-05-11', '2023-05-12', '2023-05-13', '2023-05-14']
-    # }
-
-    # return
-
-    # def _getSummaryAttrForSymbolFromDF(self, sym, attr):
-    #     df = self.getSummary()
-    #     # if not isinstance(df, DataFrame):
-    #     #     return None
-    #     # df = df.loc[df[Symbol] == sym]
-    #     # if df.empty:
-    #     #     return None
-    #     return df[attr].values[0]
-    # def identyfyIdleSecurities(self, noactivity_in_days=180):
-    #     symbols_by_date = self.getSymbolsWithLastTradedDate()
-    #     today = datetime.date.today()
-    #     # days_idle = (today - noactivity_in_days).dt.days
-    #     self.idle_symbols = BaseSet()
-    #     return
-    # def ifLastTradeBuy(self, sym):
-    #     value = self.lastTradeQty(sym)
-    #     if not value:
-    #         return None
-    #     if value > 0:
-    #         return True
-    #     return False
-
-    # def initHistorySummary(self):
-    #     for sym in self.all_symbols:
-    #         # historys = self
-    #         # obj = historySummary(historys, sym)
-    #         # self._histSumm.append(sym, obj)
-    #     return
-
-    # from base_classes import BaseObject, BaseReaderWriter
-
-    # from file_process import FileObject
-    # from base_lib.core.files_include import hist_file
-
-    # from base_lib.core.base_classes import BaseInt, BaseDate, BaseBuySell
-    #
-    # from base_classes import *
-    # from TradeUtil import *
-
-
-    # def noOfDaysSinceTrans(self):
-    #     self.dayDiff = self.Date.getNoDaysFromToday() * -1
-    #     return self.dayDiff

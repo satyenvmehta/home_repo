@@ -2,10 +2,13 @@ import socket
 
 from base_lib.core.base_classes import BasePrice
 from base_lib.core.base_container_classes import BaseList, BaseDict
+from tp.lib.ticker import Ticker
 from tp.market.market_include import CURR_PORT, HIST_PORT
-from tp.market.ticker import Ticker
+# from tp.market.ticker import Ticker
 
 import pickle
+
+# from tp.ticker import Ticker
 
 HOST = 'localhost'  # The server's hostname or IP address
 # CURRPORT = 65432        # The port used by the server

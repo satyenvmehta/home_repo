@@ -1,14 +1,11 @@
-from dataclasses import dataclass
-
-from base_lib.core.base_classes import BaseTradeSymbol, BaseObject, BaseFloat, BasePrice, BaseString, BaseInt
-from base_lib.core.base_container_classes import BaseReaderWriter
-from base_lib.core.files_include import stock_fundamentals_file
-
+import common_include as C
 from TradeUtil import BaseTrades
+from base_lib.core.files_include import stock_fundamentals_file
+from tp.lib.tp_classes import BaseTradeSymbol
 
 
-@dataclass
-class StockScreener(BaseObject):
+@C.dataclass
+class StockScreener(C.BaseObject):
     """
     A class representing a stock screener.
 
@@ -57,8 +54,8 @@ class StockScreener(BaseObject):
         return f'StockScreener({self.screener_name}, {self.screener_id}, {self.screener_url}, {self.screener_description}, {self.screener_criteria}, {self.screener_stocks})'
 
 
-@dataclass
-class StockFundamentals(BaseObject):
+@C.dataclass
+class StockFundamentals(C.BaseObject):
     """
     A class representing stock fundamentals.
 
@@ -67,9 +64,9 @@ class StockFundamentals(BaseObject):
         Sector
     """
     Symbol: BaseTradeSymbol = None
-    Sector: BaseString = None
-    BVPS: BasePrice = None
-    Growth: BasePrice = None
+    Sector:C.BaseString = None
+    BVPS: C.BasePrice = None
+    Growth: C.BasePrice = None
 
     @classmethod
     def from_dict(cls, data_dict):
@@ -105,7 +102,7 @@ class StocksFundamentals(BaseTrades):
         return
 
     def getInfoForSymbol(self, sym):
-        if isinstance(sym, BaseObject):
+        if isinstance(sym, C.BaseObject):
             sym = sym.getBase()
         obj = self.getCurrentObj(sym)
         if isinstance(obj, StockFundamentals):
@@ -113,20 +110,20 @@ class StocksFundamentals(BaseTrades):
         return self.getBase().getInfo(sym)
 
 
-@dataclass
-class StockFilterAttributes(BaseObject):
+@C.dataclass
+class StockFilterAttributes(C.BaseObject):
     Symbol: BaseTradeSymbol = None
-    today_open : BasePrice = None
-    intraday_range_per: BasePrice = None
-    open_close_gap_per: BasePrice = None
-    overnight_gap: BasePrice = None
-    today_high: BasePrice = None
-    today_low: BasePrice = None
-    close_today: BasePrice = None
-    rsi: BasePrice = None
-    bs_indicator: BaseString = None
-    bd_advise: BaseString = None
-    pos: BaseInt = None
+    today_open : C.BasePrice = None
+    intraday_range_per: C.BasePrice = None
+    open_close_gap_per: C.BasePrice = None
+    overnight_gap: C.BasePrice = None
+    today_high: C.BasePrice = None
+    today_low: C.BasePrice = None
+    close_today: C.BasePrice = None
+    rsi: C.BasePrice = None
+    bs_indicator:C.BaseString = None
+    bd_advise:C.BaseString = None
+    pos: C.BaseInt = None
 
 
     def init_from_df(self, symbol, df, rsi, bs_indicator, bd_advise, pos):
@@ -144,17 +141,17 @@ class StockFilterAttributes(BaseObject):
 
         """
         self.Symbol = BaseTradeSymbol(symbol)
-        self.today_open = BasePrice((df['Open'].iloc[-1]))
-        self.today_high = BasePrice((df['High'].iloc[-1]))
-        self.today_low = BasePrice((df['Low'].iloc[-1]))
-        prev_close = BasePrice((df['Close'].iloc[-2]))
-        self.close_today = BasePrice((df['Close'].iloc[-1]))
+        self.today_open = C.BasePrice((df['Open'].iloc[-1]))
+        self.today_high = C.BasePrice((df['High'].iloc[-1]))
+        self.today_low = C.BasePrice((df['Low'].iloc[-1]))
+        prev_close = C.BasePrice((df['Close'].iloc[-2]))
+        self.close_today = C.BasePrice((df['Close'].iloc[-1]))
         self.overnight_gap = self.today_open - prev_close
 
         self.intraday_range_per = (self.today_high - self.today_low) * 100.0 / self.today_open
-        self.intraday_range_per = BasePrice(self.intraday_range_per.getBase())
+        self.intraday_range_per = C.BasePrice(self.intraday_range_per.getBase())
         self.open_close_gap_per = (self.close_today - self.today_open) * 100.0 / self.today_open
-        self.open_close_gap_per = BasePrice(self.open_close_gap_per.getBase())
+        self.open_close_gap_per = C.BasePrice(self.open_close_gap_per.getBase())
         self.intraday_range = (self.today_high - self.today_low)
         self.open_close_gap = (self.close_today - self.today_open)
         self.rsi = rsi

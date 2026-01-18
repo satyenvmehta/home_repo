@@ -1,9 +1,5 @@
-from pprint import pprint
-
+import common_include as C
 import yfinance as yf
-from base_lib.core.base_classes import BaseObject
-# from time_util import sleep_sec
-# from pandas import DataFrame
 from pandas.core.frame import DataFrame
 
 import time
@@ -32,11 +28,8 @@ def getTickerObj(tkr):
             break
     return tkr
 
-from dataclasses import dataclass, asdict
-
-
-@dataclass
-class MarketData(BaseObject):
+@C.dataclass
+class MarketData(C.BaseObject):
     ticker: str
     info: dict = None
     sector: str = None # = info.get('sector')

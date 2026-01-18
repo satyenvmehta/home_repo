@@ -22,25 +22,27 @@ unittest = False
 # header_lines = 3
 
 # from base_classes import BaseObject
-
-# % Changes today - to recommend buy/sell
-TodaysChange = 0
-StrongBuy = 5
-StrongSell = StrongBuy
-Buy = StrongBuy-2
-Sell = Buy
-Hold = Buy -1
-
-SellTh = 0.05 # 5 %
-BuyTh = SellTh +  0.02 # 7%
-
-SmallMrkCapValue = 200
+#
+# # % Changes today - to recommend buy/sell
+# TodaysChange = 0
+# StrongBuy = 5
+# StrongSell = StrongBuy
+# Buy = StrongBuy-2
+# Sell = Buy
+# Hold = Buy -1
+#
+# SellTh = 0.05 # 5 %
+# BuyTh = SellTh +  0.02 # 7%
+#
+# SmallMrkCapValue = 200
 
 def getDeltaPercentage(p1, p2):
     deptaP = 100 * (p1 - p2) / p1
     return deptaP
 
 MFList = ['FAGIX',	'FBIOX',	'FDCPX',	'FDRXX',	'FHIFX',	'FHKCX',	'FIDSX',	'FIEUX',	'FNBGX',	'FOCPX',	'FPHAX',	'FRESX',	'FSAGX',	'FSAVX',	'FSCHX',	'FSCSX',	'FSDAX',	'FSDPX',	'FSELX',	'FSENX',	'FSHCX',	'FSLBX',	'FSLEX',	'FSPHX',	'FSPTX',	'FSRBX',	'FSRFX',	'FUMBX',	'FWRLX',	'FWWFX',]
+
+from base_lib.core.base_classes import BaseString, BaseFloat, BasePrice
 
 '''
 def map_lam():

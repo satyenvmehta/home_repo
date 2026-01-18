@@ -6,23 +6,26 @@ Symbol	Last	TradeDescription	            Status	Account	Order Number
 AI     26.88	'Buy 50 Limit at $26.55'  	"FILLED AT $26.55"	ROLLOVER IRA (224916532)	I07NHLPL
 '''
 
-from base_lib.core.base_classes import BaseInt, BaseCustomStatus, BaseBuySell, BasePercentage
+import common_include as C
+from tp.TradeUtil import BaseTrade, BaseTrades, Symbol
+from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice, BaseCustomStatus, BaseBuySell
 
-from TradeUtil import *
+import numpy as np
+
 header_lines=3
 
 #  Adjust Buy Price  or Adjust Sell Price  Parameters
 BT=12
 thresholdP = {'B':BT, 'S' : BT+1}
-@dataclass
-class Order( BaseTrade):
+@C.dataclass
+class Order(BaseTrade):
     Symbol : BaseTradeSymbol = None
     Last : BaseTradePrice = None
-    Description : BaseString= None   # Buy 35 Limit at $26.25
+    Description : C.BaseString= None   # Buy 35 Limit at $26.25
     Status : BaseCustomStatus= None
-    Account : BaseString= None
-    TIF: BaseString = None
-    OrderNum : BaseString = None
+    Account : C.BaseString= None
+    TIF:C.BaseString = None
+    OrderNum :C.BaseString = None
 
     @classmethod
     def from_dict(cls, data_dict):
@@ -45,7 +48,7 @@ class Order( BaseTrade):
         if d_parts[0] == 'Exchange':  # Skip MF exchanges to monitor
             return
         self.buySell = BaseBuySell(d_parts[0])
-        self.orderQty = BaseInt(d_parts[1])
+        self.orderQty = C.BaseInt(d_parts[1])
         lastval = d_parts[len(d_parts)-1]
 
         if not lastval.startswith("$"):
@@ -98,7 +101,7 @@ class Order( BaseTrade):
             return False
 
 
-@dataclass
+@C.dataclass
 class Orders(BaseTrades):
     def __post_init__(self):
         super().__post_init__()
@@ -108,7 +111,7 @@ class Orders(BaseTrades):
         from base_lib.core.files_include import order_file
         self.readFile(self.cls, self.uniqueCols, header_lines, order_file)
         df = self.getDF()
-        self.all_symbols = df[Symbol].unique()
+        self.all_symbols = np.sort(df[Symbol].unique())
         return
 
     def getLastPrice(self, sym):
@@ -125,7 +128,7 @@ class Orders(BaseTrades):
         res = self.findSymbol(sym)
         if not res:
             return None
-        nres = BaseList()
+        nres = C.BaseList()
         for item in res.getBase():
             if isinstance(item, Order):
                 if item.isOpen():
@@ -228,108 +231,3 @@ if __name__ == '__main__':
     # orderFileTesting()
 
 
-'''
-
-    def post_read(self):
-        for item in self.getBase():
-            if isinstance(item, Order):
-                item.setDescDetails()
-                if self.getDebug():
-                    print(str(item))
-            else:
-                print("Cant custmize")
-        return
-
-    def read(self):
-        super().read( header_lines, order_file)
-        self.post_read()
-        return self.getBase()
-
-    def findSymbol(self, sym, bs=None):
-        results = super(Orders, self).findSymbol(sym)
-        if not results:
-            return None
-        if not bs:
-            return results
-
-        nresults = BaseList()
-        for item in results.getBase():
-            if isinstance(item, Order):
-                if item.getBuySell().isBS(bs):
-                    nresults.append(item)
-        return nresults
-'''
-
-
-'''
-
-if __name__ == '__main__':
-    b = Orders()
-    res = b.findSymbol('AAOI', "S")
-
-    print(res)
-    if res.size():
-        result = res.getBase()
-        if res.size() == 1:
-            if isinstance(result[0], Order):
-                print(result[0].bidTooFarFromLast())
-                print(result[0])
-        else:
-            sres = b.sort(data=result, key=lambda x: x.Description, reverse=False)
-            print(sres)
-            
-    # print(b.findSymbol('ZMZ'))
-    # b.print()
-
-    # res_list = b.getBase()
-    #
-    row2Examin = 16
-    b.examinRow(row2Examin)
-    #
-    # print(b.getDetailsBySymbol('AAPL'))
-    # print(b.getUniqueRows())
-            '''
-# def reading_lorders(df:pd.DataFrame)->list:
-#     return list(map(lambda x:Order(x[0], x[1], x[2], x[3], x[4] ),df.values.tolist()))
-# if __name__ == '__main__':
-#     b = Orders()
-#     order_list = b.read()
-#     b.print()
-#
-#     row2Examin = 16
-#     offset = header_lines+1+1
-#     actual_row = row2Examin-offset
-#     print(order_list[actual_row])
-#     results = b.getDetailsBySymbol('BTBT', Order)
-#     for res in results.item:
-#         print(res)
-#
-#     results = b.getDetailsBySymbol('BTBT123', Order)
-#     for res in results.item:
-#         print(res)
-
-
-    # Symbol : BaseObject = field(repr=False)
-    # Last : BaseObject= field(repr=False)
-    # Description : BaseObject= field(repr=False)
-    # Status : BaseObject= field(repr=False)
-    # Account : BaseObject= field(repr=False)
-
-# @dataclass
-# class Orders(BaseDF):
-#     def read(self):
-#         fo = FileObject(order_file)
-#         # index_col = 'Symbol'
-#         df = fo.read( skip=header_lines)
-#         self.item = load_data_to_class_list(df, Order)
-#         return self.item
-
-
-    # def setBuySell(self, bs):
-    #     if bs == "Buy":
-    #         self.buySell = "B"
-    #     else:
-    #         self.buySell = "S"
-    #     # print(self.__dict__)
-    #     print(str(self))
-    #     # print(self.getBuySell())

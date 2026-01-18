@@ -1,16 +1,13 @@
-from tp.market.client  import getPricesFor
-
-from base_lib.core.base_include import *
-
-from dataclasses import dataclass
+import common_include as C
+from tp.market.client import getPricesFor
 
 from tp.market.get_price import get_market_price
 
 
-@dataclass
-class MarketPrice(BaseObject):
+@C.dataclass
+class MarketPrice(C.BaseObject):
     tkrList : list
-    mktTkrPrices: BaseDict = None
+    mktTkrPrices: C.BaseDict = None
 
     def __post_init__(self):
 
@@ -23,7 +20,7 @@ class MarketPrice(BaseObject):
 
     def getPrice(self, ticker):
         tickerInfo = self.getTickerDetails(ticker)
-        from tp.market.ticker import Ticker
+        from tp.lib.ticker import Ticker
         if isinstance(tickerInfo, Ticker):
             lastP = tickerInfo.getPrice()
             return lastP
@@ -37,8 +34,6 @@ class MarketPrice(BaseObject):
 
 if __name__ == '__main__':
     tkrL = ['DUFRY', 'AAPL', 'MSFT', 'APPL', 'CSCO', 'FAGIX', 'SRNE']
-    # lst = BaseDict()
-    # lst.convertContainerToThis(tkrL)
     r = get_market_price('AAPL')
     mktP = MarketPrice(tkrL)
 

@@ -1,50 +1,43 @@
+import common_include as C
 
-# from common_include import *
-
-
-from base_lib.core.base_classes import BaseInt, BasePercentage, BaseDate
-# from files_include  import pos_file
-from base_lib.core.common_include import SmallMrkCapValue
-from base_lib.core.files_include import pos_file
-from base_lib.core.sys_utils import Today
-
-import all_history
 from TradeUtil import *
 
 # Symbol: BaseTradeSymbol = None
 # Last: BaseTradePrice = None
-# Description: BaseString = None  # Buy 35 Limit at $26.25
-# Status: BaseString = None
-# Account: BaseString = None
+# Description:C.BaseString = None  # Buy 35 Limit at $26.25
+# Status:C.BaseString = None
+# Account:C.BaseString = None
 
 from all_history import Historys #, historySummary
+from base_lib.core.files_include import pos_file
+from tp.tp_include import SmallMrkCapValue
 
-@dataclass
+
+@C.dataclass
 class Position(BaseTrade):
     Symbol: BaseTradeSymbol = None
     Last: BaseTradePrice = None
-    PerChange: BasePercentage = None
-    PerGnL: BasePercentage = None
-    Quantity: BaseInt = None
-    Account: BaseString = None
-    DayRange: BaseString = None
-    News: BaseString = None
+    PerChange: C.BasePercentage = None
+    PerGnL: C.BasePercentage = None
+    Quantity: C.BaseInt = None
+    Account:C.BaseString = None
+    DayRange:C.BaseString = None
+    News:C.BaseString = None
     CloseValue: BaseTradePrice = None
     Change: BaseTradePrice = None
-    Sector: BaseString = None
-    Year_Range: BaseString = None
-    Yield : BaseFloat = None
-    Volume: BaseInt = None
+    Sector:C.BaseString = None
+    Year_Range:C.BaseString = None
+    Yield : C.BaseFloat = None
+    Volume: C.BaseInt = None
     PurchasePrice: BaseTradePrice = None
     Value: BaseTradePrice = None
     TdyGnL: BaseTradePrice = None
-    PerTdyGnL: BaseFloat = None
+    PerTdyGnL: C.BaseFloat = None
     GnL: BaseTradePrice = None
-    EquityScore: BaseString = None
-    PE: BaseFloat = None
-    MarketCap: BaseString = None
-    EarningsDate: BaseDate = None
-    # earningAlert: BaseInt = None
+    EquityScore:C.BaseString = None
+    PE: C.BaseFloat = None
+    MarketCap:C.BaseString = None
+    EarningsDate: C.BaseDate = None
 
     def __post_init__(self):
         self.setEarnigAlert()
@@ -67,7 +60,7 @@ class Position(BaseTrade):
     def setEarnigAlert(self):
         NoOfDays = self.EarningsDate.getNoDaysFromToday()
         if  NoOfDays < 10 and NoOfDays > -3:
-            self.earningAlert = BaseInt(NoOfDays)
+            self.earningAlert = C.BaseInt(NoOfDays)
         else:
             self.earningAlert = None
         return
@@ -87,7 +80,7 @@ class Position(BaseTrade):
         # obj.setEarnigAlert()
         return obj
 
-@dataclass
+@C.dataclass
 class Positions(BaseTrades):
     def __post_init__(self):
         super().__post_init__()
@@ -189,21 +182,3 @@ if __name__ == '__main__':
             print(str(acct) + " " + str(found))
     print(b.findSymbol('COIN'))
     print(b.findSymbol('ZMZ'))
-
-    # row2Examin = 16
-    # b.examinRow(row2Examin)
-    #
-    # print(b.getDetailsBySymbol('AAPL'))
-    # print(b.getUniqueRows())
-
-    # Symbol : BaseObject
-    # Last : BaseObject
-    # Description : BaseObject
-    # Status : BaseObject
-    # Account : BaseObject
-
-    # Symbol : BaseObject = field(repr=False)
-    # Last : BaseObject= field(repr=False)
-    # Description : BaseObject= field(repr=False)
-    # Status : BaseObject= field(repr=False)
-    # Account : BaseObject= field(repr=False)

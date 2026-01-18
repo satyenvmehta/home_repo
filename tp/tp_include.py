@@ -29,3 +29,18 @@ Amount = 'Amount'
 Account = 'Account'
 Description = 'Description'
 last_trade_date = 'last_date'
+
+
+
+# % Changes today - to recommend buy/sell
+TodaysChange = 0
+StrongBuy = 5
+StrongSell = StrongBuy
+Buy = StrongBuy-2
+Sell = Buy
+Hold = Buy -1
+
+SellTh = 0.05 # 5 %
+BuyTh = SellTh +  0.02 # 7%
+
+SmallMrkCapValue = 200

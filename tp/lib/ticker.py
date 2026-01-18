@@ -1,6 +1,11 @@
 from base_lib.core.common_include import *
 from base_lib.core.base_classes import BaseString, BaseFloat, BasePrice
 
+ExceptionTicker = [
+'L4135L100','SPAXX','SRNEQ','TSPH', 'SCLX', 'SRNE', 'SPHIX',
+]
+
+ETF = ['ARKK', 'ILTB', ]
 
 @dataclass
 class Ticker:
@@ -23,6 +28,27 @@ class Ticker:
         if self.price is None:
             return True
         return self.price.isZero()
+    def isETF(self):
+        if self.symbol in ETF:
+            return True
+        return False
+    def isMF(self):
+        if self.symbol in MFList:
+            return True
+        return False
+    def isExceptionTicker(self):
+        if self.symbol in ExceptionTicker:
+            return True
+        return False
+    def isValidTicker(self):
+        tkr = self.symbol.getBase()
+        if tkr[0].isdigit() or tkr.startswith("adj ") or tkr in MFList:
+            return False
+        if tkr in ExceptionTicker:
+            return False
+        if len(tkr) > 6:
+            return False
+        return True
 
 
     # price_change

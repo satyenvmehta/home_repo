@@ -1,29 +1,31 @@
+import os
 
+import pandas as pd
 
-from base_lib.core.base_classes import *
+import common_include as C
+from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice, BaseCustomStatus, BaseBuySell
 
-# # from base_classes import BaseObject, BaseObjectItem,  BaseString, BaseFloat, BaseMoney,  BaseCustomStatus, BasePercentage
-# from base_lib.core.base_container_classes import    BaseReaderWriter,  BaseSet,  BaseList, BaseContainer, BaseDict, BaseBuySell
-# from base_lib.core.common_include import MFList
 from base_lib.core.files_include import stock_fundamentals_file, weekly_fundamentals_file_debug
 
 from tp.market.get_price import getHistoricalData, getTickerInfo
-from TradeUtil import _validate_ticker, prep_ticker_list, prep_debug_list
+from TradeUtil import  prep_ticker_list, prep_debug_list
+from tp.market.validate_ticker import _validate_ticker
+
 RefreshInterval = 7
 
 import builtins
 print = builtins.print
 
-@dataclass
-class MarketData(BaseObject):
-    tickers: Any = None
-    history_data: Any = None
-    debug: BaseBool = None
+@C.dataclass
+class MarketData(C.BaseObject):
+    tickers: C.Any = None
+    history_data: C.Any = None
+    debug: C.BaseBool = None
 
     def isFileOlderThan(self, file_path, days=7):
         if not os.path.exists(file_path):
             return True
-        file_age = datetime.now() - datetime.fromtimestamp(os.path.getmtime(file_path))
+        file_age = C.datetime.now() - C.datetime.fromtimestamp(os.path.getmtime(file_path))
         return file_age.days > days
 
     def __post_init__(self):
@@ -35,7 +37,6 @@ class MarketData(BaseObject):
             self.tickers = prep_ticker_list()
 
         self.tickers = [tkr for tkr in self.tickers if _validate_ticker(tkr)]
-        # self.tickers = prep_debug_list()
         self.history_data = getHistoricalData(self.tickers)
         return
 
@@ -106,7 +107,7 @@ class MarketData(BaseObject):
                 'Sector': tiObj.sector,
                 'BVPS': bvps,
                 'Growth': tiObj.growth,
-                'Date': datetime.now().strftime('%Y-%m-%d')
+                'Date': C.datetime.now().strftime('%Y-%m-%d')
             })
         df = pd.DataFrame(records)
         # Save snapshot (append or overwrite)

@@ -1,15 +1,13 @@
-from base_lib.core.base_classes import *
-# from common_include import *
 
-# from file_process import FileObject
+import common_include as C
 from base_lib.core.files_include import int_scan_file
+from tp.TradeUtil import BaseTrade, BaseTrades, Symbol
 
-from TradeUtil import *
 header_lines = 0
 
 PossibleTrends = {'UP', 'DOWN', 'BOTH', 'NONE'}
 
-class Trend(BaseObjectItem):
+class Trend(C.BaseObjectItem):
     def __post_init__(self):
         if not self.getBase().upper() in PossibleTrends:
             raise "Error"
@@ -21,31 +19,31 @@ class Trend(BaseObjectItem):
             return -1
         return 0
 
-@dataclass
+@C.dataclass
 class InteliScan(BaseTrade):
-    Market: BaseString = None
-    Symbol: BaseString = None
-    Category: BaseString = None
+    Market:C.BaseString = None
+    Symbol:C.BaseString = None
+    Category:C.BaseString = None
     TrplXDir: Trend = None
-    TrplXDays: BaseString = None
-    TrplXVal: BaseString = None
+    TrplXDays:C.BaseString = None
+    TrplXVal:C.BaseString = None
     NutrlTrndDir: Trend = None
-    NutrlTrndDays: BaseString = None
+    NutrlTrndDays:C.BaseString = None
     ShrtTermDiffDir: Trend = None
-    ShrtTermDays: BaseString = None
+    ShrtTermDays:C.BaseString = None
     MidTermDir: Trend = None
-    MidTermDays: BaseString = None
+    MidTermDays:C.BaseString = None
     LongTermDir: Trend = None
-    LongTermDays: BaseString = None
+    LongTermDays:C.BaseString = None
     PredTradDir: Trend = None
-    Volume: BaseString = None
-    VolumePecAvg: BaseString = None
+    Volume:C.BaseString = None
+    VolumePecAvg:C.BaseString = None
     ShortTermTrendDir: Trend = None
-    sttdays: BaseString = None
+    sttdays:C.BaseString = None
     MediumTermTrendDir: Trend = None
-    mttdays: BaseString = None
+    mttdays:C.BaseString = None
     LongTermTrendDir: Trend = None
-    lttdays: BaseString = None
+    lttdays:C.BaseString = None
 
     @classmethod
     def from_dict(cls, data_dict):
@@ -77,7 +75,7 @@ class InteliScan(BaseTrade):
                      self.ShortTermTrendDir.getValue() + self.MediumTermTrendDir.getValue() + self.LongTermTrendDir.getValue()
         return
 
-@dataclass
+@C.dataclass
 class InteliScans(BaseTrades):
     def __post_init__(self):
         super().__post_init__()

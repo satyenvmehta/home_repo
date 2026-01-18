@@ -1,7 +1,7 @@
 
 
 
-class InfoReader(BaseObject):
+class InfoReader(C.BaseObject):
     Orders
     Positions
     History

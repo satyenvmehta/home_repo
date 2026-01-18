@@ -1,31 +1,22 @@
-# from common_include import *
-from dataclasses import dataclass
-
-import pandas as pd
-from base_lib.core.base_classes import *
 Debug_sym = "BLUE"
+import common_include as C
 
-from base_lib.core.base_classes import BaseTradeSymbol, BaseTradePrice
+@C.dataclass
+class TransRequest(C.BaseObject):
+    Symbol: BaseTradeSymbol = None
+    bs: C.BaseString = None
 
-@dataclass
-class TransRequest(BaseObject):
-    Symbol  : BaseTradeSymbol = None
-    bs: BaseString = None
+    reccomnd: C.BaseString = None
 
-    reccomnd: BaseString = None
-    # action  : BaseString = None
-    # Qty: BaseInt = None
-    # PercDiff: BaseFloat = None
-    PerGnL: BaseFloat = None
-    ActToSell : BaseString = None
-    # PerGnL: BaseString = None
-    Yield : BaseFloat = None
-    price : BaseString = None
+    PerGnL: C.BaseFloat = None
+    ActToSell : C.BaseString = None
+    Yield : C.BaseFloat = None
+    price : C.BaseString = None
     lastP : BaseTradePrice = None
 
 
 from TradeUtil import BaseTrades
-@dataclass
+@C.dataclass
 class TransRequests(BaseTrades):
     def __post_init__(self):
         super().__post_init__()

@@ -2,16 +2,7 @@
 import pandas as pd
 from base_lib.core.base_classes import *
 
-# from TradeUtil import BaseBuySell
-# from base_container_classes import BaseSet, BaseList
-# from base_classes import BaseInt, BaseCustomStatus, BaseBuySell, BasePercentage
-# from base_classes import BaseObject, BaseObjectItem,  BaseString, BaseFloat, BaseMoney
-from base_lib.core.base_container_classes import BaseList, BaseReaderWriter, BaseSet, BaseList, BaseContainer, BaseDict
 
-from base_lib.core.files_include import rootdir, output_file, alt_output_file
-
-from base_lib.core.base_classes import BaseTradeSymbol, BaseTradePrice
-from base_lib.core.base_container_classes import BuySellSet
 from tp.market.client_fe import MarketPrice
 
 import main
@@ -28,33 +19,19 @@ Debug_sym = "CEG"
 Debug_Ticker = Debug_sym
 
 @dataclass
-class Exception(BaseObject):
-    Symbol: BaseObject
-    reason: BaseObject
-    action: BaseObject
+class Exception(C.BaseObject):
+    Symbol: C.BaseObject
+    reason: C.BaseObject
+    action: C.BaseObject
 
 from base_lib.core.common_include import BuyTh, SellTh
 
 @dataclass
-class Action(BaseObject):
-    actionFlag: BaseObject
-    message: BaseObject
-    tradePrice: BaseObject
-    qty: BaseObject
-
-    # bsh: BaseObject
-    # curr_ticker: BaseObject
-    # curr_price: BaseObject
-    # positions: BaseObject
-    # orders: BaseObject
-    # history: BaseObject
-    # inteli_scan: BaseObject
-    # market_price: BaseObject
-    # buyTh: BaseObject
-    # sellTh: BaseObject
-    # exception: BaseObject
-    # debug: BaseObject
-    # debug_sym: BaseObject
+class Action(C.BaseObject):
+    actionFlag: C.BaseObject
+    message: C.BaseObject
+    tradePrice: C.BaseObject
+    qty: C.BaseObject
 
     def __post_init__(self):
         self.setActionParams()

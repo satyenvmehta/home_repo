@@ -1,16 +1,12 @@
-from dataclasses import dataclass
+import pandas as pd
 
-from base_lib.core.base_classes import *
+import common_include as C
+from base_lib.core.files_include import ticker_file, output_file, alt_output_file
+from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice
 from tp.market.get_price import get_market_price
-#from ticker import TickersSet
 
 Debug_Ticker = "PATH"
-from base_lib.core.base_container_classes import  BaseSet, BaseList
 
-from base_lib.core.files_include import rootdir, output_file, alt_output_file, ticker_file
-
-from base_lib.core.base_classes import BaseTradeSymbol, BaseTradePrice
-from base_lib.core.base_container_classes import BuySellSet
 from tp.market.client_fe import MarketPrice
 
 import main
@@ -27,66 +23,67 @@ thresholdP = {'B': BT, 'S': BT + 1}
 
 # Debug_Ticker = Debug_sym
 
-@dataclass
-class Exception(BaseObject):
-    Symbol: BaseObject
-    reason: BaseObject
-    action: BaseObject
+@C.dataclass
+class Exception(C.BaseObject):
+    Symbol: C.BaseObject
+    reason: C.BaseObject
+    action: C.BaseObject
 
-from base_lib.core.common_include import BuyTh, SellTh
 from tp_include import *
 
-@dataclass
-class Result(BaseObject):
-    curr_ticker  : BaseTradeSymbol = None
-    bs: BaseString = None
+@C.dataclass
+class Result(C.BaseObject):
+    curr_ticker : BaseTradeSymbol = None
+    bs:C.BaseString = None
 
-    reccomnd: BaseString = None
-    # action  : BaseString = None
-    Qty: BaseInt = None
-    PercDiff: BaseFloat = None
-    PerGnL: BaseFloat = None
-    ActToSell : BaseString = None
-    VPScore: BaseString = None
-    IdleSecurity : BaseString = None
-    # PerGnL: BaseString = None
-    Yield : BaseFloat = None
+    reccomnd:C.BaseString = None
+    # action  :C.BaseString = None
+    Qty: C.BaseInt = None
+    PercDiff: C.BaseFloat = None
+    PerGnL: C.BaseFloat = None
+    ActToSell :C.BaseString = None
+    VPScore:C.BaseString = None
+    IdleSecurity :C.BaseString = None
+    # PerGnL:C.BaseString = None
+    Yield : C.BaseFloat = None
 
-    earningAlert: BaseInt = None
-    price : BaseString = None
+    earningAlert: C.BaseInt = None
+    price :C.BaseString = None
     lastP : BaseTradePrice = None
-    TSML : BaseString = None
-    category:  BaseString = None
-    mcap: BaseString = None
-    STRecomm: BaseString = None
-    STDeltaP: BaseFloat = None
+    TSML :C.BaseString = None
+    category: C.BaseString = None
+    mcap:C.BaseString = None
+    STRecomm:C.BaseString = None
+    STDeltaP: C.BaseFloat = None
 
-from TradeUtil import BaseTrades
-@dataclass
+from TradeUtil import BaseTrades, BuySellSet
+
+
+@C.dataclass
 class Results(BaseTrades):
     def __post_init__(self):
         super().__post_init__()
         return
-@dataclass
-class tkr_acct(BaseObject):
+@C.dataclass
+class tkr_acct(C.BaseObject):
     tkr : BaseTradeSymbol
-    acct : BaseString
+    acct :C.BaseString
 
     def getTicker(self):
-        if isinstance(self.tkr, BaseObject):
+        if isinstance(self.tkr, C.BaseObject):
             return self.tkr.getBase()
         return self.tkr
     def getAcct(self):
         return self.acct.getBase()
 
-@dataclass
-class tkr_action(BaseObject):
+@C.dataclass
+class tkr_action(C.BaseObject):
     curr_ticker  : BaseTradeSymbol
-    action  : BaseString
-    # bs_ext : BaseString
+    action  :C.BaseString
+    # bs_ext :C.BaseString
 
-@dataclass
-class TradeProcessing(BaseObject):
+@C.dataclass
+class TradeProcessing(C.BaseObject):
     orders: Orders = None
     historys: Historys = None
 
@@ -112,7 +109,7 @@ class TradeProcessing(BaseObject):
                        "ActToSell", "VPScore","IdleSecurity",  "Yield",
                          earning,  "Limit Price/Ref Hist Prc" , "lastP"  , "VP_Ind(T|S|M|L)",  \
                         "Category", "MrkCap", "STRecomm", "STDeltaP"]
-        self.tkr_set = BaseSet()
+        self.tkr_set = C.BaseSet()
         self.getVantageMissingPos()
         # self.getPositionNotTradedInLast()
         self.deltaP = 0
@@ -184,7 +181,7 @@ class TradeProcessing(BaseObject):
         return rc
 
     def str2Numueric(self, s, exCh=None):
-        if isinstance(s, BaseObject):
+        if isinstance(s, C.BaseObject):
             s = s.getBase()
         if not isinstance(s, str):
             return s
@@ -238,7 +235,7 @@ class TradeProcessing(BaseObject):
         if not price:
             suggested_price = self.getSuggestedPrice(bs)
         else:
-            if isinstance(price, BaseMoney):
+            if isinstance(price, C.BaseMoney):
                 price = price.getBase()
             if isinstance(price, str):
                 price = price.replace('$', '')
@@ -253,7 +250,7 @@ class TradeProcessing(BaseObject):
             bs = bs + "@" + str(suggested_price).strip() + \
                  "_" + self.bs_ext + "_" + str(self.hist_summ.getLastPrice(self.curr_ticker)) + "_" + str(self.hist_summ.getLastQuantity(self.curr_ticker))
             if bs.startswith("Sell"):
-                if isinstance(qty, BaseInt):
+                if isinstance(qty, C.BaseInt):
                     qty = qty.getBase()
                 bs = bs + "_R" + str(int(qty))
         else:
@@ -294,14 +291,11 @@ class TradeProcessing(BaseObject):
     def setPositionBasedAttr(self):
         if not self.curr_pos_obj:
             return
-        # self.yieldVal = self.curr_pos_obj.Yield
-        # self.EquityScore = self.curr_pos_obj.EquityScore
-        # self.PerGnL = self.curr_pos_obj.PerGnL
-        # self.lastP = self.curr_pos_obj.Last.getBase()
+
         return
 
     def print(self, msg):
-        print(msg, width=1000),
+        print(msg)
         return
     def calculateRelativePerformance(self):
         print("TBD calculateRelativePerformance")
@@ -322,7 +316,7 @@ class TradeProcessing(BaseObject):
         self.curr_vant_obj = None
         self.bs_ext = ""
         self.TSML = "NA"
-        self.total_pos = BaseFloat(0)
+        self.total_pos = C.BaseFloat(0)
         self.curr_hist_obj = None
         self.curr_pos_obj = None
         return
@@ -463,8 +457,7 @@ class TradeProcessing(BaseObject):
         return self.orders.exists(sym, bs)
 
     def retVals(self, lp,qty):
-        return str(BaseMoney(lp)), BaseInt(qty)
-        # return str(BaseMoney(lp)) + "/" + str(BaseMoney(hp)), str(BaseInt(qty))
+        return str(C.BaseMoney(lp)), C.BaseInt(qty)
 
     def _setNextBuySellRefPrices(self):
         self.lastAction = self.hist_summ.getLastAction(self.curr_ticker)
@@ -542,7 +535,7 @@ class TradeProcessing(BaseObject):
         return
 
     def get_curr_tkr_str(self):
-        if isinstance(self.curr_ticker, BaseObject):
+        if isinstance(self.curr_ticker, C.BaseObject):
             tkr = self.curr_ticker.getBase()
         else:
             tkr = self.curr_ticker
@@ -582,7 +575,7 @@ class TradeProcessing(BaseObject):
             return
 
         self.delta = (cp-hp)/hp
-        self.deltaP = BasePercentage(self.delta*100)
+        self.deltaP = C.BasePercentage(self.delta*100)
         if self.delta > 2 * SellTh and self.total_pos.isPositive():
             self.bsh = SS + self.getApproved2SellSuf()
             return
@@ -642,7 +635,7 @@ class TradeProcessing(BaseObject):
     def setAnayzeParams(self, acct=None):
         sym = self.curr_ticker
         self.debug(sym)
-        self.total_pos = BaseFloat(self.positions.getTotalQty(self.curr_ticker))
+        self.total_pos = C.BaseFloat(self.positions.getTotalQty(self.curr_ticker))
         self.setCurrPosObj(acct)
         self.getBestPriceForSymbol()
         self.analyzeSectorDistribution()
@@ -672,7 +665,7 @@ class TradeProcessing(BaseObject):
         self.uniqPosList = self.positions.getUniqueSymbols()
         uords_tkr = self.orders.getUniqueSymbols()
         uhist_tkr = self.historys.getUniqueSymbols()
-        tksSet = BaseSet()
+        tksSet = C.BaseSet()
         # all_tickers = TickersSet()
         import itertools
         for tkr in itertools.chain(uhist_tkr, uords_tkr):
@@ -683,7 +676,7 @@ class TradeProcessing(BaseObject):
         tksSet.saveToCSV(ticker_file, header=["Symbol"])
 
         # self.idlePos_tkrs = sorted(list(set([x for x in self.uniqPosList if x not in uords_tkr])))
-        self.tkr_acts = BaseList()
+        self.tkr_acts = C.BaseList()
         print("Processing..")
         for tkr in tkrs:
             tobj = BaseTradeSymbol(tkr)
@@ -712,7 +705,7 @@ class TradeProcessing(BaseObject):
     def validateTicker(self, tkr_act):
         if not isinstance(tkr_act, tkr_acct):
             return False
-        if isinstance(tkr_act.tkr, BaseObject):
+        if isinstance(tkr_act.tkr, C.BaseObject):
             sym = tkr_act.tkr #.getBase()
         else:
             sym = BaseTradeSymbol(tkr_act.tkr)
@@ -772,7 +765,7 @@ class TradeProcessing(BaseObject):
             return False, ""
         delatP = abs(getDeltaPercentage(hp, oobj.orderLimitPrice.getBase()))
         if thresholdP[oobj.buySell.getBase()] < delatP:
-            return True, str(BasePercentage(delatP))
+            return True, str(C.BasePercentage(delatP))
         return False, ""
     # NEW - Logic removal for comparing Order Limit Price with Hist Price
     # hp = self.getLastHistPriceForOrder(oobj)
@@ -786,7 +779,7 @@ class TradeProcessing(BaseObject):
         # if not hp:
         delatP = abs(getDeltaPercentage(oobj.Last.getBase(), oobj.orderLimitPrice.getBase()))
         if thresholdP[oobj.buySell.getBase()] < delatP:
-            return True, str(BasePercentage(delatP))
+            return True, str(C.BasePercentage(delatP))
         return False, ""
 
     def historyBasedPricing(self, oobj):

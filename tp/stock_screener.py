@@ -6,8 +6,11 @@ from ta.momentum import RSIIndicator
 
 from MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_debug_list
 
+
+
 from position import Positions
 from sc_util import StockFilterAttributes
+from tp.order import Orders
 
 RSI_WINDOW = 14
 RSI_OVERBOUGHT = 69
@@ -20,6 +23,7 @@ IntraDayKey = "Intraday %"
 interested_fields = ["Ticker",  "last", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %", "High", "Low", "RSI", "BS_IND"] #, "Pos"]
 
 positions = Positions()
+orders = Orders()
 
 def getRSI(df, window=RSI_WINDOW):
     delta = df["Close"].diff()
@@ -31,10 +35,23 @@ def getRSI(df, window=RSI_WINDOW):
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
+def get_orders_exists(ticker):
+    be = orders.exists(ticker, "Buy")
+    se = orders.exists(ticker, "Sell")
+    if be and se:
+        return True, True
+    if be:
+        return True, False
+    if se:
+        return False, True
+    return False, False
 def get_rsi(data, ticker):
     df = data[ticker].dropna()
     if len(df) < RSI_WINDOW + 1:
         return None, None, None
+
+    be, se = get_orders_exists(ticker)
+
     rsi = RSIIndicator(df['Close'], window=RSI_WINDOW).rsi().iloc[-1]
     if rsi > RSI_OVERBOUGHT_PLUS:
         bs_indicator = "Overbought+"
@@ -51,6 +68,14 @@ def get_rsi(data, ticker):
     else:
         bs_indicator = "Neutral"
         bd_advise = "Hold"
+    PLUS = "+"
+    if bd_advise.endswith("Buy"):
+        if be:
+            bd_advise = bd_advise + PLUS
+    if bd_advise.endswith("Sell"):
+        if se:
+            bd_advise = bd_advise + PLUS
+
     return BasePrice(rsi), bs_indicator, bd_advise
 
 def append_filter_to_result(sfa, result):
@@ -92,6 +117,7 @@ def find_stocks_multi():
             if pos == 0 or pos is None:
                 if bd_advise.endswith("Sell"):
                     bd_advise = "NA"
+
             sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos)
             open_close_gap_abs = abs(sfa.open_close_gap_per.getBase())
             if sfa.intraday_range_per.getBase() > 3.5:

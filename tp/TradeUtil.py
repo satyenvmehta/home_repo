@@ -1,14 +1,10 @@
-
-from base_lib.core.base_classes import *
-
-# from base_classes import BaseObject, BaseObjectItem,  BaseString, BaseFloat, BaseMoney,  BaseCustomStatus, BasePercentage
-from base_lib.core.base_container_classes import    BaseReaderWriter,  BaseSet,  BaseList, BaseContainer, BaseDict, BaseBuySell
-from base_lib.core.common_include import MFList
 from base_lib.core.files_include import ticker_file, sp_500_file, nasd_100_file, my_symbol_xls_file
 
+import common_include as C
+from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice, BaseCustomStatus, BaseBuySell
 from tp.market.get_price import  getTickerInfo
-from tp.market.validate_ticker import _validate_ticker
 
+import pandas as pd
 
 def prep_ticker_list():
     # Read both Excel files (assume first column contains tickers)
@@ -28,38 +24,9 @@ def prep_debug_list():
     tickers = sorted(tickers)
     return tickers
 
-@dataclass
-class BaseTradeSymbol(BaseObjectItem):
-    def __post_init__(self):
-        return
-    def __str__(self):
-        base_str = "{:>15}".format(self.getBase())
-        return base_str
-    def isMF(self):
-        return isMFSym(self.getBase())
-        # if len(self.getBase()) == 5 and str(self.getBase()).startswith("F"):
-        #     return True
-        # return False
-    def __eq__(self, other):
-        if isinstance(other, BaseObject):
-            if self.getBase() == other.getBase():
-                return True
-        else:
-            if isinstance(other, str):
-                if self.getBase() == other:
-                    return True
-        return False
 
-    def validate(self):
-        tkr = self.getBase()
-        if not _validate_ticker(tkr):
-            return False
-        if tkr[0] == '$':
-            return False
-        return True
-
-@dataclass
-class BaseTrade(BaseObject):
+@C.dataclass
+class BaseTrade(C.BaseObject):
     Symbol: BaseTradeSymbol = None
     # Last: BaseTradePrice = None
     # Status: BaseCustomStatus = None
@@ -91,8 +58,8 @@ class BaseTrade(BaseObject):
         return vars(self)  # or self.__dict__
 
 Symbol = 'Symbol'
-@dataclass  #
-class BaseTrades(BaseReaderWriter):
+@C.dataclass  #
+class BaseTrades(C.BaseReaderWriter):
     def __post_init__(self):
         super(BaseTrades, self).__post_init__()
         sort_by = lambda x: x.Symbol
@@ -186,7 +153,7 @@ class BaseTrades(BaseReaderWriter):
         if self.acctSet:
             return self.acctSet
 
-        self.acctSet = BaseSet()
+        self.acctSet = C.BaseSet()
         for rec in self.getBase():
             if isinstance(rec, self.cls):
                 if rec.Account.isNaN():
@@ -200,7 +167,7 @@ class BaseTrades(BaseReaderWriter):
         return
 
     def getRecordsForSym(self, sym):
-        filt_pos = BaseList()
+        filt_pos = C.BaseList()
         for pos in self.getBase():
             if isinstance(pos, self.cls):
                 if pos.Symbol.equals(sym):
@@ -221,7 +188,7 @@ class BaseTrades(BaseReaderWriter):
             return None
         if not acct:
             return objs
-        if isinstance(acct, BaseObject):
+        if isinstance(acct, C.BaseObject):
             acct = acct.getBase()
         # foundObj = None
         foundObj = objs.getFirst()
@@ -247,10 +214,16 @@ class BaseTrades(BaseReaderWriter):
         return True
 
     def findSymbol(self, sym, bs=None):
-        results = BaseList()
+        if bs:
+            if (bs == "Buy"):
+                bs = "B"
+            if (bs == "Sell"):
+                bs = "S"
+
+        results = C.BaseList()
         if not self.getBase():
             return None
-        if isinstance(sym, BaseObject):
+        if isinstance(sym, C.BaseObject):
             sym = sym.getBase()
         for item in self.getBase():
             if isinstance(item, BaseTrade):
@@ -272,13 +245,13 @@ class BaseTrades(BaseReaderWriter):
         res_df = pd.DataFrame(data)
         return res_df
         # return pd.DataFrame(data)
-@dataclass
+@C.dataclass
 class OrderSampleClass(BaseTrade):
     Symbol : BaseTradeSymbol = None
     Last : BaseTradePrice = None
-    Description : BaseString= None   # Buy 35 Limit at $26.25
+    Description : C.BaseString= None   # Buy 35 Limit at $26.25
     Status : BaseCustomStatus= None
-    Account : BaseString= None
+    Account : C.BaseString= None
     def __post_init__(self):
         return
 
@@ -290,7 +263,7 @@ class OrderSampleClass(BaseTrade):
         return cls(data_dict['Symbol'], data_dict['Last'], data_dict['Description'], data_dict['Status'], data_dict['Account'])
 
 
-@dataclass
+@C.dataclass
 class OrdersSampleClass(BaseTrades):
     def __post_init__(self):
         super().__post_init__()
@@ -330,6 +303,28 @@ def getBestPrice(symbol):
     if price is None:
         price = info.get('currentPrice')
     return price
+
+@C.dataclass
+class BuySellSet(C.BaseSet):
+    def _multiEntries(self, obj):
+        if not self.has(obj):
+            return False
+        return super().getCounts(obj) > 0
+
+    def multiBuyCounts(self):
+        return self._multiEntries('B')
+
+    def multiSellCounts(self):
+        return self._multiEntries('S')
+
+    def isBuyOnly(self):
+        return self.hasOnly('B')
+
+    def isSellOnly(self):
+        return self.hasOnly('S')
+
+    def isBuyAndSellSet(self):
+        return self.has(['B', 'S'])
 
 if __name__ == '__main__':
     orderFileTesting()

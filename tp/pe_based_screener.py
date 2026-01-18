@@ -62,7 +62,7 @@ def fetch_fundamentals_realtime(tickers, weekly_file='fundamentals_weekly.csv', 
     # Filter
     filtered = df[(df['Ratio_vs_Sector_PE'] <= pe_multiplier) & (df['PEG'].notna()) & (df['PEG'] <= peg_threshold)]
     # Export
-    sheet_name = datetime.now().strftime('%b_%d')
+    sheet_name = C.datetime.now().strftime('%b_%d')
     with pd.ExcelWriter(save_file) as writer:
         filtered.to_excel(writer, sheet_name=sheet_name, index=False)
     return filtered

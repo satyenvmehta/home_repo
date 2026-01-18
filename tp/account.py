@@ -1,17 +1,15 @@
 
-from base_lib.core.base_include import *
+import common_include as C
 
-
-
-@dataclass
-class TradingAccount(BaseObject):
+@C.dataclass
+class TradingAccount(C.BaseObject):
     """
     Represents a trading account with properties like account number, balance, and trading status.
     """
-    account_number: BaseString
-    key : BaseString
-    balance: BaseFloat
-    is_trading: BaseBool
+    account_number:C.BaseString
+    key :C.BaseString
+    balance: C.BaseFloat
+    is_trading: C.BaseBool
 
 
     def __post_init__(self):
@@ -44,12 +42,11 @@ actList = [
     TradingAccount(account_number='Joint WROS - TOD (2BQ833959)', key = 'J2B', balance=500, is_trading=True),
     TradingAccount(account_number='Traditional IRA (2YD005797)', key = 'TR', balance=500, is_trading=False),
 ]
-@dataclass
-class AccountManager(BaseDict):
+@C.dataclass
+class AccountManager(C.BaseDict):
     """
     Manages trading accounts and provides methods to create, retrieve, update, and delete accounts.
     """
-    # accounts: BaseSet
 
     def __post_init__(self):
         """
@@ -90,7 +87,7 @@ class AccountManager(BaseDict):
     def actListToActIdList(self, actNumList):
         actIdList = None
         for act in actNumList:
-            if isinstance(act, BaseObject):
+            if isinstance(act, C.BaseObject):
                 act = act.getBase()
             aid = self.getKey(act)
             if aid:
