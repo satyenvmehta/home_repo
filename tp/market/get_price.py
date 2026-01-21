@@ -155,7 +155,7 @@ def getHistoricalData(tickers):
     if not isinstance(tickers, list):
         return False
     print("downloading data for ", tickers)
-    print("Total tickers ",  len(tickers))
+    print("Total tickers ....",  len(tickers))
     data = yf.download(tickers, period="30d", interval="1d", group_by="ticker", auto_adjust=True, progress=False)
     print("download complete")
     return data
