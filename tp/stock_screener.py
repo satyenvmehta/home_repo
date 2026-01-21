@@ -20,7 +20,7 @@ RSI_OVERSOLD_MINUS = 22
 
 IntraDayKey = "Intraday %"
 # Ticker	last	BS?	Pos	Intraday %	OC_gap%	ONight Gap%	High	Low	RSI	BS_IND	Pos
-interested_fields = ["Ticker",  "last", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %", "High", "Low", "RSI", "BS_IND"] #, "Pos"]
+interested_fields = ["Ticker",  "last", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
 
 positions = Positions()
 orders = Orders()
@@ -83,13 +83,13 @@ def append_filter_to_result(sfa, result):
         result.append(
             [sfa.Symbol.getBase()
                 , sfa.close_today.getBase()
+                , sfa.today_high.getBase()
+                , sfa.today_low.getBase()
                 , sfa.bd_advise
                 , sfa.pos
                 , sfa.intraday_range_per.getBase()
                 , sfa.open_close_gap_per.getBase()
                 , sfa.overnight_gap.getBase()
-                , sfa.today_high.getBase()
-                , sfa.today_low.getBase()
                 , sfa.rsi.getBase()
                 , sfa.bs_indicator
              ])
@@ -141,7 +141,11 @@ def find_stocks_multi():
     r_more_15 = r_more_15.sort_values(by=IntraDayKey, ascending=False)
     r_rest = r_rest.sort_values(by=IntraDayKey, ascending=False)
     return r_15,  r_more_15, r_rest
-
+AllRecs = "All"
+OC_LT_15 = "open_close_LT_1.5"
+OC_GT_15 = "open_close_GT_1.5"
+Rest = "rest"
+SheetNames = [AllRecs, OC_LT_15, OC_GT_15, Rest]
 if __name__ == "__main__":
     d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(d)
@@ -159,10 +163,29 @@ if __name__ == "__main__":
 
     with pd.ExcelWriter(filen, engine="xlsxwriter") as writer:
         All = pd.concat([df_15, df_more_15, df_rest], ignore_index=True).sort_values(by="RSI", ascending=False)
-        All.to_excel(writer, sheet_name="All", index=False)
-        df_15.to_excel(writer, sheet_name="open_close_LT_1.5", index=False)
-        df_more_15.to_excel(writer, sheet_name="open_close_GT_1.5", index=False)
-        df_rest.to_excel(writer, sheet_name="rest", index=False)
+        All.to_excel(writer, sheet_name=AllRecs, index=False)
+        df_15.to_excel(writer, sheet_name=OC_LT_15, index=False)
+        df_more_15.to_excel(writer, sheet_name=OC_GT_15, index=False)
+        df_rest.to_excel(writer, sheet_name=Rest, index=False)
+
+        workbook = writer.book
+        ws_all = writer.sheets[AllRecs]
+        ws_lt_15 = writer.sheets[OC_LT_15]
+        ws_gt_15 = writer.sheets[OC_GT_15]
+        ws_rest = writer.sheets[Rest]
+
+        for name, worksheet in writer.sheets.items():
+            worksheet.conditional_format('J2:J1000', {'type': 'cell',
+                                                'criteria': 'greater than',
+                                                'value': RSI_OVERBOUGHT,
+                                                'format': workbook.add_format({'bg_color': '#C6EFCE',
+                                                                               'font_color': '#006100'})})
+            worksheet.conditional_format('J2:J1000', {'type': 'cell',
+                                                'criteria': 'less than',
+                                                'value': RSI_OVERSOLD,
+                                                'format': workbook.add_format({'bg_color': '#FFC7CE',
+                                                                               'font_color': '#9C0006'})})
+
 
 
 

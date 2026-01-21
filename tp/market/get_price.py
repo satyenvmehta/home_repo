@@ -155,14 +155,17 @@ def getHistoricalData(tickers):
     if not isinstance(tickers, list):
         return False
     print("downloading data for ", tickers)
+    print("Total tickers ",  len(tickers))
     data = yf.download(tickers, period="30d", interval="1d", group_by="ticker", auto_adjust=True, progress=False)
     print("download complete")
     return data
 
 if __name__ == "__main__":
     # sleep_sec(10)
+    t = ['ILTB', 'SNDK', 'SPHIX', 'OKTA', 'G637AM102', 'ARKK', 'AAPL', 'T']
+    getHistoricalData(t)
     for i in [1,2,3,4,5,6,7,8,9,10]:
-        for l in ['ILTB', 'SNDK', 'SPHIX', 'OKTA', 'G637AM102', 'ARKK', 'AAPL', 'T']:
+        for l in t:
             # print({l: get_market_price(l)})
             tiObj = getTickerInfo(l)
             if tiObj:

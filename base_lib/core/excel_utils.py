@@ -3,8 +3,8 @@ from base_lib.core.common_include import *
 from base_lib.core.base_classes import BaseObject
 from base_lib.core.base_container_classes import  BaseList, BaseDict
 
-import openpyxl
-from openpyxl import Workbook, load_workbook #, workbook
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill
 
 def fromColName2ColIndex(df, colName):
     char_col_index = None
