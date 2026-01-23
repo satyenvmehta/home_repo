@@ -77,6 +77,58 @@ MutFundList = [
      'FSAGX', 'FSAVX', 'FSCHX', 'FSCSX', 'FSDAX', 'FSDPX', 'FSELX', 'FSENX', 'FSHCX', 'FSLBX', 'FSLEX', 'FSPHX',
      'FSPTX', 'FSRBX', 'FSRFX', 'FUMBX', 'FWRLX', 'FWWFX', ]
 
+import re
+
+
+def is_option_symbol(symbol):
+    # Pattern: Look for digits, then 'C' or 'P', then more digits
+    pattern = r"\d+[CP]\d+"
+    if re.search(pattern, symbol):
+        return True
+    return False
+
+
+import re
+
+
+def robust_option_parser(symbol):
+    # Regex Breakdown:
+    # ^([A-Z0-9.]+) -> Group 1: Ticker. Allows letters, numbers, and dots (e.g., BRK.B)
+    # \.?           -> Optional: Handles an extra dot between ticker and date
+    # (\d{6})       -> Group 2: The Date (YYMMDD)
+    # ([CP])        -> Group 3: 'C' or 'P'
+    # (\d+)         -> Group 4: The Strike Price (variable length)
+
+    pattern = r"^([A-Z0-9.]+)\.?(\d{6})([CP])(\d+)$"
+    pattern = r"^([A-Z0-9.]+)(\d{6})([CP])([\d.]+)"
+
+    # Use IGNORECASE in case symbols are lowercase
+    match = re.match(pattern, symbol, re.IGNORECASE)
+
+    if match:
+        ticker = match.group(1).upper()
+        date_str = match.group(2)
+        type_char = match.group(3).upper()
+        strike_val = match.group(4)
+
+        # Determine Strike Price
+        # Rule of thumb: if it's 8 digits, it's the OSI standard (/1000)
+        # If it's short, it's usually the direct price.
+        if "." in strike_val:
+            strike_price = float(strike_val)
+        elif len(strike_val) == 8:
+            strike_price = float(strike_val) / 1000
+        else:
+            strike_price = float(strike_val)
+
+        return {
+            "Ticker": ticker,
+            "Type": "Call" if type_char == 'C' else "Put",
+            "Expiry": f"{date_str[2:4]}/{date_str[4:]}/20{date_str[:2]}",
+            "Strike": strike_price
+        }
+
+    return "Not an Option Symbol"
 
 @C.dataclass
 class BaseTradeSymbol(C.BaseObjectItem):
@@ -90,6 +142,12 @@ class BaseTradeSymbol(C.BaseObjectItem):
         # if len(self.getBase()) == 5 and str(self.getBase()).startswith("F"):
         #     return True
         # return False
+    def isOpt(self):
+        return is_option_symbol(self.getBase())
+    def getOptSymbol(self):
+        if self.isOpt():
+            return BaseOptionSymbol(self.getBase())
+        return None
     def __eq__(self, other):
         if isinstance(other, C.BaseObject):
             if self.getBase() == other.getBase():
@@ -119,3 +177,43 @@ class BaseTradePrice(C.BaseMoney):
         return super().__str__()
 
     # format_str = '$#,##0.00' #"${:,.2f}"
+
+@C.dataclass
+class BaseOptionSymbol(C.BaseObjectItem):
+    def __post_init__(self):
+        self.tkr = C.BaseString("")
+        self.exp = C.BaseDate("01/01/2000")
+        self.strike = C.BaseFloat(0.0)
+        self.opt_type = C.BaseString("C")
+        self.parse()
+        return
+    def getDesc(self):
+        return f"{self.tkr} {self.exp} {self.opt_type} {self.strike}"
+    def parse(self):
+        result = robust_option_parser(self.getBase())
+        if isinstance(result, dict):
+            self.tkr = C.BaseString(result["Ticker"])
+            self.exp = C.BaseDate(result["Expiry"])
+            self.strike = C.BaseFloat(result["Strike"])
+            self.opt_type = C.BaseString(result["Type"])
+        return
+    def get_tkr(self):
+        return self.tkr
+    def get_exp(self):
+        return self.exp
+    def get_strike(self):
+        return self.strike
+    def get_type(self):
+        return self.opt_type
+
+    def __str__(self):
+        return self.getBase()
+
+if __name__ == "__main__":
+    for sym in ["QUBT260206C12.5", "SPY230616P00420000", "BRK.B250620C00150000", "AAPL.250620C150", "TSLA241220P200", "QUBT260206C12.5"]:
+        print("Sym ... " , sym)
+        o = BaseOptionSymbol(sym)
+        print(o.get_tkr(), o.get_exp(), o.get_strike(), o.get_type())
+    # o = BaseOptionSymbol("SPY230616P00420000")
+    # print(o)
+    # print(o.get_tkr(), o.get_exp(), o.get_strike(), o.get_type())

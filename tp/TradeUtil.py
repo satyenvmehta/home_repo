@@ -164,7 +164,7 @@ class BaseTrades(C.BaseReaderWriter):
         return self.acctSet
 
     def printAccounts(self):
-        if isinstance(self.acctSet, BaseSet):
+        if isinstance(self.acctSet, C.BaseSet):
             self.acctSet.print()
         return
 

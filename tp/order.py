@@ -43,19 +43,23 @@ class Order(BaseTrade):
         ps = str(self.Symbol) + " " + str(bs)  + str(qty)  + " At " + str(lprc) + " " + str(self.getStatus())
         return ps
 
-    def setDescDetails(self): # Buy 35 Limit at $26.25
+    def setDescDetails(self):
+        # Buy 35 Limit at $26.25
         d_parts = str(self.Description).rstrip().split(' ')
         if d_parts[0] == 'Exchange':  # Skip MF exchanges to monitor
             return
         self.buySell = BaseBuySell(d_parts[0])
-        self.orderQty = C.BaseInt(d_parts[1])
         lastval = d_parts[len(d_parts)-1]
-
         if not lastval.startswith("$"):
             lastval = self.Last.getBase()
         else:
             lastval = lastval.replace('$', '')
         self.orderLimitPrice = BaseTradePrice(lastval)
+        if self.Symbol.isOpt():
+            self.orderQty = d_parts[3]
+            return
+
+        self.orderQty = C.BaseInt(d_parts[1])
         # print(str(self))
         return
 
