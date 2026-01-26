@@ -1,27 +1,16 @@
 import pandas as pd
-
 import common_include as C
-from base_lib.core.files_include import ticker_file, output_file, alt_output_file
-from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice
-from tp.market.get_price import get_market_price
 
 Debug_Ticker = "PATH"
 
-from tp.market.client_fe import MarketPrice
-
-import main
 from order import Orders, Order
 from position import Positions, Position
 from all_history import Historys #,  historySummary
 from inteli_scan import InteliScans, InteliScan
-from base_lib.core.common_include import getDeltaPercentage
 
 tooFar2TradeThreshold = 5
 BT = 12
 thresholdP = {'B': BT, 'S': BT + 1}
-
-
-# Debug_Ticker = Debug_sym
 
 @C.dataclass
 class Exception(C.BaseObject):
@@ -33,7 +22,7 @@ from tp_include import *
 
 @C.dataclass
 class Result(C.BaseObject):
-    curr_ticker : BaseTradeSymbol = None
+    curr_ticker : C.BaseTradeSymbol = None
     bs:C.BaseString = None
 
     reccomnd:C.BaseString = None
@@ -49,14 +38,14 @@ class Result(C.BaseObject):
 
     earningAlert: C.BaseInt = None
     price :C.BaseString = None
-    lastP : BaseTradePrice = None
+    lastP : C.BaseTradePrice = None
     TSML :C.BaseString = None
     category: C.BaseString = None
     mcap:C.BaseString = None
     STRecomm:C.BaseString = None
     STDeltaP: C.BaseFloat = None
 
-from TradeUtil import BaseTrades, BuySellSet
+from TradeUtil import BaseTrades
 
 
 @C.dataclass
@@ -66,7 +55,7 @@ class Results(BaseTrades):
         return
 @C.dataclass
 class tkr_acct(C.BaseObject):
-    tkr : BaseTradeSymbol
+    tkr : C.BaseTradeSymbol
     acct :C.BaseString
 
     def getTicker(self):
@@ -78,7 +67,7 @@ class tkr_acct(C.BaseObject):
 
 @C.dataclass
 class tkr_action(C.BaseObject):
-    curr_ticker  : BaseTradeSymbol
+    curr_ticker  : C.BaseTradeSymbol
     action  :C.BaseString
     # bs_ext :C.BaseString
 
@@ -132,13 +121,13 @@ class TradeProcessing(C.BaseObject):
         last_hist_price = self.hist_summ.getLastPrice(tkr)
         if not last_hist_price:
             return
-        if isinstance(last_hist_price, BaseTradePrice):
+        if isinstance(last_hist_price, C.BaseTradePrice):
             last_hist_price = last_hist_price.getBase()
-        if isinstance(self.lastP, BaseTradePrice):
+        if isinstance(self.lastP, C.BaseTradePrice):
             lastP = self.lastP.getBase()
         else:
             lastP = self.lastP
-        self.STDeltaP = round(getDeltaPercentage(lastP, last_hist_price), 2)
+        self.STDeltaP = round(C.getDeltaPercentage(lastP, last_hist_price), 2)
 
         if self.STDeltaP < -ShortTermGnLPercentageBuy:
             self.STRecomm = ShortTermBuy + self.buy_exist
@@ -169,7 +158,7 @@ class TradeProcessing(C.BaseObject):
         # self.results.setDataFrame(self.result_df)
         listOfInterest = {'Results':self.results.getSelf(), 'Orders':self.orders.getSelf(), 'Postions': self.positions, 'Vantage': self.inteli_scans, 'History': self.historys ,  'HistorySummary': self.hist_summ.summary_df}
 
-        self._saveResults(listOfInterest=listOfInterest, fileName=output_file, altFilename=alt_output_file)
+        self._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, altFilename=C.alt_output_file)
 
         self.printDuplicateOrders()
         return
@@ -332,7 +321,7 @@ class TradeProcessing(C.BaseObject):
     def getBestPriceForSymbols(self, symbols):
         # symbols = ['DUFRY', 'MSFT', 'CSCO', 'TESTSYM']
         print("Getting Latest Prices for " + str(len(symbols)) + " symbols from Yahoo Finance")
-        self.marketPrices = MarketPrice(symbols)
+        self.marketPrices = C.MarketPrice(symbols)
         return self.marketPrices
 
     def getBestPriceForSymbol(self):
@@ -350,7 +339,7 @@ class TradeProcessing(C.BaseObject):
             print({"Found Price from Orders for ": symbol, "Prices = ": self.lastP})
             return
 
-        self.lastP = get_market_price(symbol) # self.marketPrices.getPrice(symbol)
+        self.lastP = C.get_market_price(symbol) # self.marketPrices.getPrice(symbol)
         if self.lastP:
             print({"Found Price from MarketPrice for ": symbol, "Prices = ": self.lastP})
             return
@@ -673,13 +662,13 @@ class TradeProcessing(C.BaseObject):
         for tkr in self.uniqPosList:
             self.appendToTkrSet(tksSet, tkr)
         tkrs = tksSet.sort(key=None, reverse=False)
-        tksSet.saveToCSV(ticker_file, header=["Symbol"])
+        tksSet.saveToCSV(C.ticker_file, header=["Symbol"])
 
         # self.idlePos_tkrs = sorted(list(set([x for x in self.uniqPosList if x not in uords_tkr])))
         self.tkr_acts = C.BaseList()
         print("Processing..")
         for tkr in tkrs:
-            tobj = BaseTradeSymbol(tkr)
+            tobj = C.BaseTradeSymbol(tkr)
             if not tobj.validate():
                 skip = "Skipped " + tkr
                 print(skip)
@@ -708,7 +697,7 @@ class TradeProcessing(C.BaseObject):
         if isinstance(tkr_act.tkr, C.BaseObject):
             sym = tkr_act.tkr #.getBase()
         else:
-            sym = BaseTradeSymbol(tkr_act.tkr)
+            sym = C.BaseTradeSymbol(tkr_act.tkr)
         if not sym.validate():
             return False
 
@@ -763,21 +752,15 @@ class TradeProcessing(C.BaseObject):
         hp = self.getLastHistPriceForOrder(oobj)
         if not hp:
             return False, ""
-        delatP = abs(getDeltaPercentage(hp, oobj.orderLimitPrice.getBase()))
+        delatP = abs(C.getDeltaPercentage(hp, oobj.orderLimitPrice.getBase()))
         if thresholdP[oobj.buySell.getBase()] < delatP:
             return True, str(C.BasePercentage(delatP))
         return False, ""
-    # NEW - Logic removal for comparing Order Limit Price with Hist Price
-    # hp = self.getLastHistPriceForOrder(oobj)
-    # if not hp:
-    #     return False, ""
-    # deltaH = abs(getDeltaPercentage(hp, oobj.orderLimitPrice.getBase()))
-    # if thresholdP[oobj.buySell.getBase()] < deltaH:
-    #     return True, str(BasePercentage(deltaH))
+
 
     def bidTooFarFromLast(self, oobj):
         # if not hp:
-        delatP = abs(getDeltaPercentage(oobj.Last.getBase(), oobj.orderLimitPrice.getBase()))
+        delatP = abs(C.getDeltaPercentage(oobj.Last.getBase(), oobj.orderLimitPrice.getBase()))
         if thresholdP[oobj.buySell.getBase()] < delatP:
             return True, str(C.BasePercentage(delatP))
         return False, ""
@@ -825,7 +808,7 @@ class TradeProcessing(C.BaseObject):
         return p,  delata, price #price
 
     def orderBuySellAnalysis(self, oobjs):
-        buy_sell = BuySellSet()
+        buy_sell = C.BuySellSet()
         for oobj in oobjs.getBase():
             # For a symbol
             if isinstance(oobj, Order):
@@ -877,7 +860,7 @@ class TradeProcessing(C.BaseObject):
 
 def Dbg_save_file(b):
     listOfInterest = {'Results': []}
-    b._saveResults(listOfInterest=listOfInterest, fileName=output_file, altFilename=alt_output_file)
+    b._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, altFilename=C.alt_output_file)
     exit(1)
 
 

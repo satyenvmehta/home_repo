@@ -1,6 +1,6 @@
 
 import common_include as C
-from base_lib.core.files_include import int_scan_file
+# from base_lib.core.files_include import int_scan_file
 from tp.TradeUtil import BaseTrade, BaseTrades, Symbol
 
 header_lines = 0

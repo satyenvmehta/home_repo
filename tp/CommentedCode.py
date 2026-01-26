@@ -227,7 +227,7 @@
 # @dataclass
 # class historySummary(BaseObject):
 #     historys : any #= None
-#     sym: BaseTradeSymbol #= None
+#     sym: C.BaseTradeSymbol #= None
 #
 #     def _initbase(self):
 #         self.lastH = None

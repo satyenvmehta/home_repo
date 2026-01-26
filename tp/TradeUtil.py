@@ -1,19 +1,14 @@
-from base_lib.core.files_include import ticker_file, sp_500_file, nasd_100_file, my_symbol_xls_file
-
 import common_include as C
-from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice, BaseCustomStatus, BaseBuySell
-from tp.market.get_price import  getTickerInfo
-
 import pandas as pd
 
 def get_my_symbols_df():
-    return pd.read_excel(my_symbol_xls_file)
+    return pd.read_excel(C.my_symbol_xls_file)
 
 def prep_ticker_list():
     # Read both Excel files (assume first column contains tickers)
-    df1 = pd.read_excel(sp_500_file)
-    df2 = pd.read_excel(nasd_100_file)
-    df3 = pd.read_csv(ticker_file)
+    df1 = pd.read_excel(C.sp_500_file)
+    df2 = pd.read_excel(C.nasd_100_file)
+    df3 = pd.read_csv(C.ticker_file)
     df_my = get_my_symbols_df()
 
     # Combine tickers from both sheets, remove duplicates, drop NaN
@@ -26,12 +21,9 @@ def prep_debug_list():
     tickers = sorted(tickers)
     return tickers
 
-
 @C.dataclass
 class BaseTrade(C.BaseObject):
-    Symbol: BaseTradeSymbol = None
-    # Last: BaseTradePrice = None
-    # Status: BaseCustomStatus = None
+    Symbol: C.BaseTradeSymbol = None
 
     def __str__(self):
         sym = str(self.Symbol) #+ " " + str(self.Status)
@@ -233,7 +225,7 @@ class BaseTrades(C.BaseReaderWriter):
                     if not bs:
                         results.append(item)
                     else:
-                        if isinstance(bs, BaseBuySell):
+                        if isinstance(bs, C.BaseBuySell):
                             bs = bs.getBase()
                         if bs == item.getBuySell():
                             results.append(item)
@@ -249,10 +241,10 @@ class BaseTrades(C.BaseReaderWriter):
         # return pd.DataFrame(data)
 @C.dataclass
 class OrderSampleClass(BaseTrade):
-    Symbol : BaseTradeSymbol = None
-    Last : BaseTradePrice = None
+    Symbol : C.BaseTradeSymbol = None
+    Last : C.BaseTradePrice = None
     Description : C.BaseString= None   # Buy 35 Limit at $26.25
-    Status : BaseCustomStatus= None
+    Status : C.BaseCustomStatus= None
     Account : C.BaseString= None
     def __post_init__(self):
         return
@@ -282,8 +274,7 @@ def orderFileTesting():
     cls = OrderSampleClass
     uniqueCols = ['Symbol', 'Last', 'Trade Description', 'Status', ]
     header_lines = 3
-    from base_lib.core.files_include import order_file
-    b.readFile(cls, uniqueCols, header_lines, order_file)
+    b.readFile(cls, uniqueCols, header_lines, C.order_file)
     print(b.findSymbol('XBI', bs='B'))
     print(b.findSymbol('XBI'))
     row2Examin = 16
@@ -296,37 +287,16 @@ def orderFileTesting():
     return
 
 
-def getBestPrice(symbol):
-    price = positions.getLastPrice(symbol)
-    if price is not None:
-        return price
-    info = getTickerInfo(symbol)
-    price = info.get('regularMarketPrice')
-    if price is None:
-        price = info.get('currentPrice')
-    return price
+# def getBestPrice(symbol):
+#     price = positions.getLastPrice(symbol)
+#     if price is not None:
+#         return price
+#     info = C.getTickerInfo(symbol)
+#     price = info.get('regularMarketPrice')
+#     if price is None:
+#         price = info.get('currentPrice')
+#     return price
 
-@C.dataclass
-class BuySellSet(C.BaseSet):
-    def _multiEntries(self, obj):
-        if not self.has(obj):
-            return False
-        return super().getCounts(obj) > 0
-
-    def multiBuyCounts(self):
-        return self._multiEntries('B')
-
-    def multiSellCounts(self):
-        return self._multiEntries('S')
-
-    def isBuyOnly(self):
-        return self.hasOnly('B')
-
-    def isSellOnly(self):
-        return self.hasOnly('S')
-
-    def isBuyAndSellSet(self):
-        return self.has(['B', 'S'])
 
 if __name__ == '__main__':
     orderFileTesting()

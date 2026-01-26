@@ -1,46 +1,29 @@
 from datetime import timedelta
 
+import pandas as pd
 from pandas import DataFrame
 
-from base_lib.core import common_include, files_include
-#from base_lib.core.files_include as files_include
-#from base_lib.core.common_include as common_include
-from base_lib.core.base_app_classes import getNoOfBusinessDaysFromDate
 from dateutil.utils import today
 
-from base_lib.core.files_include import alt_output_file
+from tp.TradeUtil import BaseTrade, BaseTrades
 
 threshold = 5
 
 posThreshold = threshold
 negThreshold = -threshold
-
-from TradeUtil import *
-
+import common_include as C
 header_lines = 6
-
-# Symbol	Date	Quantity	Price	Amount	Account	Description
-
-# # Define Col Names
-# Symbol = 'Symbol'
-# Date = 'Date'
-# Quantity = 'Quantity'
-# Price = 'Price'
-# Amount = 'Amount'
-# Account = 'Account'
-# Description = 'Description'
-# last_trade_date = 'last_date'
 from tp_include import *
 
 @C.dataclass
 class History(BaseTrade):
-    Symbol: BaseTradeSymbol = None
+    Symbol: C.BaseTradeSymbol = None
     Date: C.BaseDate = None
     Quantity: C.BaseFloat = None
-    Price: BaseTradePrice = None
-    Amount: BaseTradePrice = None
+    Price: C.BaseTradePrice = None
+    Amount: C.BaseTradePrice = None
     Account:C.BaseString = None
-    Description: BaseBuySell = None
+    Description: C.BaseBuySell = None
 
     def getPrice(self):
         return self.Price.getBase()
@@ -95,12 +78,7 @@ class Historys(BaseTrades):
         self.presetTrades(sort_by=sort_by, reverse=True)
         self.cls = History
         self.uniqueCols = [	Symbol,	Amount,]
-
-        # self.index_cols= ['Date']
-        print({"common_include.unittest" : common_include.unittest})
-        # if common_include.unittest:
-        #     files_include.hist_file = rootdir + "all_history_test.csv"
-        self.readFile(self.cls, self.uniqueCols, header_lines=header_lines, datafile=files_include.hist_file)
+        self.readFile(self.cls, self.uniqueCols, header_lines=header_lines, datafile=C.hist_file)
         df = self.getDF()
 
         self.all_symbols = df[Symbol].unique()
@@ -116,10 +94,10 @@ class Historys(BaseTrades):
             sym = sym.getBase()
         return self._histSumm.getValue(sym)
 
-    def getSummaryObjForSymbol(self, sym):
-        if isinstance(sym, C.BaseObject):
-            sym = sym.getBase()
-        return self._histSumm.getSummaryObj(sym)
+    # def getSummaryObjForSymbol(self, sym):
+    #     if isinstance(sym, C.BaseObject):
+    #         sym = sym.getBase()
+    #     return self._histSumm.getSummaryObj(sym)
 
     def postDFProcess(self):
         self.updateDateFormat()
@@ -247,9 +225,9 @@ class Historys(BaseTrades):
     def isApproved2Sell(self, sym):
         return self.sell_bucket._exists(sym)
 
-    def getLastQuantity(self, sym):
-        qty = self.summary_df.loc[self.summary_df[Symbol] == sym, 'last_qty'].iloc[0]
-        return abs(qty)
+    # def getLastQuantity(self, sym):
+    #     qty = self.summary_df.loc[self.summary_df[Symbol] == sym, 'last_qty'].iloc[0]
+    #     return abs(qty)
 
     def hasHistory(self, sym):
         if sym in self.summary_df[Symbol].values:
@@ -272,31 +250,21 @@ class Historys(BaseTrades):
     def getLastTradeDate(self, sym):
         return self.getSummaryAttrForSymbolFromDF(sym, last_trade_date).strftime('%Y-%m-%d')
 
-    def _isAnIdleSecurity(self, sym, days_since_last=30):
-        print("Invalid call for isAnIdleSecurity")
-        self.idle_symbols = None
-        return None
-        last_trd_date = self.getLastTradeDate(sym)
-        if last_trd_date is None:
-            return True
-        if last_trd_date.isOlderThan(days_since_last):
-            return True
-        return sym in self.idle_symbols
+    # def _isAnIdleSecurity(self, sym, days_since_last=30):
+    #     print("Invalid call for isAnIdleSecurity")
+    #     self.idle_symbols = None
+    #     return None
+    #     last_trd_date = self.getLastTradeDate(sym)
+    #     if last_trd_date is None:
+    #         return True
+    #     if last_trd_date.isOlderThan(days_since_last):
+    #         return True
+    #     return sym in self.idle_symbols
 
     def getSummaryAttrForSymbolFromDF(self, sym, attr):
         df = self.getSummary()
         try:
             val = df.loc[self.summary_df[Symbol] == sym, attr].iloc[0]
-            # if isinstance(val, pd.Timestamp):
-            #     return val.date()
-            # if isinstance(val, str):
-            #     return val
-            # if isinstance(val, float):
-            #     return round(val, 2)
-            # if isinstance(val, int):
-            #     return val
-            # if isinstance(val, bool):
-            #     return val
         except Exception as e:
             if isinstance(sym, C.BaseObject):
                 sym = sym.getBase()
@@ -341,7 +309,7 @@ class Historys(BaseTrades):
             trade_count=(Quantity, 'count'),  # Count of trades
             first_date=('trade_date', lambda x: x.min().date())  # First trade date
             , days_since_last=('trade_date', lambda x: (pd.Timestamp.now() - x.max()).days)
-            , bus_days_since_last=('trade_date', lambda x: getNoOfBusinessDaysFromDate(x.max()))
+            , bus_days_since_last=('trade_date', lambda x: C.getNoOfBusinessDaysFromDate(x.max()))
             , days_since_first=('trade_date', lambda x: (pd.Timestamp.now() - x.min()).days)
         ).reset_index()
 
@@ -368,8 +336,8 @@ class Historys(BaseTrades):
         return int(self.getSummaryAttrForSymbolFromDF(sym, 'days_since_last'))
     def getNoOfBusDaysSinceLastTrade(self, sym):
         return int(self.getSummaryAttrForSymbolFromDF(sym, 'bus_days_since_last'))
-    def getLastTradeDate(self, sym):
-        return self.getSummaryAttrForSymbolFromDF(sym, last_trade_date)
+    # def getLastTradeDate(self, sym):
+    #     return self.getSummaryAttrForSymbolFromDF(sym, last_trade_date)
     def getNoOfDaysSinceFirstTrade(self, sym):
         return int(self.getSummaryAttrForSymbolFromDF(sym, 'days_since_first'))
 
@@ -432,11 +400,10 @@ def print_history(hist):
     if isinstance(hist, Historys):
         listOfInterest = { 'History': hist,
                           'HistorySummary': hist.summary_df}
-        hist._saveResults(listOfInterest=listOfInterest, fileName=alt_output_file, altFilename=alt_output_file)
+        hist._saveResults(listOfInterest=listOfInterest, fileName=C.alt_output_file, altFilename=C.alt_output_file)
     return
 
 if __name__ == '__main__':
-    common_include.unittest = True
     ht = Historys()
     print(ht.isAnIdleSymbol('MS'))
 

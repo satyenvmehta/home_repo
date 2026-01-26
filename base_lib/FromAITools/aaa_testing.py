@@ -1,6 +1,4 @@
 
-from all_include import *
-
 @dataclass
 class _MyInteger(int):  # Assuming OtherClass is defined elsewhere
     def __new__(cls, value):

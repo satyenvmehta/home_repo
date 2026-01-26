@@ -60,6 +60,27 @@ class BaseBuySell(C.BaseObjectItem):
         # print(sym)
         return base_str
 
+@C.dataclass
+class BuySellSet(C.BaseSet):
+    def _multiEntries(self, obj):
+        if not self.has(obj):
+            return False
+        return super().getCounts(obj) > 0
+
+    def multiBuyCounts(self):
+        return self._multiEntries('B')
+
+    def multiSellCounts(self):
+        return self._multiEntries('S')
+
+    def isBuyOnly(self):
+        return self.hasOnly('B')
+
+    def isSellOnly(self):
+        return self.hasOnly('S')
+
+    def isBuyAndSellSet(self):
+        return self.has(['B', 'S'])
 
 def isMFSym(sym):
     # if self.getBase() == 'ILTB':

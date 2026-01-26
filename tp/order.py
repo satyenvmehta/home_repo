@@ -1,6 +1,4 @@
 
-# from base_classes import *
-
 '''
 Symbol	Last	TradeDescription	            Status	Account	Order Number
 AI     26.88	'Buy 50 Limit at $26.55'  	"FILLED AT $26.55"	ROLLOVER IRA (224916532)	I07NHLPL
@@ -19,8 +17,8 @@ BT=12
 thresholdP = {'B':BT, 'S' : BT+1}
 @C.dataclass
 class Order(BaseTrade):
-    Symbol : BaseTradeSymbol = None
-    Last : BaseTradePrice = None
+    Symbol : C.BaseTradeSymbol = None
+    Last : C.BaseTradePrice = None
     Description : C.BaseString= None   # Buy 35 Limit at $26.25
     Status : BaseCustomStatus= None
     Account : C.BaseString= None
@@ -54,7 +52,7 @@ class Order(BaseTrade):
             lastval = self.Last.getBase()
         else:
             lastval = lastval.replace('$', '')
-        self.orderLimitPrice = BaseTradePrice(lastval)
+        self.orderLimitPrice = C.BaseTradePrice(lastval)
         if self.Symbol.isOpt():
             self.orderQty = d_parts[3]
             return
@@ -112,8 +110,8 @@ class Orders(BaseTrades):
         self.cls = Order
         self.uniqueCols = ['Symbol',	'Last',	'Trade Description',	'Status',]
         header_lines = 3
-        from base_lib.core.files_include import order_file
-        self.readFile(self.cls, self.uniqueCols, header_lines, order_file)
+
+        self.readFile(self.cls, self.uniqueCols, header_lines, C.order_file)
         df = self.getDF()
         self.all_symbols = np.sort(df[Symbol].unique())
         return

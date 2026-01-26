@@ -3,7 +3,7 @@ import common_include as C
 
 @C.dataclass
 class TransRequest(C.BaseObject):
-    Symbol: BaseTradeSymbol = None
+    Symbol: C.BaseTradeSymbol = None
     bs: C.BaseString = None
 
     reccomnd: C.BaseString = None
@@ -12,7 +12,7 @@ class TransRequest(C.BaseObject):
     ActToSell : C.BaseString = None
     Yield : C.BaseFloat = None
     price : C.BaseString = None
-    lastP : BaseTradePrice = None
+    lastP : C.BaseTradePrice = None
 
 
 from TradeUtil import BaseTrades

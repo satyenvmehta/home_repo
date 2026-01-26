@@ -1,15 +1,7 @@
-# from common_include import *
-import pandas as pd
-from base_lib.core.base_classes import *
 
+# from base_lib.core.base_classes import *
 
-from tp.market.client_fe import MarketPrice
-
-import main
-from order import Orders, Order
-from position import Positions, Position
-from all_history import Historys, History
-from inteli_scan import InteliScans, InteliScan
+import common_include as C
 
 tooFar2TradeThreshold = 5
 BT = 12
@@ -18,15 +10,15 @@ thresholdP = {'B': BT, 'S': BT + 1}
 Debug_sym = "CEG"
 Debug_Ticker = Debug_sym
 
-@dataclass
-class Exception(C.BaseObject):
+@C.dataclass
+class Exception_junk(C.BaseObject):
     Symbol: C.BaseObject
     reason: C.BaseObject
     action: C.BaseObject
 
-from base_lib.core.common_include import BuyTh, SellTh
+# from base_lib.core.common_include import BuyTh, SellTh
 
-@dataclass
+@C.dataclass
 class Action(C.BaseObject):
     actionFlag: C.BaseObject
     message: C.BaseObject
@@ -34,17 +26,17 @@ class Action(C.BaseObject):
     qty: C.BaseObject
 
     def __post_init__(self):
-        self.setActionParams()
+        # self.setActionParams()
         return
 
     def print(self):
         msg = self.printAction(self.actionFlag, self.message, self.qty, self.tradePrice)
         if msg:
-            self.print(msg)
+            self.print()
         return
 
     def printAction(self, bs, qty, price):
-        self._debug()
+        # self._debug()
         # if qty.startswith("None"):
         #     qty = None
         if (qty is None) and bs.startswith('Sell'):
@@ -61,7 +53,7 @@ class Action(C.BaseObject):
         if not price:
             suggested_price = self.getSuggestedPrice(bs)
         else:
-            if isinstance(price, BaseMoney):
+            if isinstance(price, C.BaseMoney):
                 price = price.getBase()
             if isinstance(price, str):
                 price = price.replace('$', '')
@@ -72,7 +64,7 @@ class Action(C.BaseObject):
             bs = bs + "@" + str(suggested_price).strip() + \
                  "_" + self.bs_ext + "_" + str(self.last_hist_obj.Price.getBase()) + "_" + str(self.last_hist_obj.Quantity.getBase())
             if bs.startswith("Sell"):
-                if isinstance(qty, BaseInt):
+                if isinstance(qty, C.BaseInt):
                     qty = qty.getBase()
                 bs = bs + "_R" + str(int(qty))
         else:
@@ -95,6 +87,7 @@ class Action(C.BaseObject):
         self.results.export_df = pd.concat([self.results.export_df, bdf], ignore_index=True)
         return bs_msg
 
+'''
 
 def Action(self, actionFlag, message, tradePrice=None, qty=None):
     self._debug()
@@ -138,3 +131,5 @@ def Action(self, actionFlag, message, tradePrice=None, qty=None):
 
 
     return
+
+'''

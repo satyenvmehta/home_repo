@@ -5,7 +5,7 @@ import pandas as pd
 import common_include as C
 from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice, BaseCustomStatus, BaseBuySell
 
-from base_lib.core.files_include import stock_fundamentals_file, weekly_fundamentals_file_debug
+# from base_lib.core.files_include import stock_fundamentals_file, weekly_fundamentals_file_debug
 
 from tp.market.get_price import getHistoricalData, getTickerInfo
 from TradeUtil import  prep_ticker_list, prep_debug_list
@@ -67,7 +67,7 @@ class MarketData(C.BaseObject):
 
     def getWeeklyInfo(self, save_file='fundamentals_weekly.csv'):
         if self.debug:
-            save_file = weekly_fundamentals_file_debug
+            save_file = C.weekly_fundamentals_file_debug
 
         if not self.isFileOlderThan(save_file):
             print(f"File {save_file} is not older than {RefreshInterval} days. Skipping refresh.")
@@ -134,9 +134,9 @@ def _get_rsi(df):
 
 if __name__ == '__main__':
     mrk_data = MarketData(debug=True)
-    mrk_data.refreshWeeklyInfo(save_file=weekly_fundamentals_file_debug)
+    mrk_data.refreshWeeklyInfo(save_file=C.weekly_fundamentals_file_debug)
     for t in mrk_data.getTickers():
         rsi = mrk_data.getRSI(t)
         print(f"{t} RSI: {rsi}")
-    mrk_data.getWeeklyInfo(save_file=stock_fundamentals_file)
+    mrk_data.getWeeklyInfo(save_file=C.stock_fundamentals_file)
 

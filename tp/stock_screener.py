@@ -1,12 +1,10 @@
-from datetime import datetime
 
 import pandas as pd
-from base_lib.core.base_classes import BasePrice
+
+import common_include as C
 from ta.momentum import RSIIndicator
 
 from MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_debug_list
-
-
 
 from position import Positions
 from sc_util import StockFilterAttributes
@@ -76,7 +74,7 @@ def get_rsi(data, ticker):
         if se:
             bd_advise = bd_advise + PLUS
 
-    return BasePrice(rsi), bs_indicator, bd_advise
+    return C.BasePrice(rsi), bs_indicator, bd_advise
 
 def append_filter_to_result(sfa, result):
     if isinstance(result, list):
@@ -146,20 +144,20 @@ OC_LT_15 = "open_close_LT_1.5"
 OC_GT_15 = "open_close_GT_1.5"
 Rest = "rest"
 SheetNames = [AllRecs, OC_LT_15, OC_GT_15, Rest]
+
+def date_now(fmt):
+    return C.datetime.now().strftime(fmt)
 if __name__ == "__main__":
-    d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    d = date_now("%Y-%m-%d %H:%M")
     print(d)
     print("started")
-# ✅ Example list
-#     tickers = ["AAPL", "TSLA", "AMD", "PLTR", "NVDA", "MARA", "SOFI", "BABA", "F", "TQQQ"]
-#     tickers = prep_ticker_list()
-    # tickers = prep_debug_list()
+
     df_15, df_more_15, df_rest = find_stocks_multi()
     print(df_15)
     print(df_more_15)
     print(df_rest)
-    filen =  "G:\My Drive\\vepar\\stock_screener_" + datetime.now().strftime("%Y-%m-%d") + ".xlsx"
-    sheet_name = datetime.now().strftime("%b_%d")  # e.g., "Aug_09"
+    filen =  "G:\My Drive\\vepar\\stock_screener_" + date_now("%Y-%m-%d") + ".xlsx"
+    sheet_name = date_now("%b_%d")  # e.g., "Aug_09"
 
     with pd.ExcelWriter(filen, engine="xlsxwriter") as writer:
         All = pd.concat([df_15, df_more_15, df_rest], ignore_index=True).sort_values(by="RSI", ascending=False)
@@ -186,9 +184,4 @@ if __name__ == "__main__":
                                                 'format': workbook.add_format({'bg_color': '#FFC7CE',
                                                                                'font_color': '#9C0006'})})
 
-
-
-
-    # df_15.to_excel(filen, sheet_name=sheet_name, index=0)
-    # df_more_15.to_excel(filen, sheet_name=sheet_name + "_more_15", index=1)
     print("saved to ", filen)

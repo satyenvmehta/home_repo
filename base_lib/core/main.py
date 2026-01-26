@@ -6,6 +6,10 @@
 # from math import hex2float
 
 import sys
+
+from base_lib.core.base_classes import BaseBool
+
+
 def append_path(path):
     sys.path.append(path)
     return None
@@ -17,7 +21,7 @@ def print_hi(name):
     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
 
-from  base_include import BaseBool
+# from  base_include import BaseBool
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

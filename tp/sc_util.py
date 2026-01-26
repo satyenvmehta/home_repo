@@ -1,8 +1,5 @@
 import common_include as C
 from TradeUtil import BaseTrades
-from base_lib.core.files_include import stock_fundamentals_file
-from tp.lib.tp_classes import BaseTradeSymbol
-
 
 @C.dataclass
 class StockScreener(C.BaseObject):
@@ -63,7 +60,7 @@ class StockFundamentals(C.BaseObject):
         Symbol (BaseTradeSymbol): The ticker symbol of the stock.
         Sector
     """
-    Symbol: BaseTradeSymbol = None
+    Symbol: C.BaseTradeSymbol = None
     Sector:C.BaseString = None
     BVPS: C.BasePrice = None
     Growth: C.BasePrice = None
@@ -94,7 +91,7 @@ class StocksFundamentals(BaseTrades):
         # self.extra_columns = ['Ext Hrs Last', '% Ext Hrs Chg']
         self.cls = StockFundamentals
         self.uniqueCols = ['Symbol']
-        self.readFile(self.cls, self.uniqueCols, header_lines=3, datafile=stock_fundamentals_file)
+        self.readFile(self.cls, self.uniqueCols, header_lines=3, datafile=C.stock_fundamentals_file)
         return
     def printValues(self):
         for item in self.getBase():
@@ -112,7 +109,7 @@ class StocksFundamentals(BaseTrades):
 
 @C.dataclass
 class StockFilterAttributes(C.BaseObject):
-    Symbol: BaseTradeSymbol = None
+    Symbol: C.BaseTradeSymbol = None
     today_open : C.BasePrice = None
     intraday_range_per: C.BasePrice = None
     open_close_gap_per: C.BasePrice = None
@@ -140,7 +137,7 @@ class StockFilterAttributes(C.BaseObject):
             :param rsi: Relative Strength Index
 
         """
-        self.Symbol = BaseTradeSymbol(symbol)
+        self.Symbol = C.BaseTradeSymbol(symbol)
         self.today_open = C.BasePrice((df['Open'].iloc[-1]))
         self.today_high = C.BasePrice((df['High'].iloc[-1]))
         self.today_low = C.BasePrice((df['Low'].iloc[-1]))

@@ -1,10 +1,9 @@
+from pandas import DataFrame
 
-from base_lib.core.common_include import *
-from base_lib.core.base_classes import BaseObject
-from base_lib.core.base_container_classes import  BaseList, BaseDict
+import common_include as C
 
 from openpyxl import Workbook
-from openpyxl.styles import PatternFill
+# from openpyxl.styles import PatternFill
 
 def fromColName2ColIndex(df, colName):
     char_col_index = None
@@ -13,16 +12,16 @@ def fromColName2ColIndex(df, colName):
         char_col_index = chr(col_index + 65)
     return char_col_index
 
-@dataclass
-class BaseExcel(BaseObject):
-    sheetNames: Any = None
+@C.dataclass
+class BaseExcel(C.BaseObject):
+    sheetNames: C.Any = None
 
     def __post_init__(self):
         wb = Workbook()
         self.mainsheet = wb.active
         self.setBase(wb)
         self.getBase().active
-        self.sheetDict = BaseDict()
+        self.sheetDict = C.BaseDict()
         return
 
     def getWorkbook(self):

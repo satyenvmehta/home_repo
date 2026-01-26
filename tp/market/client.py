@@ -2,7 +2,7 @@ import socket
 
 from base_lib.core.base_classes import BasePrice
 from base_lib.core.base_container_classes import BaseList, BaseDict
-from tp.lib.ticker import Ticker
+# from tp.lib.ticker import Ticker
 from tp.market.market_include import CURR_PORT, HIST_PORT
 # from tp.market.ticker import Ticker
 
@@ -93,7 +93,8 @@ def getTkrPrice(sock, tkr):
     tkr = Ticker(tkr, price)
     return tkr
 
-from base_lib.core.common_include import MFList
+import common_include as C
+# from base_lib.core.common_include import MFList
 def getPricesFor(param):
     s = getActiveSocket(CURR_PORT)
     if (not s):
@@ -109,7 +110,7 @@ def getPricesFor(param):
             if len(tkr) > 6:
                 results.append(tkr, None)
                 continue
-            if tkr in MFList:
+            if tkr in C.MFList:
                 print("MF LIST " + tkr)
                 results.append(tkr, None)
                 continue

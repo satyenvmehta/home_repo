@@ -1,16 +1,11 @@
-from base_lib.core.common_include import MFList
+import common_include as C
 
-ExceptionTicker = [
-'L4135L100','SPAXX','SRNEQ','TSPH', 'SCLX', 'SRNE', 'SPHIX',
-]
-
-ETF = ['ARKK', 'ILTB', ]
 def isEFT(tkr):
-    if tkr in ETF:
+    if tkr in C.ETF:
         return True
     return False
 def ignore_ticker(tkr):
-    if tkr[0].isdigit() or tkr.startswith("adj ") or tkr in MFList or tkr in ExceptionTicker:
+    if tkr[0].isdigit() or tkr.startswith("adj ") or tkr in C.MFList or tkr in C.ExceptionTicker:
         return True
     if len(tkr) > 5:
         return True

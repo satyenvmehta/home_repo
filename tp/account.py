@@ -11,7 +11,6 @@ class TradingAccount(C.BaseObject):
     balance: C.BaseFloat
     is_trading: C.BaseBool
 
-
     def __post_init__(self):
         """
         Validate the account number and balance during object initialization.

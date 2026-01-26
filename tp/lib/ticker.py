@@ -1,16 +1,9 @@
-from base_lib.core.common_include import *
-from base_lib.core.base_classes import BaseString, BaseFloat, BasePrice
+import common_include as C
 
-ExceptionTicker = [
-'L4135L100','SPAXX','SRNEQ','TSPH', 'SCLX', 'SRNE', 'SPHIX',
-]
-
-ETF = ['ARKK', 'ILTB', ]
-
-@dataclass
+@C.dataclass
 class Ticker:
-    symbol : BaseString
-    price : BasePrice
+    symbol : C.BaseString
+    price : C.BasePrice
 
     def __post_init__(self):
         self.symbol = self.symbol.upper()

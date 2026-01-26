@@ -1,10 +1,8 @@
 # def delete_col(df, col_name):
 import os
 
-from base_lib.core.common_include import *
+# from base_lib.core.common_include import *
 import pandas as pd
-
-from base_lib.core.base_include import *
 
 
 @dataclass

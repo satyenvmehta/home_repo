@@ -1,51 +1,19 @@
 import inspect
-import os.path
 import math
 
 from dataclasses import dataclass, field, fields
-# from typing import List, Any
-#
-# from pprint import pprint
-# from pprint import pprint as print
-#
-# import pandas as pd
-# from pandas import DataFrame
-# import numpy as np
-#
-# # from all_history import History
-# # from common_include import load_data_to_class_list, get_load_fun_basedon_cls
-# # from file_process import FileObject
-# import pandas as pd
-
-from datetime import datetime
 from pprint import pprint
 
 import pandas as pd
 from pandas import DataFrame
+from datetime import  datetime as dt
 
 def getTodayYYYYMMDD():
-    print({"DEBUG:" : type(datetime) } )
-    dt = datetime.today().strftime('%Y%m%d')
-    return dt
+    print({"DEBUG:" : type(dt) } )
+    dt1 = dt.today().strftime('%Y%m%d')
+    return dt1
 
-
-from base_lib.core.sys_utils import Today, getPwd
-
-
-# def getTodayYYYYMMDD():
-#     print({"DEBUG:" : type(datetime) } )
-#     dt = datetime.today().strftime('%Y%m%d')
-#     return dt
-
-@dataclass
-class C:
-    x: int
-    y: int = field(repr=False)
-    z: int = field(repr=False, default=10)
-    item: any = field(init=False)
-    item2: any = None
-    t: int = 20
-
+from base_lib.core.sys_utils import Today
 
 @dataclass
 class Rectangle:
@@ -157,8 +125,6 @@ class BaseObject:
         if self.getDebug():
             print(str_val)
 
-    # openpyxl  xlsxwriter
-
     def is_file_locked(self, file_path):
         import psutil
         for proc in psutil.process_iter(['open_files']):
@@ -172,27 +138,6 @@ class BaseObject:
 
     def is_file_in_use(self, fullFileName):
         return self.is_file_locked(file_path=fullFileName)
-        ''' 
-        try:
-            # Try opening the file exclusively
-            fd = os.open(fullFileName,  os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.close(fd)
-            return False
-        except PermissionError:
-            # File is in use
-            return True
-        except FileExistsError:
-            # File already exists but not necessarily in use
-            return False
-        except OSError as e:
-            import errno
-            if e.errno == errno.EEXIST:
-                # File already exists
-                return True
-            else:
-                # Other OS error
-                raise
-        '''
 
     def _saveResults(self, listOfInterest, fileName, altFilename=None):
         workbook = None
@@ -201,10 +146,6 @@ class BaseObject:
             return
 
         fullFileName = fileName
-        # if self.is_file_in_use(fullFileName):
-        #     print("Currently In use " + fullFileName)
-        #     if altFilename:
-        #         fullFileName = altFilename
 
         print("Saving to file " + fullFileName)
         with pd.ExcelWriter(fullFileName, engine='xlsxwriter') as writer:
@@ -225,11 +166,6 @@ class BaseObject:
                     df.to_excel(writer, sheet_name=item, index=0)
                     if not workbook:
                         workbook = writer.book
-
-                    # m_frmt = BaseTradePrice.format_key
-                    # sp_formats[BaseTradePrice] = workbook.add_format(m_frmt)
-                    # p_frmt = BasePercentage.format_key
-                    # sp_formats[BasePercentage] = workbook.add_format(p_frmt)
 
                     if isinstance(dobj, BaseReaderWriter):
                         formats = dobj.getClassMembersFormats()
@@ -412,8 +348,6 @@ class BaseInt(BaseObjectItem):
             other = other.getBase()
             return self.getBase() != other
         return self.getBase() != other
-
-
     format_str = {'num_format': '#,##0'}
 
 @dataclass
@@ -421,8 +355,6 @@ class MyInteger(int, BaseObject):  # Assuming OtherClass is defined elsewhere
     def __new__(cls, value):
         # You can implement custom behavior here if needed
         return super().__new__(int, value)
-
-
 
 @dataclass
 class BaseFloat(BaseObjectItem):
@@ -660,133 +592,6 @@ class BaseDate(BaseObjectItem):
             other = BaseDate(other)
         # Compare the instance date with the parsed date
         return self.getBase() > other.getBase()
-'''
-
-OPEN = 'O'
-FILLED = 'F'
-@dataclass
-class BaseCustomStatus(BaseObjectItem):
-    def __post_init__(self):
-        self.origStatus = self.getBase()
-        tmp = str(self.getBase())[0]
-        valid_status = {'O', 'F', 'V', 'P', 'B', 'S'}
-        if tmp not in valid_status:
-            err = f"Error to set up status {valid_status} - found - {tmp} -"
-            raise Exception(err)
-        self.setBase(tmp)
-        return
-    def getOrigStatus(self):
-        if isinstance(self.origStatus, str):
-            return self.origStatus
-        if isinstance(self.origStatus, BaseObject):
-            return self.origStatus.getBase()
-        return None
-    def isStatus(self, status):
-        return self.getBase() == status
-    def isOpen(self):
-        return self.isStatus(OPEN)
-    def isFilled(self):
-        return self.isStatus(FILLED)
-
-    def __str__(self):
-        base_str = "{:>3}".format(self.getBase())
-        # print(sym)
-        return base_str
-
-@dataclass
-class BaseBuySell(BaseObjectItem):
-    def __post_init__(self):
-        # tmp = str(self.getBase())[0]
-
-        tmp = self.getBase()
-        if isinstance(tmp, str):
-            tmp = tmp.replace("YOU ", "")
-        tmp1 = tmp[0]
-        if tmp1 not in {'B', 'S', 'E', 'D', 'I', 'R'}:
-            raise Exception("Error to set up BaseBuySell")
-        self.setBase(tmp1)
-        return
-    def isBS(self, bs):
-        return self.getBase() == bs
-    def isBuy(self):
-        return self.isBS('B')
-
-    def isSell(self):
-        return self.isBS('S')
-
-    def __str__(self):
-        base_str = "{}".format(self.getBase())
-        # print(sym)
-        return base_str
-
-
-def isMFSym(sym):
-    # if self.getBase() == 'ILTB':
-    #     return True
-    if len(sym) == 5 and str(sym).startswith("F"):
-        # print(self.getBase())
-        return True
-    return False
-
-ExceptionTicker = [
-'L4135L100','SPAXX','SRNEQ','TSPH', 'SCLX', 'SRNE', "FZDXX", "MODVQ"
-]
-MutFundList = [
-    'FAGIX', 'FBIOX', 'FDCPX', 'FDRXX', 'FHIFX', 'FHKCX', 'FIDSX', 'FIEUX', 'FNBGX', 'FOCPX', 'FPHAX', 'FRESX',
-     'FSAGX', 'FSAVX', 'FSCHX', 'FSCSX', 'FSDAX', 'FSDPX', 'FSELX', 'FSENX', 'FSHCX', 'FSLBX', 'FSLEX', 'FSPHX',
-     'FSPTX', 'FSRBX', 'FSRFX', 'FUMBX', 'FWRLX', 'FWWFX', ]
-
-
-@dataclass
-class BaseTradeSymbol(BaseObjectItem):
-    def __post_init__(self):
-        return
-    def __str__(self):
-        base_str = "{:>15}".format(self.getBase())
-        return base_str
-    def isMF(self):
-        return isMFSym(self.getBase())
-        # if len(self.getBase()) == 5 and str(self.getBase()).startswith("F"):
-        #     return True
-        # return False
-    def __eq__(self, other):
-        if isinstance(other, BaseObject):
-            if self.getBase() == other.getBase():
-                return True
-        else:
-            if isinstance(other, str):
-                if self.getBase() == other:
-                    return True
-        return False
-
-    def validate(self):
-        tkr = self.getBase()
-        if tkr in ExceptionTicker:
-            return False
-        if tkr in MutFundList:
-            return False
-        if tkr[0].isdigit():
-            return False
-        # if tkr in main.prep_debug_list():
-        #     return False
-        if tkr.startswith('adj'):
-            return False
-        if tkr[0] == '$':
-            return False
-        return True
-
-
-@dataclass
-class BaseTradePrice(BaseMoney):
-    def __post_init__(self):
-        super().__post_init__()
-        return
-    def __str__(self):
-        return super().__str__()
-
-    # format_str = '$#,##0.00' #"${:,.2f}"
-'''
-
 
 import logging
 
@@ -965,9 +770,6 @@ def round_up_down_Dbg():
 
     return
 
-
-from base_lib.core.files_include import rootdir, output_file, alt_output_file
-
 def Dbg_save_file():
     a = BaseObject()
     # Sample data: Replace this with your actual data loading process
@@ -997,7 +799,6 @@ def DbgLogger():
     return
 
 def howToInstallThisLib():
-
     # pip install -e .
     # pip install -e .[dev]
     # pip install -e .[test]
@@ -1016,8 +817,8 @@ def howToInstallThisLib():
 
 if __name__ == '__main__':
     from common_include import *
-    from common_include import MFList
-    print(MFList)
+    # from common_include import MFList
+    # print(MFList)
     # DbgComposite()
     # print({"UnitDbg" : unittest})
     # DbgLogger()  # Comeback for Dbging timeEST
@@ -1036,112 +837,3 @@ if __name__ == '__main__':
     DbgBasics()
     DbgBaseDate()
     DbgBaseFltMnyPerc()
-
-
-
-
-    # tp.print()
-    # tp.listUniqueSymbols()
-
-    # tbrw = DbgBRW()
-    # results = tbrw.read()
-    # for res in results:
-    #     print(res)
-    # row2Examin = 16
-    # tp.examinRow(row2Examin)
-    #
-    # fo = FileObject()
-    # t1 = DbgFeatures()
-    # print(t1.item)
-    # tf = DbgFeatures(10)
-    # print(tf.item)
-    # tf2 = DbgFeatDeri(10,11)
-    # print(tf2.item2)
-    #
-    # b= BaseObject('aa')
-    # b = BaseString('aa')
-    # b.print()
-    #
-    # bl = BaseList()
-    # bl.append("one")
-    # bl.append("two")
-    # bl.print()
-# @dataclass
-# class BaseTrade(BaseObject):
-#     Symbol:BaseString
-
-
-# @dataclass
-# class DbgFeatures:
-#     item : any = None
-#
-# @dataclass
-# class DbgDervstr(DbgFeatures):
-#     def __post_init__(self):
-#         self.item = ""
-#         return
-
-# @dataclass
-# class BaseDerivedExtend(BaseObject):
-#     item2 : Any = None
-#     def __post_init__(self):
-#         self.item2 = None
-#         return
-
-
-# @dataclass
-# class DbgFeatDeri(DbgFeatures):
-#     item2 : Any = None
-#
-#     def __post_init__(self):
-#         self.item = []
-#         return
-#
-#  '''
-#     from pprint import pprint
-# import inspect
-#
-# class BaseClass:
-#     def pretty_print_members(self, include_methods=False, indent=0):
-#         """Recursively print all members of the class instance in a pretty format."""
-#         padding = ' ' * indent
-#         if include_methods:
-#             # Get all members including methods
-#             members = inspect.getmembers(self)
-#         else:
-#             # Only instance attributes
-#             members = self.__dict__.items()
-#
-#         for key, value in members:
-#             if isinstance(value, BaseClass):
-#                 print(f"{padding}{key}:")
-#                 value.pretty_print_members(include_methods, indent=indent + 4)
-#             else:
-#                 print(f"{padding}{key}: {value}")
-#
-#
-# # Example nested class
-# class ChildClass(BaseClass):
-#     def __init__(self, name, number):
-#         self.name = name
-#         self.number = number
-#
-#
-# class MyClass(BaseClass):
-#     def __init__(self):
-#         self.name = "MyClassInstance"
-#         self.value = 42
-#         self.child = ChildClass("ChildInstance", 99)
-#
-#     def greet(self):
-#         return "Hello, World!"
-#
-#
-# # Create an instance of the derived class
-# obj = MyClass()
-#
-# # Use the base class method to print members recursively
-# print("Recursive Pretty Print:")
-# obj.pretty_print_members()
-#
-#     '''
