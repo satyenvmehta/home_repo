@@ -81,7 +81,7 @@ class InteliScans(BaseTrades):
         super().__post_init__()
         self.cls = InteliScan
         self.uniqueCols = ['Symbol',	'Last',	'% Chg',	'Day Range',	'Sector',	'52 Wk Range',	'Volume',]
-        self.readFile(self.cls, self.uniqueCols, header_lines=header_lines, datafile=int_scan_file)
+        self.readFile(self.cls, self.uniqueCols, header_lines=header_lines, datafile=C.int_scan_file)
         df = self.getDF()
         self.all_symbols = df[Symbol].unique()
         return
