@@ -6,11 +6,11 @@ from pprint import pprint
 
 import pandas as pd
 from pandas import DataFrame
-from datetime import  datetime as dt
+from datetime import  datetime 
 
 def getTodayYYYYMMDD():
-    print({"DEBUG:" : type(dt) } )
-    dt1 = dt.today().strftime('%Y%m%d')
+    # print({"DEBUG:" : type(dt) } )
+    dt1 = datetime.today().strftime('%Y%m%d') 
     return dt1
 
 from base_lib.core.sys_utils import Today
@@ -528,13 +528,14 @@ class BaseDate(BaseObjectItem):
         if self.getBase() == "--":
             self.setBase("01/01/1900")
             # self.item = "01/01/1900"
+        dtp = None
         try:
-            dt = datetime.strptime(self.getBase(), self.date_format)
+            dtp = datetime.strptime(self.getBase(), self.date_format)
         except:
             print("Incorrect value " + str(self.getBase()))
             return
         finally:
-            self.setBase(dt)
+            self.setBase(dtp)
         return
 
     def getNoDaysFromToday(self):
