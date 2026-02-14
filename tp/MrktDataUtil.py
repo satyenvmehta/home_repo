@@ -3,10 +3,6 @@ import os
 import pandas as pd
 
 import common_include as C
-from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice, BaseCustomStatus, BaseBuySell
-
-# from base_lib.core.files_include import stock_fundamentals_file, weekly_fundamentals_file_debug
-
 from tp.market.get_price import getHistoricalData, getTickerInfo
 from TradeUtil import  prep_ticker_list, prep_debug_list
 from tp.market.validate_ticker import _validate_ticker

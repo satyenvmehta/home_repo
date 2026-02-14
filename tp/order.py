@@ -5,7 +5,7 @@ AI     26.88	'Buy 50 Limit at $26.55'  	"FILLED AT $26.55"	ROLLOVER IRA (2249165
 '''
 
 import common_include as C
-from tp.TradeUtil import BaseTrade, BaseTrades, Symbol
+from tp.TradeUtil import BaseTrade, BaseTrades
 from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice, BaseCustomStatus, BaseBuySell
 
 import numpy as np
@@ -113,7 +113,7 @@ class Orders(BaseTrades):
 
         self.readFile(self.cls, self.uniqueCols, header_lines, C.order_file)
         df = self.getDF()
-        self.all_symbols = np.sort(df[Symbol].unique())
+        self.all_symbols = np.sort(df['Symbol'].unique())
         return
 
     def getLastPrice(self, sym):

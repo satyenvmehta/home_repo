@@ -51,7 +51,6 @@ class BaseTrade(C.BaseObject):
         """ Return all attributes of the object as a dictionary """
         return vars(self)  # or self.__dict__
 
-Symbol = 'Symbol'
 @C.dataclass  #
 class BaseTrades(C.BaseReaderWriter):
     def __post_init__(self):

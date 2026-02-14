@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 
 
-from tp.excel_classes import create_excel_file, FillColor, ConditionOp, Condition
+from base_lib.core.excel_classes import create_excel_file, FillColor, ConditionOp, Condition
 
 df_summary = pd.DataFrame({
     "Metric": ["Revenue", "Cost", "Profit"],

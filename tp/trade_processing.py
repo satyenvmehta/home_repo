@@ -58,6 +58,11 @@ class tkr_acct(C.BaseObject):
     tkr : C.BaseTradeSymbol
     acct :C.BaseString
 
+    def isValidTicker(self):
+        if isinstance(self.tkr, C.BaseObject):
+            return self.tkr.getBase() not in C.exclude_tickers
+        return self.tkr not in C.exclude_tickers
+
     def getTicker(self):
         if isinstance(self.tkr, C.BaseObject):
             return self.tkr.getBase()
@@ -84,15 +89,11 @@ class TradeProcessing(C.BaseObject):
         self.orders = Orders()
         self.inteli_scans = InteliScans()
         self.results = Results()
-        self.vantages = self.inteli_scans
         self.bs_ext = ""
         self.marketPrices = None
 
-        # self.result_df = None
         self.sep = ":"
-
         self.results.setUnitClass(Result)  # Soecial Class - not reading files but preparing here..
-
         earning = 'earningAlert' # + "ED as of " + str(Today('%b-%d'))
         self.header = ["Symbol" , "Action@Price_LastH_Price_Qty" , "Recommend",  "Qty", "PercDiff" ,  "PerGnL",
                        "ActToSell", "VPScore","IdleSecurity",  "Yield",
@@ -100,7 +101,6 @@ class TradeProcessing(C.BaseObject):
                         "Category", "MrkCap", "STRecomm", "STDeltaP"]
         self.tkr_set = C.BaseSet()
         self.getVantageMissingPos()
-        # self.getPositionNotTradedInLast()
         self.deltaP = 0
         return
 
@@ -108,21 +108,26 @@ class TradeProcessing(C.BaseObject):
         self.orders.printDuplicateOrders()
         return
 
+    def getLastSTPrice(self):
+        if not self.tickerHasHistory():
+            return 0
+        if self.hist_summ.getNoOfBusDaysSinceLastTrade(self.curr_ticker) > ShortTermDays:
+            return 0
+        last_hist_price = self.getLastHistPrice()
+        if not last_hist_price:
+            return 0
+        if isinstance(last_hist_price, C.BaseTradePrice):
+            last_hist_price = last_hist_price.getBase()
+        return last_hist_price
     def determineShortTermRecommend(self):
         self._debug()
         tkr = self.curr_ticker
         self.STRecomm = HOLD
         if not self.lastP:
             return
-        if self.hist_summ.hasHistory(tkr) == False:
-            return
-        if self.hist_summ.getNoOfBusDaysSinceLastTrade(tkr) > ShortTermDays:
-            return
-        last_hist_price = self.hist_summ.getLastPrice(tkr)
+        last_hist_price = self.getLastSTPrice()
         if not last_hist_price:
             return
-        if isinstance(last_hist_price, C.BaseTradePrice):
-            last_hist_price = last_hist_price.getBase()
         if isinstance(self.lastP, C.BaseTradePrice):
             lastP = self.lastP.getBase()
         else:
@@ -141,7 +146,6 @@ class TradeProcessing(C.BaseObject):
                 return
             if self.STDeltaP > STLPerc:
                 self.STRecomm = STSellLimit + self.sell_exist
-
         return
 
     def getPositionNotTradedInLast(self, days=60):
@@ -153,13 +157,13 @@ class TradeProcessing(C.BaseObject):
         if  len(self.results.export_df) <=0:
             print("No Results(self.results.export_df) to print")
             return
-
         self.results.assignFormats()
         # self.results.setDataFrame(self.result_df)
-        listOfInterest = {'Results':self.results.getSelf(), 'Orders':self.orders.getSelf(), 'Postions': self.positions, 'Vantage': self.inteli_scans, 'History': self.historys ,  'HistorySummary': self.hist_summ.summary_df}
+        listOfInterest = {'Results':self.results.getSelf(), 'Orders':self.orders.getSelf(),
+                          'Postions': self.positions, 'Vantage': self.inteli_scans, 'History': self.historys ,
+                          'HistorySummary': self.hist_summ.summary_df}
 
         self._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, altFilename=C.alt_output_file)
-
         self.printDuplicateOrders()
         return
 
@@ -178,7 +182,6 @@ class TradeProcessing(C.BaseObject):
             s = s.replace(exCh, "")
         if exCh and  s and s.startswith(exCh):
             s = s.replace(exCh, "")
-
         try:
             val = float(s)
         except:
@@ -235,9 +238,9 @@ class TradeProcessing(C.BaseObject):
 
             suggested_price = price  #.replace('$',  '')
         suggested_price = round(suggested_price, 2)
-        if self.hist_summ.hasHistory(self.curr_ticker):
+        if self.tickerHasHistory():
             bs = bs + "@" + str(suggested_price).strip() + \
-                 "_" + self.bs_ext + "_" + str(self.hist_summ.getLastPrice(self.curr_ticker)) + "_" + str(self.hist_summ.getLastQuantity(self.curr_ticker))
+                 "_" + self.bs_ext + "_" + str(self.getLastHistPrice()) + "_" + str(self.getLastHistQuantity())
             if bs.startswith("Sell"):
                 if isinstance(qty, C.BaseInt):
                     qty = qty.getBase()
@@ -280,42 +283,36 @@ class TradeProcessing(C.BaseObject):
     def setPositionBasedAttr(self):
         if not self.curr_pos_obj:
             return
-
         return
 
     def print(self, msg):
         print(msg)
         return
-    def calculateRelativePerformance(self):
-        print("TBD calculateRelativePerformance")
-        # Use Vantage data for calc relative performance for each security in its group
-        # for example - NVDA w.r.t XLK, TOL w.r.t. XLRE
-        return
 
     def initDefaults(self):
-        # print({"Init Defaults for : ": self.curr_ticker})
-        # self.debug(self.curr_ticker)
         self.earningAlert = None
         self.lastP = 0
         self.yieldVal = 0
         self.IdleSecurity = "NA"
         self.PerGnL = 0
         self.mcap = None
-        # self.curr_hist_objs = None
         self.curr_vant_obj = None
         self.bs_ext = ""
         self.TSML = "NA"
         self.total_pos = C.BaseFloat(0)
         self.curr_hist_obj = None
         self.curr_pos_obj = None
+        self.nextBuyPrice = 0
+        self.nextSellPrice = 0
         return
 
-    def initRowLevel(self):
+    def initRowLevel(self, acct=None):
+        self.initDefaults()
         self.bsh = None
         self.curr_buy_order, self.curr_sell_order = None, None
         self.buy_exist , self.sell_exist  = "", ""
         self.STDeltaP, self.STRecomm = 0, HOLD
-        self.setCurrOrdObjs()
+        self.setCurrentPosOrderVantage(acct=acct)
         return
 
     def getBestPriceForSymbols(self, symbols):
@@ -331,7 +328,6 @@ class TradeProcessing(C.BaseObject):
         if self.curr_pos_obj:
             self.lastP = self.curr_pos_obj.Last.getBase()
             if self.lastP:
-                # print({"Found Price from Positions for ": symbol, "Prices = ": self.lastP})
                 return
         ord_based_lastP = self.orders.getLastPrice(symbol)
         if ord_based_lastP:
@@ -344,8 +340,8 @@ class TradeProcessing(C.BaseObject):
             print({"Found Price from MarketPrice for ": symbol, "Prices = ": self.lastP})
             return
 
-        if self.hist_summ.hasHistory(self.curr_ticker):
-            self.lastP = self.hist_summ.getLastPrice(self.curr_ticker)
+        if self.tickerHasHistory():
+            self.lastP = self.getLastHistPrice()
         if self.lastP:
             print({"Found Price from history for ": symbol, "Prices = ": self.lastP})
         return
@@ -360,16 +356,36 @@ class TradeProcessing(C.BaseObject):
         if str_val == Debug_Ticker:
             print("Debug")
         return
-
     def _debug(self):
         self.debug(self.curr_ticker)
         return
 
+    def tickerHasHistory(self):
+        if not self.hist_summ.hasHistory(self.curr_ticker):
+            return False
+        return True
+
+    def getLastHistPrice(self):
+        if not self.tickerHasHistory():
+            return None
+        hp = self.hist_summ.getLastPrice(self.curr_ticker)
+        return hp
+    def getLastHistQuantity(self):
+        if not self.tickerHasHistory():
+            return 0
+        h_qty = self.hist_summ.getLastQuantity(self.curr_ticker)
+        return h_qty
+    def getLastHistAction(self):
+        if not self.tickerHasHistory():
+            return None
+        h_act = self.hist_summ.getLastAction(self.curr_ticker)
+        return h_act
+
     def getBuyNEWParams(self):
         self.bsh = "NEW"
         if self.lastP:
-            if self.hist_summ.getLastPrice(self.curr_ticker):
-                percDiff = 100 * (self.hist_summ.getLastPrice(self.curr_ticker) - self.lastP) / self.lastP
+            if self.getLastHistPrice():
+                percDiff = 100 * (self.getLastHistPrice() - self.lastP) / self.lastP
             else:
                 percDiff = 0
         else:
@@ -387,8 +403,8 @@ class TradeProcessing(C.BaseObject):
         currP = self.lastP
         if not currP:
             return None, None
-        if self.hist_summ.hasHistory(self.curr_ticker):
-            h_qty = self.hist_summ.getLastQuantity(self.curr_ticker)
+        if self.tickerHasHistory():
+            h_qty = self.getLastHistQuantity()
         else:
             h_qty = 1000 / currP   # Lets try for $1000 worth of shares
         qty = int(h_qty)
@@ -437,11 +453,6 @@ class TradeProcessing(C.BaseObject):
             self.print(msg)
         return
 
-    def hasHistoryPrice(self):
-        if not self.hist_summ.hasHistory(self.curr_ticker):
-            return False
-        return True
-
     def orderExists(self, sym, bs):
         return self.orders.exists(sym, bs)
 
@@ -449,21 +460,21 @@ class TradeProcessing(C.BaseObject):
         return str(C.BaseMoney(lp)), C.BaseInt(qty)
 
     def _setNextBuySellRefPrices(self):
-        self.lastAction = self.hist_summ.getLastAction(self.curr_ticker)
-        self._setNextBuyPrice()
-        self._setNextSellPrice()
+        lhp = self.getLastHistPrice()
+        if not lhp:
+            return
+        self.lastAction = self.getLastHistAction()
+        self._setNextBuyPrice(lhp)
+        self._setNextSellPrice(lhp)
         return
-    def _setNextSellPrice(self):
-        lp = self.hist_summ.getLastPrice(self.curr_ticker)
+    def _setNextSellPrice(self, lp):
         if self.lastAction == 'B':
             np = lp * (1 + .1)
         else:
             np = lp * (1 + .05)
         self.nextSellPrice = round(np, 2)
         return
-
-    def _setNextBuyPrice(self):
-        lp = self.hist_summ.getLastPrice(self.curr_ticker)
+    def _setNextBuyPrice(self, lp):
         if self.lastAction == 'S':
             np = lp * (1 - .1)
         else:
@@ -474,17 +485,16 @@ class TradeProcessing(C.BaseObject):
     def getBuyParams(self):
         if self.orderExists(self.curr_ticker, 'B'):   # No action required  -- Needs to validate Price
             return None, None
-        if self.hasHistoryPrice():
+        if self.tickerHasHistory():
             lp = self.getNextBuyPrice()
-            qty = self.hist_summ.getLastQuantity(self.curr_ticker)  * 1.1
-            self.debug(self.curr_ticker)
+            qty = self.getLastHistQuantity()  * 1.1
+            self._debug()
             return self.retVals(lp,  qty)
         return None, None
 
     def getSellParams(self):
-        lp = self.nextSellPrice #self.hist_summ.getNextSellPrice(self.curr_ticker)
-        # lp = hobj.getPrice() * (1 + SellTh)
-        qty = self.hist_summ.getLastQuantity(self.curr_ticker) * 1.1
+        lp = self.nextSellPrice
+        qty = self.getLastHistQuantity() * 1.1
         if isinstance(self.curr_pos_obj, Position):
             self._debug()
             if self.total_pos.isPositive():
@@ -513,6 +523,11 @@ class TradeProcessing(C.BaseObject):
         return
 
     def isAnIdleSecurity(self):
+        if not self.positions.existsForSym(self.curr_ticker):
+            self.IdleSecurity = "NEW"
+        else:
+            self.IdleSecurity = str(self.historys.isAnIdleSymbol(self.curr_ticker))
+
         return self.IdleSecurity
 
     def analyzeSectorDistribution(self):
@@ -549,12 +564,12 @@ class TradeProcessing(C.BaseObject):
         self.deltaP = "NA"
         if not self.hist_summ:
             return
-        self.bs_ext = self.hist_summ.getLastAction(self.curr_ticker)
+        self.bs_ext = self.getLastHistAction()
         if not self.bs_ext:
             self.bs_ext = ""
             return
 
-        hp = self.hist_summ.getLastPrice(self.curr_ticker)
+        hp = self.getLastHistPrice()
         if not hp:
             return
 
@@ -592,6 +607,12 @@ class TradeProcessing(C.BaseObject):
             self.bsh = "SMMrkCap"
         return
 
+    def setCurrentPosOrderVantage(self, acct=None):
+        self.setCurrPosObj(acct)
+        self.setCurrOrdObjs()
+        self.setvantageObj()
+        return
+
     def setCurrOrdObjs(self):
         self.curr_buy_order, self.curr_sell_order = self.orders.get_bs_orders(self.curr_ticker)
         self.bs_hint = ""
@@ -608,34 +629,26 @@ class TradeProcessing(C.BaseObject):
         return
 
     def setCurrPosObj(self, acct=None):
-        sym = self.curr_ticker
-        self.curr_pos_obj = self.positions.getCurrentObj(sym, acct)
-        self.setPositionBasedAttr()
+        self.curr_pos_obj = self.positions.getCurrentObj(self.curr_ticker, acct)
         return
 
     def setvantageObj(self):
-        vrlist = self.vantages.findSymbol(self.curr_ticker)
+        vrlist = self.inteli_scans.findSymbol(self.curr_ticker)
         if vrlist:
             self.curr_vant_obj = vrlist.getBase()[0]
         if self.curr_vant_obj:
             self.TSML = self.curr_vant_obj.getTSML()
         return
 
-    def setAnayzeParams(self, acct=None):
-        sym = self.curr_ticker
-        self.debug(sym)
+    def setAnayzeParams(self):
+        self._debug()
         self.total_pos = C.BaseFloat(self.positions.getTotalQty(self.curr_ticker))
-        self.setCurrPosObj(acct)
         self.getBestPriceForSymbol()
         self.analyzeSectorDistribution()
         self._setHistBasedParams()
         return
 
     def _setHistBasedParams(self):
-        if not self.positions.existsForSym(self.curr_ticker):
-            self.IdleSecurity = "NA"
-        else:
-            self.IdleSecurity = str(self.historys.isAnIdleSymbol(self.curr_ticker))
         self.setBuySellRec()
         self._setNextBuySellRefPrices()
         self.determineShortTermRecommend()
@@ -692,35 +705,33 @@ class TradeProcessing(C.BaseObject):
             return None
 
     def validateTicker(self, tkr_act):
-        if not isinstance(tkr_act, tkr_acct):
-            return False
         if isinstance(tkr_act.tkr, C.BaseObject):
             sym = tkr_act.tkr #.getBase()
         else:
             sym = C.BaseTradeSymbol(tkr_act.tkr)
         if not sym.validate():
             return False
-
+        print({"Current Ticker ": sym})
+        if sym == Debug_Ticker:
+            print("Debug break 2")
         return True
     def analyzeBuySellAction(self):
         tkrActsList = self.prepareListToOperate()
         if not tkrActsList:
             return
-        for tkr_act in tkrActsList.getBase():
-            self.initDefaults()
+        for tkr_act in self.tkr_acts.getBase(): #tkrActsList.getBase():
+            if not isinstance(tkr_act, tkr_acct):
+                continue
             if not self.validateTicker(tkr_act):
                 continue
             self.curr_ticker = tkr_act.getTicker()
-            print({"Current Ticker ": self.curr_ticker})
-            self.initRowLevel()
-            if self.curr_ticker == Debug_Ticker:
-                print("Debug break 2")
-            self.setAnayzeParams(tkr_act.acct)
-            if not self.hist_summ.hasHistory(self.curr_ticker) and not self.curr_pos_obj:
+            self.initRowLevel(tkr_act.acct)
+            self.setAnayzeParams()
+            if not self.tickerHasHistory() and not self.curr_pos_obj:
                 self.Action("N", "Please investigate ticker - Never Traded this security")
                 continue
             if self.isAnIdleSecurity() == "True":
-                if self.hist_summ.hasHistory(self.curr_ticker):
+                if self.tickerHasHistory():
                     self.Action(BS, "Buy/sell Order")
                     continue
             oobjs = self.orders.findOpenOrdersForSymbol(self.curr_ticker)
@@ -734,9 +745,6 @@ class TradeProcessing(C.BaseObject):
                 self.orderBuySellAnalysis(oobjs)
         return
 
-    def analyzeQQQ(self):
-        pass
-
     def getLastHistPriceForOrder(self, oobj):
         if isinstance(oobj, Order):
             hp = self.hist_summ.getLastPrice(oobj.Symbol.getBase())
@@ -747,7 +755,7 @@ class TradeProcessing(C.BaseObject):
         return None
 
     def bidTooFarFromHistory(self, oobj):
-        if not self.hasHistoryPrice():
+        if not self.tickerHasHistory():
             return False, ""
         hp = self.getLastHistPriceForOrder(oobj)
         if not hp:
@@ -757,7 +765,6 @@ class TradeProcessing(C.BaseObject):
             return True, str(C.BasePercentage(delatP))
         return False, ""
 
-
     def bidTooFarFromLast(self, oobj):
         # if not hp:
         delatP = abs(C.getDeltaPercentage(oobj.Last.getBase(), oobj.orderLimitPrice.getBase()))
@@ -766,7 +773,7 @@ class TradeProcessing(C.BaseObject):
         return False, ""
 
     def historyBasedPricing(self, oobj):
-        if not self.hasHistoryPrice():
+        if not self.tickerHasHistory():
             return False, None, None
         # sym = oobj.Symbol.getBase()
         if not self.hist_summ:
@@ -784,7 +791,6 @@ class TradeProcessing(C.BaseObject):
         if not p:
             p = oobj.orderLimitPrice.getBase()
         return "HP", delata, p
-
 
     def lastPriceBasedPricing(self, oobj):
         tooFar, delata = self.bidTooFarFromLast(oobj)

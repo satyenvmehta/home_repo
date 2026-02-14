@@ -1,7 +1,7 @@
 
 import common_include as C
-# from base_lib.core.files_include import int_scan_file
-from tp.TradeUtil import BaseTrade, BaseTrades, Symbol
+# import tp_include as
+from tp.TradeUtil import BaseTrade, BaseTrades
 
 header_lines = 0
 
@@ -83,7 +83,7 @@ class InteliScans(BaseTrades):
         self.uniqueCols = ['Symbol',	'Last',	'% Chg',	'Day Range',	'Sector',	'52 Wk Range',	'Volume',]
         self.readFile(self.cls, self.uniqueCols, header_lines=header_lines, datafile=C.int_scan_file)
         df = self.getDF()
-        self.all_symbols = df[Symbol].unique()
+        self.all_symbols = df['Symbol'].unique()
         return
 
 if __name__ == '__main__':

@@ -63,7 +63,7 @@ class History(BaseTrade):
 
     @classmethod
     def from_dict(cls, data_dict):
-        o =  cls(data_dict[Symbol],	data_dict['Date'], data_dict['Quantity'],
+        o =  cls(data_dict['Symbol'],	data_dict['Date'], data_dict['Quantity'],
                    data_dict['Price'],	data_dict['Amount'],data_dict['Account'], data_dict['Description'])
         # o.noOfDaysSinceTrans()
         return o
@@ -81,7 +81,7 @@ class Historys(BaseTrades):
         self.readFile(self.cls, self.uniqueCols, header_lines=header_lines, datafile=C.hist_file)
         df = self.getDF()
 
-        self.all_symbols = df[Symbol].unique()
+        self.all_symbols = df['Symbol'].unique()
         self.prep_summ_df()
         self._histSumm = C.BaseDict()
         # self.initHistorySummary()
@@ -122,14 +122,14 @@ class Historys(BaseTrades):
 
     def getRecordsForSym(self, sym):
         df = self.getDF()
-        return df.loc[df[Symbol] == sym]
+        return df.loc[df['Symbol'] == sym]
     def getRecordForAcct(self, acct):
         df = self.getDF()
         return df.loc[df[Account] == acct]
 
     def getRecordForAcctAndSym(self, acct, sym, bs='B'):
         df = self.getDF()
-        return df.loc[(df[Account] == acct) & (df[Symbol] == sym) & (df[Description] == bs)]
+        return df.loc[(df[Account] == acct) & (df['Symbol'] == sym) & (df[Description] == bs)]
 
     def getLastBoughtForAcctAndSym(self, acct, sym):
         df = self.getRecordForAcctAndSym(acct, sym,  bs='B')
@@ -198,7 +198,7 @@ class Historys(BaseTrades):
         start_date = end_date - timedelta(days=no_of_days)
 
         recent_traded = df[(df[DateCol] >= start_date) & (df[DateCol] <= end_date)]
-        active_symbols = recent_traded[Symbol].unique()
+        active_symbols = recent_traded['Symbol'].unique()
         self.idle_symbols = list(set(self.all_symbols) - set(active_symbols))
         return self.idle_symbols
 
@@ -226,17 +226,17 @@ class Historys(BaseTrades):
         return self.sell_bucket._exists(sym)
 
     # def getLastQuantity(self, sym):
-    #     qty = self.summary_df.loc[self.summary_df[Symbol] == sym, 'last_qty'].iloc[0]
+    #     qty = self.summary_df.loc[self.summary_df['Symbol'] == sym, 'last_qty'].iloc[0]
     #     return abs(qty)
 
     def hasHistory(self, sym):
-        if sym in self.summary_df[Symbol].values:
+        if sym in self.summary_df['Symbol'].values:
             return True
         return False
 
     def getHistoryPrice(self, sym):
         if self.hasHistory(sym):
-            return self.summary_df.loc[self.summary_df[Symbol] == sym, 'last_price'].iloc[0]
+            return self.summary_df.loc[self.summary_df['Symbol'] == sym, 'last_price'].iloc[0]
         return None
 
     def getLastPrice(self, sym):
@@ -264,7 +264,7 @@ class Historys(BaseTrades):
     def getSummaryAttrForSymbolFromDF(self, sym, attr):
         df = self.getSummary()
         try:
-            val = df.loc[self.summary_df[Symbol] == sym, attr].iloc[0]
+            val = df.loc[self.summary_df['Symbol'] == sym, attr].iloc[0]
         except Exception as e:
             if isinstance(sym, C.BaseObject):
                 sym = sym.getBase()
@@ -320,7 +320,7 @@ class Historys(BaseTrades):
         return self.summary_df
 
     def symHasHistory(self, sym):
-        if sym in self.summary_df[Symbol].values:
+        if sym in self.summary_df['Symbol'].values:
             return True
         return False
     def getLastTradeType(self, sym):

@@ -2,14 +2,7 @@ import common_include as C
 
 from TradeUtil import *
 
-# Symbol: C.BaseTradeSymbol = None
-# Last: C.BaseTradePrice = None
-# Description:C.BaseString = None  # Buy 35 Limit at $26.25
-# Status:C.BaseString = None
-# Account:C.BaseString = None
-
 from all_history import Historys #, historySummary
-# from base_lib.core.files_include import pos_file
 from tp.tp_include import SmallMrkCapValue
 
 
@@ -88,12 +81,12 @@ class Positions(BaseTrades):
         # self.presetTrades(sort_by=sort_by, reverese=False)
         self.extra_columns = ['Ext Hrs Last', '% Ext Hrs Chg']
         self.cls = Position
-        self.uniqueCols = [Symbol,	'Last',	'% Chg',	'Day Range',	'Sector',	'52 Wk Range',	'Volume',]
+        self.uniqueCols = ['Symbol',	'Last',	'% Chg',	'Day Range',	'Sector',	'52 Wk Range',	'Volume',]
         self.readFile(self.cls, self.uniqueCols, header_lines=3, datafile=C.pos_file)
         self.acctSet = None
         self.getHoldingAccounts()
         df = self.getDF()
-        self.all_symbols = df[Symbol].unique()
+        self.all_symbols = df['Symbol'].unique()
         self.historys = None
         return
 

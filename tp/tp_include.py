@@ -19,7 +19,6 @@ ShortTermGnLPercentageSell = 5 # 5% Gain or Loss
 STLPerc = 2.5 # 2.5% Loss/gain
 OrderExistSign = "+"
 
-
 # Define Col Names
 Symbol = 'Symbol'
 Date = 'Date'
@@ -29,8 +28,6 @@ Amount = 'Amount'
 Account = 'Account'
 Description = 'Description'
 last_trade_date = 'last_date'
-
-
 
 # % Changes today - to recommend buy/sell
 TodaysChange = 0
