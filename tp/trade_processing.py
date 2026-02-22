@@ -259,15 +259,10 @@ class TradeProcessing(C.BaseObject):
         # lastP = self.str2Numueric(self.lastP, "$")
         self.earningAlert = self.str2Numueric(self.earningAlert)
 
-        if self.positions.isPennyStock(self.curr_ticker):
-            penny = "_P"
-        else:
-            penny = None
-
-        if penny:
+        if self.rec_ext:
             if isinstance(self.bsh, str):
-                if not self.bsh.endswith(penny):
-                    self.bsh = self.bsh + penny
+                if not self.bsh.endswith(self.rec_ext):
+                    self.bsh = self.bsh + self.rec_ext
 
         acts, ActToSell = self.historys.getActListToSell(self.curr_ticker, self.positions)
         # self.earningAlert.
@@ -280,9 +275,13 @@ class TradeProcessing(C.BaseObject):
             self.results.export_df = pd.concat([self.results.export_df, bdf], ignore_index=True)
         return bs_msg
 
-    def setPositionBasedAttr(self):
-        if not self.curr_pos_obj:
+    def setReccomdExt(self):
+        self.rec_ext = None
+        if self.isAnOption:
+            self.rec_ext = "_O"
             return
+        if self.positions.isPennyStock(self.curr_ticker):
+            self.rec_ext = "_P"
         return
 
     def print(self, msg):
@@ -306,13 +305,16 @@ class TradeProcessing(C.BaseObject):
         self.nextSellPrice = 0
         return
 
-    def initRowLevel(self, acct=None):
+    def initRowLevel(self, tkr_act):
         self.initDefaults()
+        self.curr_ticker = tkr_act.getTicker()
+        # self.curr_tkr_obj = tkr_act.tkr
         self.bsh = None
         self.curr_buy_order, self.curr_sell_order = None, None
         self.buy_exist , self.sell_exist  = "", ""
         self.STDeltaP, self.STRecomm = 0, HOLD
-        self.setCurrentPosOrderVantage(acct=acct)
+        self.isAnOption = self.curr_tkr_obj.isOpt()
+        self.setCurrentPosOrderVantage(acct=tkr_act.acct)
         return
 
     def getBestPriceForSymbols(self, symbols):
@@ -335,7 +337,7 @@ class TradeProcessing(C.BaseObject):
             print({"Found Price from Orders for ": symbol, "Prices = ": self.lastP})
             return
 
-        self.lastP = C.get_market_price(symbol) # self.marketPrices.getPrice(symbol)
+        self.lastP = C.get_market_price(symbol)
         if self.lastP:
             print({"Found Price from MarketPrice for ": symbol, "Prices = ": self.lastP})
             return
@@ -630,6 +632,7 @@ class TradeProcessing(C.BaseObject):
 
     def setCurrPosObj(self, acct=None):
         self.curr_pos_obj = self.positions.getCurrentObj(self.curr_ticker, acct)
+        self.setReccomdExt()
         return
 
     def setvantageObj(self):
@@ -706,13 +709,13 @@ class TradeProcessing(C.BaseObject):
 
     def validateTicker(self, tkr_act):
         if isinstance(tkr_act.tkr, C.BaseObject):
-            sym = tkr_act.tkr #.getBase()
+            self.curr_tkr_obj = tkr_act.tkr #.getBase()
         else:
-            sym = C.BaseTradeSymbol(tkr_act.tkr)
-        if not sym.validate():
+            self.curr_tkr_obj = C.BaseTradeSymbol(tkr_act.tkr)
+        if not self.curr_tkr_obj.validate():
             return False
-        print({"Current Ticker ": sym})
-        if sym == Debug_Ticker:
+        print({"Current Ticker ": self.curr_tkr_obj})
+        if self.curr_tkr_obj == Debug_Ticker:
             print("Debug break 2")
         return True
     def analyzeBuySellAction(self):
@@ -724,8 +727,7 @@ class TradeProcessing(C.BaseObject):
                 continue
             if not self.validateTicker(tkr_act):
                 continue
-            self.curr_ticker = tkr_act.getTicker()
-            self.initRowLevel(tkr_act.acct)
+            self.initRowLevel(tkr_act)
             self.setAnayzeParams()
             if not self.tickerHasHistory() and not self.curr_pos_obj:
                 self.Action("N", "Please investigate ticker - Never Traded this security")

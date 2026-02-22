@@ -187,7 +187,7 @@ if __name__ == "__main__":
     print(df_15)
     print(df_more_15)
     print(df_rest)
-    filen =  "G:\My Drive\\vepar\\tstock_screener_" + date_now("%Y-%m-%d") + ".xlsx"
+    filen =  "G:\My Drive\\vepar\\stock_screener_" + date_now("%Y-%m-%d") + ".xlsx"
     sheet_name = date_now("%b_%d")  # e.g., "Aug_09"
 
     df_list = [All_data_df, df_15, df_more_15, df_rest]
