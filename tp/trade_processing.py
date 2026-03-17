@@ -76,6 +76,46 @@ class tkr_action(C.BaseObject):
     action  :C.BaseString
     # bs_ext :C.BaseString
 
+
+def apply_formatter(excel, df, sheet_name):
+    # excel.fill_row_for_df(sheet_name, 1, df, FillColor.YELLOW)
+    # nrows = df.shape[0] + 1
+    # last_col = df.shape[1]
+    # for col in
+    # range =
+    # excel.conditional_format(
+    #     sheet_name,
+    #     "B2:B10",
+    #     C.Condition(C.ConditionOp.GT, 50, C.FillColor.RED)
+    #
+    apply_number_format_by_header(excel, df, sheet_name)
+    return
+
+
+def apply_number_format_by_header(
+    excel, df,
+    sheet: str
+):
+    """
+    Apply numeric format to columns whose header matches any value in 'headers'.
+    """
+    ws = excel.get_sheet(sheet)
+    headers = ['lastP', 'Last', 'Amount', 'CloseValue', 'Change', 'TrplXVal', 'VolumePecAvg']
+    fmt_string="0.00"
+
+    # cache format
+    key = f"numfmt:{fmt_string}"
+    if key not in excel._formats:
+        excel._formats[key] = excel.workbook.add_format({"num_format": fmt_string})
+
+    num_fmt = excel._formats[key]
+
+    headers_upper = {h.upper() for h in headers}
+    for col_idx, col_name in enumerate(df.columns):
+        if col_name.upper() in headers_upper:
+            # print(col_name)
+            ws.set_column(col_idx, col_idx, None, num_fmt)
+
 @C.dataclass
 class TradeProcessing(C.BaseObject):
     orders: Orders = None
@@ -153,6 +193,7 @@ class TradeProcessing(C.BaseObject):
         idle_hist_syms = self.historys.idle_trade_qry(days)
         list(filter(lambda x: x in uni_pos.tolist(), idle_hist_syms))
         return
+
     def saveResults(self):
         if  len(self.results.export_df) <=0:
             print("No Results(self.results.export_df) to print")
@@ -163,7 +204,7 @@ class TradeProcessing(C.BaseObject):
                           'Postions': self.positions, 'Vantage': self.inteli_scans, 'History': self.historys ,
                           'HistorySummary': self.hist_summ.summary_df}
 
-        self._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, altFilename=C.alt_output_file)
+        self._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, custom_formatter_method=apply_formatter)
         self.printDuplicateOrders()
         return
 

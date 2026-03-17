@@ -17,6 +17,9 @@ def formatter(excel):
         Condition(ConditionOp.GT, 1000, FillColor.RED)
     )
 
+
+import common_include as C
+
 full_path = Path("C:/tmp/report1.xlsx")
 if __name__ == "__main__":
     excel = create_excel_file(full_path, "create")

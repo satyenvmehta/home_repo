@@ -139,13 +139,16 @@ class BaseObject:
     def is_file_in_use(self, fullFileName):
         return self.is_file_locked(file_path=fullFileName)
 
-    def _saveResults(self, listOfInterest, fileName, altFilename=None):
+    def _saveResults(self, listOfInterest, fileName, custom_formatter_method=None):
         workbook = None
         if listOfInterest is None:
             print("Nothing to save")
             return
 
         fullFileName = fileName
+        file_2 = fileName.replace(".xlsx", "_bak.xlsx")
+        import common_include as C
+        C.create_excel(file_2, listOfInterest, custom_formatter_method)
 
         print("Saving to file " + fullFileName)
         with pd.ExcelWriter(fullFileName, engine='xlsxwriter') as writer:
@@ -156,8 +159,8 @@ class BaseObject:
                 df = None
                 # from base_classes import BaseInt, BaseCustomStatus, BaseBuySell, BasePercentage
                 # from base_classes import BaseObject, BaseObjectItem, BaseString, BaseFloat, BaseMoney
-                from base_lib.core.base_container_classes import  BaseReaderWriter
-                if isinstance(dobj, BaseReaderWriter):
+                # from base_lib.core.base_container_classes import  BaseReaderWriter
+                if isinstance(dobj, C.BaseReaderWriter):
                     df = dobj.export_class_data_to_df()
                 elif isinstance(dobj, DataFrame):
                     df = dobj
@@ -167,7 +170,7 @@ class BaseObject:
                     if not workbook:
                         workbook = writer.book
 
-                    if isinstance(dobj, BaseReaderWriter):
+                    if isinstance(dobj, C.BaseReaderWriter):
                         formats = dobj.getClassMembersFormats()
 
                         for membr, frmt in formats.items():
