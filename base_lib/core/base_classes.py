@@ -145,43 +145,9 @@ class BaseObject:
             print("Nothing to save")
             return
 
-        fullFileName = fileName
-        file_2 = fileName.replace(".xlsx", "_bak.xlsx")
         import common_include as C
-        C.create_excel(file_2, listOfInterest, custom_formatter_method)
+        C.create_excel(fileName, listOfInterest, custom_formatter_method)
 
-        print("Saving to file " + fullFileName)
-        with pd.ExcelWriter(fullFileName, engine='xlsxwriter') as writer:
-            sp_formats = {}
-            print("Creating sheet ..")
-            for item, dobj in listOfInterest.items():
-                print("   "+ item)
-                df = None
-                # from base_classes import BaseInt, BaseCustomStatus, BaseBuySell, BasePercentage
-                # from base_classes import BaseObject, BaseObjectItem, BaseString, BaseFloat, BaseMoney
-                # from base_lib.core.base_container_classes import  BaseReaderWriter
-                if isinstance(dobj, C.BaseReaderWriter):
-                    df = dobj.export_class_data_to_df()
-                elif isinstance(dobj, DataFrame):
-                    df = dobj
-                if df is not None:
-                    self.remove_extra_columns(df)
-                    df.to_excel(writer, sheet_name=item, index=0)
-                    if not workbook:
-                        workbook = writer.book
-
-                    if isinstance(dobj, C.BaseReaderWriter):
-                        formats = dobj.getClassMembersFormats()
-
-                        for membr, frmt in formats.items():
-                            sp_formats[membr] = workbook.add_format(frmt)
-
-                        worksheet = writer.sheets[item]
-                        from base_lib.core.excel_utils import fromColName2ColIndex
-                        for membr, frmt in formats.items():
-                            ci = fromColName2ColIndex(df, membr)
-                            ci_ci = ci+":"+ci
-                            worksheet.set_column(ci_ci, None, sp_formats[membr])
         return
 
     def _toListOfDict(self):
