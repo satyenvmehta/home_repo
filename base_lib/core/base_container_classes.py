@@ -24,6 +24,8 @@ class BaseContainer(BaseObject):
         self.setBase([])
         # self.item = list()
         return
+    def __iter__(self):
+        return iter(self._item)
 
     def append(self, obj):
         self.getBase().append(obj)
@@ -591,8 +593,19 @@ def DbgBaseSet():
     bs.print()
     return
 
+def iterate_thru():
+    ilist = BaseList()
+    for i in [1,2,3]:
+        ilist.append(BaseInt(i))
+    t = 0
+    for i in ilist:
+        t = i + t
+    print(t)
+    return
+
 # from common_include import *
 if __name__ == '__main__':
+    iterate_thru()
     DbgBaseSet()
     Dbg_find_docs()
     DbgBSType()
@@ -617,8 +630,8 @@ if __name__ == '__main__':
     print(str(x))
 
 
-    bs = BaseBuySell("BO")
-    print(bs.isBuy())
+    # bs = BaseBuySell("BO")
+    # print(bs.isBuy())
 
     z = BaseDate("11/23/2023")
     print(z.getNoDaysFromToday())
@@ -636,8 +649,8 @@ if __name__ == '__main__':
     # tp.saveResults()
 
 
-    a =BaseCustomStatus('Open')
-    print(str(a))
+    # a =BaseCustomStatus('Open')
+    # print(str(a))
     sort_example()
     a = "03/20/2020"
     b = "01/20/2021"

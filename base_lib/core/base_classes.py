@@ -104,6 +104,11 @@ class BaseObject:
     def __lt__(self, other):
         return self.getBase() < other.getBase()
 
+    def __add__(self, other):
+        if isinstance(other, BaseObject):
+            other = other.getBase()
+        return self.getBase() + other
+
     def to_str(self):
         return str(self.getBase())
 

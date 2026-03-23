@@ -458,9 +458,9 @@ class TradeProcessing(C.BaseObject):
     def Action(self, actionFlag, message, tradePrice=None, qty=None):
         self._debug()
         self.setActionParams()
-        if not tradePrice:
-            bp, bq = self.getBuyParams()
-            sp, sq = self.getSellParams()
+        # if not tradePrice:
+        #     bp, bq = self.getBuyParams()
+        #     sp, sq = self.getSellParams()
         # qty = self.getTradeQty()
 
         if actionFlag in ['BO']:
@@ -469,21 +469,23 @@ class TradeProcessing(C.BaseObject):
                 if not tradePrice:
                     return
             else:
-                if self.positions.isSmallCap(self.curr_ticker):
-                    self.bsh = "SMMrkCap"
-                tradePrice = bp
-                qty = bq
+                if not tradePrice:
+                    bp, bq = self.getBuyParams()
+                    tradePrice = bp
+                    qty = bq
         if actionFlag in ['SO']:
             if not self.positions.existsForSym(self.curr_ticker):
                 return
             if self.positions.isSmallCap(self.curr_ticker):
                 self.bsh = "SMMrkCap"
-            tradePrice = sp
-            qty = sq
+            if not tradePrice:
+                sp, sq = self.getSellParams()
+                tradePrice = sp
+                qty = sq
 
         if actionFlag in ['BM', 'SM']:
             tradePrice = None
-            qty = sq
+            # qty = sq
         self.setCurrOrdObjs()
         if self.bs_hint != "":
             if self.bsh:
@@ -645,9 +647,6 @@ class TradeProcessing(C.BaseObject):
             return
 
         self.bsh = HOLD
-
-        if self.positions.isSmallCap(self.curr_ticker):
-            self.bsh = "SMMrkCap"
         return
 
     def setCurrentPosOrderVantage(self, acct=None):
@@ -882,10 +881,10 @@ class TradeProcessing(C.BaseObject):
             self.Action("BO", "Buy Order ")  # same for Buy
         if buy_sell.isBuyAndSellSet():
             self.ValidateOrderLimitPrices()
-        if buy_sell.multiBuyCounts():
-            self.Action("BM", "Remove multi Buys")
-        if buy_sell.multiSellCounts():
-            self.Action("SM", "Remove multi Sell")
+        # if buy_sell.multiBuyCounts():
+        #     self.Action("BM", "Remove multi Buys")
+        # if buy_sell.multiSellCounts():
+        #     self.Action("SM", "Remove multi Sell")
         return
 
     def getVantageMissingPos(self):
