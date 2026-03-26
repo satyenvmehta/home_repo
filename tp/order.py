@@ -19,16 +19,17 @@ thresholdP = {'B':BT, 'S' : BT+1}
 class Order(BaseTrade):
     Symbol : C.BaseTradeSymbol = None
     Last : C.BaseTradePrice = None
-    Description : C.BaseString= None   # Buy 35 Limit at $26.25
-    Status : BaseCustomStatus= None
+    Status: BaseCustomStatus = None
+    OrderNum: C.BaseString = None
+    Description : C.BaseString= None   # Buy 35 Limit at $26.2
     Account : C.BaseString= None
     TIF:C.BaseString = None
-    OrderNum :C.BaseString = None
+
 
     @classmethod
     def from_dict(cls, data_dict):
-        return cls(data_dict['Symbol'], data_dict['Last'],  data_dict['Description'], data_dict['Status'], data_dict['Account']
-                   , data_dict['TIF'], data_dict['OrderNum'])
+        return cls(data_dict['Symbol'], data_dict['Last'], data_dict['Status'], data_dict['OrderNum'], data_dict['Description'],  data_dict['Account']
+                   , data_dict['TIF'])
     def __post_init__(self):
         self.setDescDetails()
         return

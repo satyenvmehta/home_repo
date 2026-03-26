@@ -26,6 +26,11 @@ from base_lib.core.files_include import (ticker_file, sp_500_file, nasd_100_file
                                          hist_file, order_file, pos_file, int_scan_file,
                                          stock_fundamentals_file, weekly_fundamentals_file_debug)
 
+
+from base_lib.excel_utils.excel_base import FillColor, Condition, ConditionOp, ExcelFileBase
+from base_lib.excel_utils.excel_creator import create_excel
+
+
 __all__ = [
     "ticker_file",
     "sp_500_file",
@@ -59,4 +64,9 @@ __all__ = [
     , "int_scan_file"
     , "stock_fundamentals_file"
     , "weekly_fundamentals_file_debug"
+    , "create_excel"
+    , "FillColor"
+    , "Condition"
+    , "ConditionOp"
+    , "ExcelFileBase"
 ]

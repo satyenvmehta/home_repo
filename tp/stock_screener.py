@@ -8,7 +8,7 @@ from MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_d
 
 from position import Positions
 from sc_util import StockFilterAttributes
-from tp.excel_support import ExcelCreator, FillColor, ConditionOp, Condition
+# from tp.excel_support import ExcelCreator, FillColor, ConditionOp, Condition
 from tp.order import Orders
 
 RSI_WINDOW = 14
@@ -96,7 +96,7 @@ def append_filter_to_result(sfa, result):
 
 def find_stocks_multi():
     # Get all tickers at once
-    mrk_data = MarketData(debug=True)
+    mrk_data = MarketData(debug=False)
     tickers = mrk_data.getTickers()
     data = mrk_data.getHistoricalData()
 
@@ -171,56 +171,28 @@ def xlswriter_formatter(sheet, workbook, df, sheet_name):
                                                                                'font_color': '#9C0006'})})
 
 def apply_formatter(excel, df, sheet_name):
-    excel.fill_row_for_df(sheet_name, 1, df, FillColor.YELLOW)
+    # excel.fill_row_for_df(sheet_name, 1, df, FillColor.YELLOW)
     excel.conditional_format(
         sheet_name,
         "B2:B10",
-        Condition(ConditionOp.GT, 50, FillColor.RED)
+        C.Condition(C.ConditionOp.GT, 50, C.FillColor.RED)
     )
 if __name__ == "__main__":
     d = date_now("%Y-%m-%d %H:%M")
     print(d)
     print("started")
-
     df_15, df_more_15, df_rest = find_stocks_multi()
     All_data_df = pd.concat([df_15, df_more_15, df_rest], ignore_index=True).sort_values(by="RSI", ascending=False)
     print(df_15)
     print(df_more_15)
     print(df_rest)
     filen =  "G:\My Drive\\vepar\\stock_screener_" + date_now("%Y-%m-%d") + ".xlsx"
+    # filen_2 = filen.replace(".xlsx", "_2.xlsx")
     sheet_name = date_now("%b_%d")  # e.g., "Aug_09"
 
     df_list = [All_data_df, df_15, df_more_15, df_rest]
     SheetNames = [AllRecs, OC_LT_15, OC_GT_15, Rest]
-    with pd.ExcelWriter(filen, engine="xlsxwriter") as writer:
-        excel = ExcelCreator(writer=writer)
-        for sheet_name, df in zip(SheetNames, df_list):
-            excel.add_sheet(sheet_name, df)
-            apply_formatter(excel, df, sheet_name)
-            # xlswriter_formatter(worksheet, workbook, df, sheet_name)
-
-        # ws_all = writer.sheets[AllRecs]
-        # ws_lt_15 = writer.sheets[OC_LT_15]
-        # ws_gt_15 = writer.sheets[OC_GT_15]
-        # ws_rest = writer.sheets[Rest]
-        #
-        # for name, worksheet in writer.sheets.items():
-        #     xlswriter_formatter(worksheet, workbook, writer.sheets[name], name)
-
-            '''
-            
-            worksheet.conditional_format('J2:J1000', {'type': 'cell',
-                                                'criteria': 'greater than',
-                                                'value': RSI_OVERBOUGHT,
-                                                'format': workbook.add_format({'bg_color': '#C6EFCE',
-                                                                               'font_color': '#006100'})})
-            worksheet.conditional_format('J2:J1000', {'type': 'cell',
-                                                'criteria': 'less than',
-                                                'value': RSI_OVERSOLD,
-                                                'format': workbook.add_format({'bg_color': '#FFC7CE',
-                                                                               'font_color': '#9C0006'})})
-                                                                        '''
-
-    print("saved to ", filen)
-
+    df_dict = {SheetNames[i]: df_list[i] for i in range(len(SheetNames))}
+    C.create_excel(filen, df_dict, apply_formatter)
+    print("Done")
 
