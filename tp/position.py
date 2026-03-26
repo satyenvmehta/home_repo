@@ -5,6 +5,8 @@ from TradeUtil import *
 from all_history import Historys #, historySummary
 from tp.tp_include import SmallMrkCapValue
 
+# Symbol	Last	% Chg	% G/L	Quantity	Account	Day Range	News	Prev Close
+# Yield	P/E	52 Wk Range	Chg	Sector
 
 @C.dataclass
 class Position(BaseTrade):
@@ -16,11 +18,12 @@ class Position(BaseTrade):
     Account:C.BaseString = None
     DayRange:C.BaseString = None
     News:C.BaseString = None
+    Yield: C.BaseFloat = None
+    PE: C.BaseFloat = None
     CloseValue: C.BaseTradePrice = None
+    Year_Range: C.BaseString = None
     Change: C.BaseTradePrice = None
     Sector:C.BaseString = None
-    Year_Range:C.BaseString = None
-    Yield : C.BaseFloat = None
     Volume: C.BaseInt = None
     PurchasePrice: C.BaseTradePrice = None
     Value: C.BaseTradePrice = None
@@ -28,7 +31,7 @@ class Position(BaseTrade):
     PerTdyGnL: C.BaseFloat = None
     GnL: C.BaseTradePrice = None
     EquityScore:C.BaseString = None
-    PE: C.BaseFloat = None
+
     MarketCap:C.BaseString = None
     EarningsDate: C.BaseDate = None
 
@@ -65,10 +68,11 @@ class Position(BaseTrade):
     def from_dict(cls, data_dict):
         obj =  cls(data_dict['Symbol'],	data_dict['Last'],	data_dict['PerChange'],	data_dict['PerGnL'],
          data_dict['Quantity'],	data_dict['Account'],	data_dict['DayRange'],	data_dict['News'],
-         data_dict['CloseValue'],	data_dict['Change'],	data_dict['Sector'],	data_dict['Year_Range'],
-         data_dict['Yield'], data_dict['Volume'],	data_dict['PurchasePrice'],	data_dict['Value'],	data_dict['TdyGnL'],
+         data_dict['Yield'], data_dict['PE'], data_dict['CloseValue'], data_dict['Year_Range'],
+        data_dict['Change'],	data_dict['Sector'],
+         data_dict['Volume'],	data_dict['PurchasePrice'],	data_dict['Value'],	data_dict['TdyGnL'],
          data_dict['PerTdyGnL'],	data_dict['GnL']
-        , data_dict['EquityScore'],	data_dict['PE'],	data_dict['MarketCap'],	data_dict['EarningsDate']
+        , data_dict['EquityScore'],	data_dict['MarketCap'],	data_dict['EarningsDate']
                    )
         # obj.setEarnigAlert()
         return obj
