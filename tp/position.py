@@ -22,6 +22,7 @@ class Position(BaseTrade):
     PE: C.BaseFloat = None
     CloseValue: C.BaseTradePrice = None
     Year_Range: C.BaseString = None
+
     Change: C.BaseTradePrice = None
     Sector:C.BaseString = None
     Volume: C.BaseInt = None
