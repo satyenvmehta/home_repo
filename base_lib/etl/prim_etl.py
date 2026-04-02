@@ -96,6 +96,10 @@ class ExtractResult:
 class ETLContext:
     ref_data: Dict[str, pd.DataFrame] = field(default_factory=dict)
     main_data: Dict[str, pd.DataFrame] = field(default_factory=dict)
+
+    ref_objects: Dict[str, List[Any]] = field(default_factory=dict)
+    main_objects: Dict[str, List[Any]] = field(default_factory=dict)
+
     derived_data: Dict[str, pd.DataFrame] = field(default_factory=dict)
     transformed_data: Optional[pd.DataFrame] = None
     extract_data: Dict[str, Any] = field(default_factory=dict)
@@ -143,6 +147,9 @@ class BaseLoad(ABC):
     required_columns: List[str] = field(default_factory=list)
     load_type: str = "main"   # ref or main
 
+    target_class: Optional[type] = None
+    object_list: Optional[List[Any]] = field(default=None, init=False)
+
     def run(self) -> LoadResult:
         result = LoadResult(name=self.name, load_type=self.load_type)
 
@@ -158,10 +165,54 @@ class BaseLoad(ABC):
         if result.has_errors:
             return result
 
+        if self.target_class:
+            obj_list = self.convert_to_objects(prepared_df, result)
+            if result.has_errors:
+                return result
+
+            self.object_list = obj_list
+            self.validate_objects(obj_list, result)
+            if result.has_errors:
+                return result
+
         result.prepared_data = prepared_df
         result.row_count = len(prepared_df)
         result.is_valid = True
         return result
+
+    def convert_to_objects(
+            self,
+            df: pd.DataFrame,
+            result: LoadResult
+    ) -> List[Any]:
+        objects = []
+
+        try:
+            records = df.to_dict(orient="records")
+
+            for idx, rec in enumerate(records):
+                try:
+                    # if isinstance(self.target_class, type):
+                    obj = self.target_class.from_dict(rec)
+                    objects.append(obj)
+                except Exception as ex:
+                    result.add_error(
+                        "convert_to_objects",
+                        f"{self.name}: row {idx} failed: {str(ex)}"
+                    )
+
+        except Exception as ex:
+            result.add_error("convert_to_objects", str(ex))
+
+        return objects
+
+    def validate_objects(
+            self,
+            objects: List[Any],
+            result: LoadResult
+    ) -> None:
+        if not objects:
+            result.add_error("validate_objects", f"{self.name}: no objects created")
 
     @abstractmethod
     def load_raw(self) -> Any:
@@ -221,3 +272,135 @@ class CSVLoad(BaseLoad):
         df = raw_data.copy()
         df.columns = [str(col).strip() for col in df.columns]
         return df
+
+
+
+# ============================================================
+# BaseETL
+# ============================================================
+
+@dataclass
+class BaseETL:
+    name: str
+    ref_loads: Dict[str, BaseLoad] = field(default_factory=dict)
+    main_loads: Dict[str, BaseLoad] = field(default_factory=dict)
+    # transformer: Optional[BaseTransform] = None
+    # extractor: Optional[BaseExtract] = None
+    context: ETLContext = field(default_factory=ETLContext)
+    report: ETLReport = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.report = ETLReport(etl_name=self.name)
+
+    def add_ref_load(self, load: BaseLoad) -> None:
+        load.load_type = "ref"
+        self.ref_loads[load.name] = load
+
+    def add_main_load(self, load: BaseLoad) -> None:
+        load.load_type = "main"
+        self.main_loads[load.name] = load
+
+    # def set_transformer(self, transformer: BaseTransform) -> None:
+    #     self.transformer = transformer
+    #
+    # def set_extractor(self, extractor: BaseExtract) -> None:
+    #     self.extractor = extractor
+
+    def run(self) -> ETLContext:
+        self.run_loads()
+        self.run_transform()
+        self.run_extract()
+        return self.context
+
+    def run_loads(self) -> None:
+        self._run_load_group(loads=self.ref_loads, target_dict=self.context.ref_data, group_name="reference_loads")
+        self._run_load_group(loads=self.main_loads, target_dict=self.context.main_data, group_name="main_loads")
+
+    def _run_load_group(
+        self,
+        loads: Dict[str, BaseLoad],
+        target_dict: Dict[str, pd.DataFrame],
+        group_name: str,
+    ) -> None:
+        for load_name, load_obj in loads.items():
+            audit = StepAudit(step_name=f"{group_name}.{load_name}")
+
+            try:
+                result = load_obj.run()
+                if not result.is_valid:
+                    for error in result.errors:
+                        self.report.add_error(error.step, error.message)
+                    audit.complete(status="FAILED")
+                    self.report.add_audit(audit)
+                    raise ValueError(f"Load failed: {load_name}")
+
+                target_dict[load_name] = result.prepared_data
+                if load_obj.target_class and load_obj.object_list:
+                    if load_obj.load_type == "ref":
+                        self.context.ref_objects[load_name] = load_obj.object_list
+                    else:
+                        self.context.main_objects[load_name] = load_obj.object_list
+                audit.complete(status="SUCCESS", row_count=result.row_count)
+
+            except Exception as ex:
+                if audit.status != "FAILED":
+                    audit.complete(status="FAILED")
+                self.report.add_error(group_name, f"{load_name}: {str(ex)}")
+                self.report.add_audit(audit)
+                raise
+
+            self.report.add_audit(audit)
+
+    def run_transform(self) -> None:
+        if self.transformer is None:
+            raise ValueError("Transformer is not configured")
+
+        audit = StepAudit(step_name=f"transform.{self.transformer.name}")
+
+        try:
+            result = self.transformer.run(self.context)
+            if not result.is_valid:
+                for error in result.errors:
+                    self.report.add_error(error.step, error.message)
+                audit.complete(status="FAILED")
+                self.report.add_audit(audit)
+                raise ValueError(f"Transform failed: {self.transformer.name}")
+
+            self.context.transformed_data = result.output_data
+            audit.complete(status="SUCCESS", row_count=result.row_count)
+
+        except Exception as ex:
+            if audit.status != "FAILED":
+                audit.complete(status="FAILED")
+            self.report.add_error("transform", str(ex))
+            self.report.add_audit(audit)
+            raise
+
+        self.report.add_audit(audit)
+
+    def run_extract(self) -> None:
+        if self.extractor is None:
+            raise ValueError("Extractor is not configured")
+
+        audit = StepAudit(step_name=f"extract.{self.extractor.name}")
+
+        try:
+            result = self.extractor.run(self.context)
+            if not result.is_valid:
+                for error in result.errors:
+                    self.report.add_error(error.step, error.message)
+                audit.complete(status="FAILED")
+                self.report.add_audit(audit)
+                raise ValueError(f"Extract failed: {self.extractor.name}")
+
+            self.context.extract_data.update(result.outputs)
+            audit.complete(status="SUCCESS", row_count=0)
+
+        except Exception as ex:
+            if audit.status != "FAILED":
+                audit.complete(status="FAILED")
+            self.report.add_error("extract", str(ex))
+            self.report.add_audit(audit)
+            raise
+
+        self.report.add_audit(audit)

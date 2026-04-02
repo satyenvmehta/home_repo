@@ -493,6 +493,7 @@ class BasePrice(BaseFloat):
             other = other.getBase()
         return BasePrice(self.getBase() * other)
 
+
 @dataclass
 class BaseDate(BaseObjectItem):
     def __post_init__(self):
