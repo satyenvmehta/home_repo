@@ -121,9 +121,10 @@ class StockFilterAttributes(C.BaseObject):
     bs_indicator:C.BaseString = None
     bd_advise:C.BaseString = None
     pos: C.BaseInt = None
+    pe : C.BaseFloat = None
 
 
-    def init_from_df(self, symbol, df, rsi, bs_indicator, bd_advise, pos):
+    def init_from_df(self, symbol, df, rsi, bs_indicator, bd_advise, pos, pe):
         """
         Initializes the StockFilterAttributes object from a pandas DataFrame.
 
@@ -155,6 +156,7 @@ class StockFilterAttributes(C.BaseObject):
         self.bs_indicator = bs_indicator
         self.bd_advise = bd_advise
         self.pos = pos
+        self.pe = pe
         return
     def __repr__(self):
         """

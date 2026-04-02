@@ -99,6 +99,12 @@ class Positions(BaseTrades):
             self.historys = hists
         return
 
+    def getPE(self, sym):
+        pos = self.getFirstPos(sym)
+        if isinstance(pos, Position):
+            return pos.PE
+        return None
+
     def isAnIdlePosition(self, sym):
         found = self.getCurrentObj(sym)
         if found:

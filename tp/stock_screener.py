@@ -5,6 +5,7 @@ import common_include as C
 from ta.momentum import RSIIndicator
 
 from MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_debug_list
+from base_lib.core.excel_classes import FillColor
 
 from position import Positions
 from sc_util import StockFilterAttributes
@@ -19,7 +20,7 @@ RSI_OVERSOLD_MINUS = 22
 
 IntraDayKey = "Intraday %"
 # Ticker	last	BS?	Pos	Intraday %	OC_gap%	ONight Gap%	High	Low	RSI	BS_IND	Pos
-interested_fields = ["Ticker",  "last", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
+interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
 
 positions = Positions()
 orders = Orders()
@@ -82,6 +83,7 @@ def append_filter_to_result(sfa, result):
         result.append(
             [sfa.Symbol.getBase()
                 , sfa.close_today.getBase()
+                , sfa.pe
                 , sfa.today_high.getBase()
                 , sfa.today_low.getBase()
                 , sfa.bd_advise
@@ -113,11 +115,16 @@ def find_stocks_multi():
                 continue
             rsi, bs_indicator, bd_advise = get_rsi(data, ticker)
             pos = positions.getTotalQty(ticker)
+            pe = positions.getPE(ticker)
+            if pe:
+                pe = pe.getBase()
+            else:
+                pe = None
             if pos == 0 or pos is None:
                 if bd_advise.endswith("Sell"):
                     bd_advise = "NA"
 
-            sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos)
+            sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos, pe)
             open_close_gap_abs = abs(sfa.open_close_gap_per.getBase())
             if sfa.intraday_range_per.getBase() > 3.5:
                 if open_close_gap_abs < 1.5:
