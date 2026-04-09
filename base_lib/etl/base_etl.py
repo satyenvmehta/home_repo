@@ -1,12 +1,14 @@
+import pathlib
+
 import common_include as C
 import pandas as pd
 
 from datetime import datetime
 from typing import Any, Optional
-
+from base_lib.core.base_classes import BaseObject
 
 @C.dataclass
-class BaseETLObject(C.BaseObject):
+class BaseETLObject(BaseObject):
     pass
 
 
@@ -17,6 +19,22 @@ class ETLError(BaseETLObject):
 
     def __str__(self) -> str:
         return f"[{self.Step}] {self.Message}"
+
+@C.dataclass
+class FilePath(BaseObject):
+    path: pathlib.Path
+
+    def __post_init__(self):
+        self.path = pathlib.Path(self.path)
+
+    def isValid(self) -> bool:
+        return self.path.exists() and self.path.is_file()
+
+    def read_file(self, **kwargs) -> pd.DataFrame:
+        return pd.read_csv(self.path, **kwargs)
+    def get_file_mod_time(self) -> datetime:
+        stat = self.path.stat()
+        return datetime.fromtimestamp(stat.st_mtime)
 
 
 @C.dataclass

@@ -65,81 +65,34 @@ class BaseLoad(BaseETLObject, ABC):
         if df is None:
             result.add_error("validate_prepared", f"{self.Name}: prepared data is None")
             return
-
         if not isinstance(df, pd.DataFrame):
             result.add_error("validate_prepared", f"{self.Name}: prepared data must be pandas DataFrame")
             return
 
         missing_cols = [col for col in self.RequiredColumns if col not in df.columns]
         if missing_cols:
-            result.add_error(
-                "validate_prepared",
-                f"{self.Name}: missing required columns: {missing_cols}"
-            )
+            result.add_error("validate_prepared", f"{self.Name}: missing required columns: {missing_cols}")
 
     def convert_to_objects(self, df: pd.DataFrame, result: LoadResult) -> list:
         object_list = []
 
-        if self.TargetClass is None:
+        if not hasattr(self.TargetClass, "from_dict"):
+            result.add_error("convert_to_objects", f"{self.Name}: TargetClass does not support from_dict")
             return object_list
 
         rows = df.to_dict(orient="records")
-
         for i, row in enumerate(rows):
             try:
-                obj = self.create_object_from_row(row=row)
+                obj = self.TargetClass.from_dict(row)
                 object_list.append(obj)
             except Exception as ex:
-                result.add_error(
-                    "convert_to_objects",
-                    f"{self.Name}: row {i} conversion failed: {str(ex)}"
-                )
+                result.add_error("convert_to_objects", f"{self.Name}: row {i} conversion failed: {str(ex)}")
 
         return object_list
 
-    def create_object_from_row(self, row: dict) -> Any:
-        if self.TargetClass is None:
-            raise ValueError(f"{self.Name}: TargetClass is None")
-
-        target_fields = self.get_target_class_field_names()
-
-        mapped_row = {}
-        for field_name in target_fields:
-            mapped_row[field_name] = self.normalize_row_value(row.get(field_name, None))
-
-        if hasattr(self.TargetClass, "from_dict"):
-            return self.TargetClass.from_dict(mapped_row)
-
-        return self.TargetClass(**mapped_row)
-
-    def normalize_row_value(self, value: Any) -> Any:
-        if pd.isna(value):
-            return None
-        return value
-
-    def get_target_class_field_names(self) -> list:
-        """
-        Returns dataclass field names for TargetClass.
-        """
-        if self.TargetClass is None:
-            return []
-
-        if not hasattr(self.TargetClass, "__dataclass_fields__"):
-            raise ValueError(
-                f"{self.Name}: TargetClass {self.TargetClass} is not a dataclass"
-            )
-
-        return list(self.TargetClass.__dataclass_fields__.keys())
-
     def validate_objects(self, object_list: list, result: LoadResult) -> None:
-        if object_list is None:
-            result.add_error("validate_objects", f"{self.Name}: object_list is None")
-            return
-
         if len(object_list) == 0:
             result.add_error("validate_objects", f"{self.Name}: no objects created")
-
-
 
 
 @C.dataclass
@@ -160,11 +113,10 @@ class DataFrameLoad(BaseLoad):
 @C.dataclass
 class CSVLoad(BaseLoad):
     FilePath: str = ""
-    fld_sep: str = ","
     ReadCsvKwargs: dict = C.field(default_factory=dict)
 
     def load_raw(self) -> Any:
-        return pd.read_csv(self.FilePath, **self.ReadCsvKwargs, sep=self.fld_sep)
+        return pd.read_csv(self.FilePath, **self.ReadCsvKwargs)
 
     def create_prepared(self, raw_data: Any) -> pd.DataFrame:
         df = raw_data.copy()

@@ -20,7 +20,7 @@ RSI_OVERSOLD_MINUS = 22
 
 IntraDayKey = "Intraday %"
 # Ticker	last	BS?	Pos	Intraday %	OC_gap%	ONight Gap%	High	Low	RSI	BS_IND	Pos
-interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
+interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "max_swing", "avg_swing"] #, "Pos"]
 
 positions = Positions()
 orders = Orders()
@@ -80,21 +80,64 @@ def get_rsi(data, ticker):
 
 def append_filter_to_result(sfa, result):
     if isinstance(result, list):
-        result.append(
-            [sfa.Symbol.getBase()
-                , sfa.close_today.getBase()
-                , sfa.pe
-                , sfa.today_high.getBase()
-                , sfa.today_low.getBase()
-                , sfa.bd_advise
-                , sfa.pos
-                , sfa.intraday_range_per.getBase()
-                , sfa.open_close_gap_per.getBase()
-                , sfa.overnight_gap.getBase()
-                , sfa.rsi.getBase()
-                , sfa.bs_indicator
-             ])
+        if isinstance(sfa, StockFilterAttributes):
+            result.append(
+                [sfa.Symbol.getBase()
+                    , sfa.close_today.getBase()
+                    , sfa.pe
+                    , sfa.today_high.getBase()
+                    , sfa.today_low.getBase()
+                    , sfa.bd_advise
+                    , sfa.pos
+                    , sfa.intraday_range_per.getBase()
+                    , sfa.open_close_gap_per.getBase()
+                    , sfa.overnight_gap.getBase()
+                    , sfa.rsi.getBase()
+                    , sfa.bs_indicator
+                 , sfa.is_yoyo
+                 , sfa.yo_max_swing
+                 , sfa.yo_avg_daily_swing
+                 ])
 
+
+import yfinance as yf
+import pandas as pd
+
+daily_swing_pct_param = 6
+def get_yoyo_metrics(ticker_symbol, no_days=5):
+    # Fetch historical data (including current intraday if market is open)
+    ticker = yf.Ticker(ticker_symbol)
+    df = ticker.history(period=f"{no_days + 5}d")  # Extra days for technical buffering
+
+    if df.empty or len(df) < no_days:
+        return None
+
+    # 1. Calculate Daily Range Percentage: (High - Low) / Open
+    # This measures how much the "Yo-Yo" moved during the day
+    df['daily_swing_pct'] = (df['High'] - df['Low']) / df['Open'] * 100
+
+    # 2. Identify Direction: 1 for Green (Close > Open), -1 for Red
+    df['direction'] = df.apply(lambda x: 1 if x['Close'] > x['Open'] else -1, axis=1)
+
+    # 3. Count Directional Flips: Does it change color day-to-day?
+    df['flip'] = df['direction'].diff().fillna(0).apply(lambda x: 1 if x != 0 else 0)
+
+    # Get the last N business days
+    recent_data = df.tail(no_days)
+
+    metrics = {
+        "ticker": ticker_symbol,
+        "avg_daily_swing": round(recent_data['daily_swing_pct'].mean(), 2),
+        "max_swing": round(recent_data['daily_swing_pct'].max(), 2),
+        "direction_flips": int(recent_data['flip'].sum()),
+        "is_yoyo": recent_data['daily_swing_pct'].mean() > daily_swing_pct_param and recent_data['flip'].sum() >= (no_days / 2)
+    }
+
+    return metrics
+
+
+# Example usage:
+# print(get_yoyo_metrics("TSLA", no_days=5))
 
 def find_stocks_multi():
     # Get all tickers at once
@@ -124,7 +167,10 @@ def find_stocks_multi():
                 if bd_advise.endswith("Sell"):
                     bd_advise = "NA"
 
-            sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos, pe)
+            yoyo_metrix = get_yoyo_metrics(ticker_symbol=ticker)
+            yo_avg_daily_swing, yo_max_swing, is_yoyo = yoyo_metrix['avg_daily_swing'], yoyo_metrix['max_swing'], yoyo_metrix['is_yoyo']
+
+            sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos, pe, is_yoyo=is_yoyo, yo_avg_daily_swing=yo_avg_daily_swing, yo_max_swing=yo_max_swing)
             open_close_gap_abs = abs(sfa.open_close_gap_per.getBase())
             if sfa.intraday_range_per.getBase() > 3.5:
                 if open_close_gap_abs < 1.5:

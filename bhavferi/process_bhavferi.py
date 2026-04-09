@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import common_include as C
+from base_lib.core.Person import Person
 from base_lib.etl.base_load import DataFrameLoad, CSVLoad
 
 
@@ -21,32 +22,17 @@ class Trade(C.BaseObject):
 
 from base_lib.core.base_classes import BaseRowModel
 @C.dataclass
-class Trade1(C.BaseRowModel):
-    TradeId: int = None
-    CustomerId: int = None
-    Amount: float = None
-
-import pandas as pd
-
-trades_df = pd.DataFrame({
-    "TradeId": [1, 2, 3],
-    "CustomerId": [101, 102, 103],
-    "Amount": [1000.0, 2500.0, None],
-})
-
-load = C.DataFrameLoad(
-    Name="Trades12",
-    LoadType="main",
-    SourceDf=trades_df,
-    RequiredColumns=["TradeId", "CustomerId", "Amount"],
-    TargetClass=Trade1,
-)
+class Person(C.BaseRowModel):
+    Address: str = None
+    Name: str = None
 
 load_csv = C.CSVLoad(
-    Name="Trades",
-    FilePath="trades.csv",
+    Name="Monroe",
+    FilePath="Monroe_QA.txt",
+    fld_sep = "\t",
     LoadType="main",
-    TargetClass=Trade,
+    TargetClass=Person,
+    RequiredColumns=["Address", "Name"],
 )
 
 def run_load(load):
@@ -65,5 +51,7 @@ def run_load(load):
     for err in result.Errors:
         print(err)
 
-run_load(load=load)
-run_load(load=load_csv)
+
+if __name__ == "__main__":
+    # run_load(load=load)
+    run_load(load=load_csv)

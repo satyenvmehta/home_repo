@@ -320,12 +320,6 @@ class BaseFileObject(BaseObject):
             self.df.set_index(keys=index_col)
         return self.df_list
 
-    # def load_data_to_class_list(self, cls)->list:
-    #     lamfun = get_load_fun_basedon_cls(cls)
-    #     if lamfun:
-    #         return list(map(lamfun, self.df.values.tolist()))
-    #     return None
-
     def crete_row_values_to_class(self, cls, row):
         annos = cls.__annotations__
         data_dict = {}

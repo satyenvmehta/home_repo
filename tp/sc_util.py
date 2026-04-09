@@ -122,9 +122,12 @@ class StockFilterAttributes(C.BaseObject):
     bd_advise:C.BaseString = None
     pos: C.BaseInt = None
     pe : C.BaseFloat = None
+    yo_avg_daily_swing : C.BaseFloat = None
+    yo_max_swing : C.BaseFloat = None
+    is_yoyo : C.BaseBool = None
 
 
-    def init_from_df(self, symbol, df, rsi, bs_indicator, bd_advise, pos, pe):
+    def init_from_df(self, symbol, df, rsi, bs_indicator, bd_advise, pos, pe, yo_avg_daily_swing, yo_max_swing, is_yoyo):
         """
         Initializes the StockFilterAttributes object from a pandas DataFrame.
 
@@ -157,6 +160,11 @@ class StockFilterAttributes(C.BaseObject):
         self.bd_advise = bd_advise
         self.pos = pos
         self.pe = pe
+
+        self.is_yoyo = is_yoyo
+        self.yo_max_swing = yo_max_swing
+        self.yo_avg_daily_swing = yo_avg_daily_swing
+
         return
     def __repr__(self):
         """
