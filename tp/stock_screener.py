@@ -150,6 +150,8 @@ def find_stocks_multi():
     rest_results = []
 
     sfa = StockFilterAttributes()
+    error_tickers = ['avxx', 'bmnz', 'hmy', 'orcl', 'orcx']
+    tickers = error_tickers
 
     for ticker in tickers:
         try:

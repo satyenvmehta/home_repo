@@ -146,7 +146,7 @@ class Orders(BaseTrades):
         if not res:
             return False
         if res.size() > 1:
-            print({"Multiple Orders" : res.size()})
+            print({"Multiple Orders" : res.size(), " Symbol " : sym})
             # return True
         if res.size() > 0:
             for ord in res.getBase():
