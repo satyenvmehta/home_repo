@@ -5,10 +5,10 @@ import common_include as C
 from ta.momentum import RSIIndicator
 
 from MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_debug_list
-from base_lib.core.excel_classes import FillColor
 
 from position import Positions
 from sc_util import StockFilterAttributes
+from tp.all_history import Historys
 # from tp.excel_support import ExcelCreator, FillColor, ConditionOp, Condition
 from tp.order import Orders
 
@@ -20,10 +20,13 @@ RSI_OVERSOLD_MINUS = 22
 
 IntraDayKey = "Intraday %"
 # Ticker	last	BS?	Pos	Intraday %	OC_gap%	ONight Gap%	High	Low	RSI	BS_IND	Pos
-interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "max_swing", "avg_swing"] #, "Pos"]
+interested_fields = ["Ticker",  "last", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
 
+# def init_stock_screener():
 positions = Positions()
 orders = Orders()
+historys = Historys()
+    # return positions, orders, historys
 
 def getRSI(df, window=RSI_WINDOW):
     delta = df["Close"].diff()
@@ -45,6 +48,26 @@ def get_orders_exists(ticker):
     if se:
         return False, True
     return False, False
+
+IGNORE = "_Ign"
+def check_recent_history_price(ticker, bs, last):
+    recent_price =  historys.recent_price(ticker, bs)
+    ext_str = ""
+    if not recent_price:
+        return ext_str
+    if bs.endswith('Buy'):
+        if last > recent_price:
+            return IGNORE
+    if bs.endswith("Sell"):
+        if last < recent_price:
+            return IGNORE
+
+    diff = abs(last - recent_price)
+    diff_percen = diff / recent_price * 100
+    if diff_percen <  4.0:
+        ext_str = IGNORE
+    return ext_str
+
 def get_rsi(data, ticker):
     df = data[ticker].dropna()
     if len(df) < RSI_WINDOW + 1:
@@ -68,6 +91,13 @@ def get_rsi(data, ticker):
     else:
         bs_indicator = "Neutral"
         bd_advise = "Hold"
+
+    close_price = float(df['Close'].iloc[-1])
+
+    price_ind = check_recent_history_price(ticker=ticker, bs=bd_advise, last=close_price)
+    if price_ind == IGNORE:
+        bd_advise = bd_advise + price_ind
+
     PLUS = "+"
     if bd_advise.endswith("Buy"):
         if be:
@@ -76,68 +106,29 @@ def get_rsi(data, ticker):
         if se:
             bd_advise = bd_advise + PLUS
 
+
     return C.BasePrice(rsi), bs_indicator, bd_advise
 
 def append_filter_to_result(sfa, result):
     if isinstance(result, list):
-        if isinstance(sfa, StockFilterAttributes):
-            result.append(
-                [sfa.Symbol.getBase()
-                    , sfa.close_today.getBase()
-                    , sfa.pe
-                    , sfa.today_high.getBase()
-                    , sfa.today_low.getBase()
-                    , sfa.bd_advise
-                    , sfa.pos
-                    , sfa.intraday_range_per.getBase()
-                    , sfa.open_close_gap_per.getBase()
-                    , sfa.overnight_gap.getBase()
-                    , sfa.rsi.getBase()
-                    , sfa.bs_indicator
-                 , sfa.is_yoyo
-                 , sfa.yo_max_swing
-                 , sfa.yo_avg_daily_swing
-                 ])
+        if sfa.rsi:
+            rsival = sfa.rsi.getBase()
+        else:
+            rsival = None
+        result.append(
+            [sfa.Symbol.getBase()
+                , sfa.close_today.getBase()
+                , sfa.today_high.getBase()
+                , sfa.today_low.getBase()
+                , sfa.bd_advise
+                , sfa.pos
+                , sfa.intraday_range_per.getBase()
+                , sfa.open_close_gap_per.getBase()
+                , sfa.overnight_gap.getBase()
+                , rsival
+                , sfa.bs_indicator
+             ])
 
-
-import yfinance as yf
-import pandas as pd
-
-daily_swing_pct_param = 6
-def get_yoyo_metrics(ticker_symbol, no_days=5):
-    # Fetch historical data (including current intraday if market is open)
-    ticker = yf.Ticker(ticker_symbol)
-    df = ticker.history(period=f"{no_days + 5}d")  # Extra days for technical buffering
-
-    if df.empty or len(df) < no_days:
-        return None
-
-    # 1. Calculate Daily Range Percentage: (High - Low) / Open
-    # This measures how much the "Yo-Yo" moved during the day
-    df['daily_swing_pct'] = (df['High'] - df['Low']) / df['Open'] * 100
-
-    # 2. Identify Direction: 1 for Green (Close > Open), -1 for Red
-    df['direction'] = df.apply(lambda x: 1 if x['Close'] > x['Open'] else -1, axis=1)
-
-    # 3. Count Directional Flips: Does it change color day-to-day?
-    df['flip'] = df['direction'].diff().fillna(0).apply(lambda x: 1 if x != 0 else 0)
-
-    # Get the last N business days
-    recent_data = df.tail(no_days)
-
-    metrics = {
-        "ticker": ticker_symbol,
-        "avg_daily_swing": round(recent_data['daily_swing_pct'].mean(), 2),
-        "max_swing": round(recent_data['daily_swing_pct'].max(), 2),
-        "direction_flips": int(recent_data['flip'].sum()),
-        "is_yoyo": recent_data['daily_swing_pct'].mean() > daily_swing_pct_param and recent_data['flip'].sum() >= (no_days / 2)
-    }
-
-    return metrics
-
-
-# Example usage:
-# print(get_yoyo_metrics("TSLA", no_days=5))
 
 def find_stocks_multi():
     # Get all tickers at once
@@ -155,24 +146,21 @@ def find_stocks_multi():
 
     for ticker in tickers:
         try:
+            ticker = ticker.upper()
+            # if ticker in C.ignore_ticker:
+            #     continue
             df = data[ticker].dropna().tail(2)
             if len(df) < 2:
                 continue
             rsi, bs_indicator, bd_advise = get_rsi(data, ticker)
             pos = positions.getTotalQty(ticker)
-            pe = positions.getPE(ticker)
-            if pe:
-                pe = pe.getBase()
-            else:
-                pe = None
             if pos == 0 or pos is None:
+                if not bd_advise:
+                    bd_advise = "NA"
                 if bd_advise.endswith("Sell"):
                     bd_advise = "NA"
 
-            yoyo_metrix = get_yoyo_metrics(ticker_symbol=ticker)
-            yo_avg_daily_swing, yo_max_swing, is_yoyo = yoyo_metrix['avg_daily_swing'], yoyo_metrix['max_swing'], yoyo_metrix['is_yoyo']
-
-            sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos, pe, is_yoyo=is_yoyo, yo_avg_daily_swing=yo_avg_daily_swing, yo_max_swing=yo_max_swing)
+            sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos)
             open_close_gap_abs = abs(sfa.open_close_gap_per.getBase())
             if sfa.intraday_range_per.getBase() > 3.5:
                 if open_close_gap_abs < 1.5:

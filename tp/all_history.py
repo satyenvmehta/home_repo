@@ -1,4 +1,5 @@
 from datetime import timedelta
+from encodings.punycode import selective_len
 
 import pandas as pd
 from pandas import DataFrame
@@ -123,6 +124,7 @@ class Historys(BaseTrades):
     def getRecordsForSym(self, sym):
         df = self.getDF()
         return df.loc[df['Symbol'] == sym]
+
     def getRecordForAcct(self, acct):
         df = self.getDF()
         return df.loc[df[Account] == acct]
@@ -384,6 +386,30 @@ class Historys(BaseTrades):
     def getGainLossForSymbol(self, sym):
         return self.getFloatValueForSymbol(sym, 'gain_loss')
 
+    def recent_price(self, ticker, bs):
+        sym_hist = self.getRecordsForSym(sym=ticker)
+        if len(sym_hist) == 0:
+            return None
+        if bs.endswith('Buy'):
+            rec_found = sym_hist[sym_hist['quantity'] > 0].head(1)
+        else:
+            rec_found = sym_hist[sym_hist['quantity'] < 0].head(1)
+        if rec_found.empty:
+            return None
+        return rec_found['price'].iloc[0]
+
+
+    def getHistory(self, ticker):
+        sym_hist = self.summary_df.loc[self.summary_df['Symbol'] == ticker]
+        return sym_hist
+    def resetForNextSym(self, sym):
+        self.ref_price = self.getLastPrice(sym)
+        self.ref_qty = self.getLastQuantity(sym)
+        self.ref_action = self.getLastAction(sym)
+        self.ref_obj_list = self.getRefObjsForSymbol(sym)
+        pass
+
+
 def Dbg_DF():
     data = {
         'symbol': ['AAPL', 'AAPL', 'GOOGL', 'GOOGL', 'MSFT', 'MSFT', 'TSLA', 'TSLA'],
@@ -400,11 +426,21 @@ def print_history(hist):
     if isinstance(hist, Historys):
         listOfInterest = { 'History': hist,
                           'HistorySummary': hist.summary_df}
-        hist._saveResults(listOfInterest=listOfInterest, fileName=C.alt_output_file, altFilename=C.alt_output_file)
+        hist._saveResults(listOfInterest=listOfInterest, fileName=C.alt_output_file)
     return
+
+
+def check_recent_history_price(hs, ticker, bs):
+    return hs.recent_price(ticker, bs)
 
 if __name__ == '__main__':
     ht = Historys()
+    tkr = 'MBLY'
+    price = check_recent_history_price(ht, tkr, 'Buy')
+    print(price)
+    sell_pr = check_recent_history_price(ht, tkr, 'Sell')
+    print(sell_pr)
+
     print(ht.isAnIdleSymbol('MS'))
 
     print_history(ht)
