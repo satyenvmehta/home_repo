@@ -8,6 +8,7 @@ from MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_d
 
 from position import Positions
 from sc_util import StockFilterAttributes
+from tp.all_history import Historys
 # from tp.excel_support import ExcelCreator, FillColor, ConditionOp, Condition
 from tp.order import Orders
 
@@ -21,8 +22,11 @@ IntraDayKey = "Intraday %"
 # Ticker	last	BS?	Pos	Intraday %	OC_gap%	ONight Gap%	High	Low	RSI	BS_IND	Pos
 interested_fields = ["Ticker",  "last", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
 
+# def init_stock_screener():
 positions = Positions()
 orders = Orders()
+historys = Historys()
+    # return positions, orders, historys
 
 def getRSI(df, window=RSI_WINDOW):
     delta = df["Close"].diff()
@@ -44,6 +48,26 @@ def get_orders_exists(ticker):
     if se:
         return False, True
     return False, False
+
+IGNORE = "_Ign"
+def check_recent_history_price(ticker, bs, last):
+    recent_price =  historys.recent_price(ticker, bs)
+    ext_str = ""
+    if not recent_price:
+        return ext_str
+    if bs.endswith('Buy'):
+        if last > recent_price:
+            return IGNORE
+    if bs.endswith("Sell"):
+        if last < recent_price:
+            return IGNORE
+
+    diff = abs(last - recent_price)
+    diff_percen = diff / recent_price * 100
+    if diff_percen <  4.0:
+        ext_str = IGNORE
+    return ext_str
+
 def get_rsi(data, ticker):
     df = data[ticker].dropna()
     if len(df) < RSI_WINDOW + 1:
@@ -67,6 +91,13 @@ def get_rsi(data, ticker):
     else:
         bs_indicator = "Neutral"
         bd_advise = "Hold"
+
+    close_price = float(df['Close'].iloc[-1])
+
+    price_ind = check_recent_history_price(ticker=ticker, bs=bd_advise, last=close_price)
+    if price_ind == IGNORE:
+        bd_advise = bd_advise + price_ind
+
     PLUS = "+"
     if bd_advise.endswith("Buy"):
         if be:
@@ -75,10 +106,15 @@ def get_rsi(data, ticker):
         if se:
             bd_advise = bd_advise + PLUS
 
+
     return C.BasePrice(rsi), bs_indicator, bd_advise
 
 def append_filter_to_result(sfa, result):
     if isinstance(result, list):
+        if sfa.rsi:
+            rsival = sfa.rsi.getBase()
+        else:
+            rsival = None
         result.append(
             [sfa.Symbol.getBase()
                 , sfa.close_today.getBase()
@@ -89,7 +125,7 @@ def append_filter_to_result(sfa, result):
                 , sfa.intraday_range_per.getBase()
                 , sfa.open_close_gap_per.getBase()
                 , sfa.overnight_gap.getBase()
-                , sfa.rsi.getBase()
+                , rsival
                 , sfa.bs_indicator
              ])
 
@@ -108,12 +144,17 @@ def find_stocks_multi():
 
     for ticker in tickers:
         try:
+            ticker = ticker.upper()
+            # if ticker in C.ignore_ticker:
+            #     continue
             df = data[ticker].dropna().tail(2)
             if len(df) < 2:
                 continue
             rsi, bs_indicator, bd_advise = get_rsi(data, ticker)
             pos = positions.getTotalQty(ticker)
             if pos == 0 or pos is None:
+                if not bd_advise:
+                    bd_advise = "NA"
                 if bd_advise.endswith("Sell"):
                     bd_advise = "NA"
 
