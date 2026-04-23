@@ -10,4 +10,5 @@ class BhavferiProcessing(C.BaseClass):
     street_names: C.BaseString
     zipcodes : C.BaseList
 
-    
+
+

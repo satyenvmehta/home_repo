@@ -252,6 +252,14 @@ class BaseObjectItem(BaseObject):
         # super().__post_init__()
         self.setClassMembers()
         return
+#
+# @dataclass
+# class BasePath(BaseObjectItem):
+#     def isValid(self):
+#         return
+#
+#     def __post_init__(self):
+#         self.setBase
 
 @dataclass
 class BaseBool(BaseObjectItem):
@@ -461,6 +469,12 @@ class BaseString(BaseObjectItem):
         res = self.getBase() == other.getBase()
         return res
 
+# @dataclass
+# class BaseFilePath(BaseObjectItem):
+#
+
+
+
 @dataclass
 class BaseMoney(BaseFloat):
     def __post_init__(self):
@@ -492,6 +506,7 @@ class BasePrice(BaseFloat):
         if isinstance(other, BasePrice):
             other = other.getBase()
         return BasePrice(self.getBase() * other)
+
 
 @dataclass
 class BaseDate(BaseObjectItem):
@@ -567,6 +582,18 @@ class BaseDate(BaseObjectItem):
             other = BaseDate(other)
         # Compare the instance date with the parsed date
         return self.getBase() > other.getBase()
+
+# base_lib/core/base_row_model.py
+
+@dataclass
+class BaseRowModel(BaseObject):
+    """
+    Base class for domain/business row objects.
+    """
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls(**d)
 
 import logging
 
@@ -759,7 +786,7 @@ def Dbg_save_file():
 
     # listOfInterest = {'Results': [],  'Errors': []}
     listOfInterest = {"DF": df, "DF2" : df }
-    a._saveResults(listOfInterest, alt_output_file, altFilename=alt_output_file)
+    a._saveResults(listOfInterest, alt_output_file) #, altFilename=alt_output_file)
     return
 
 def DbgLogger():

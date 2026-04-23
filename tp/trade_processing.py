@@ -905,11 +905,16 @@ class TradeProcessing(C.BaseObject):
                 perDiff = 100* (order.orderLimitPrice - pos.Last)/pos.Last
                 if abs(perDiff) > tooFar2TradeThreshold:
                     exception = "Order Price Too (H|L) to Sell/Buy"
+    def securityToBeSold(self):
+        print("securityToBeSold .. Pending")
+        return
 
 def Dbg_save_file(b):
     listOfInterest = {'Results': []}
     b._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, altFilename=C.alt_output_file)
     exit(1)
+
+
 
 
 def tp():
@@ -920,6 +925,7 @@ def tp():
     b.analyzeBuySellAction()
     # b.analyzeSectorDistribution()
     b.saveResults()
+    b.securityToBeSold()
     print("Done..")
 
     # b.report()

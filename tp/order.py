@@ -62,15 +62,6 @@ class Order(BaseTrade):
         # print(str(self))
         return
 
-    # def bidTooFarFromLast(self, hp=None):
-    #     from base_lib.core.common_include import getDeltaPercentage
-    #     if not hp:
-    #
-    #     delatP = abs(getDeltaPercentage(self.Last.getBase(), self.orderLimitPrice.getBase()))
-    #     if thresholdP[self.buySell.getBase()]  < delatP:
-    #         return True, str(BasePercentage(delatP))
-    #     return False, ""
-
     def isOpen(self):
         return self.Status.isOpen()
     def isFilled(self):
@@ -83,18 +74,10 @@ class Order(BaseTrade):
         status = self.Status.getBase()
         if status:
             return status
-        # if isinstance(status, str):
-        #     st_words = status.split(' ')
-        #     if st_words[0] in ['FILLED', 'OPEN', "O"]:
-        #         return st_words[0]
-        #     if st_words in ['PARTIALLY FILLED', 'VERIFIED CANCELLED']:
-        #         return st_words[1]
-        # print( {"{str(self)} Unknown Status " : status})
         return "NA"
 
     def getSymbol(self):
         return self.Symbol.getBase()
-
 
     def isBuy(self):
         bs = self.getBuySell()
@@ -102,7 +85,6 @@ class Order(BaseTrade):
             return True
         else:
             return False
-
 
 @C.dataclass
 class Orders(BaseTrades):
@@ -172,7 +154,6 @@ class Orders(BaseTrades):
                     if ord.isOpen():
                         return True
         return False
-    # del print
 
     def printDuplicateOrders(self):
         print("Duplicate Orders - checking")
@@ -202,10 +183,6 @@ class Orders(BaseTrades):
                             # print(sym,  ":", res.size(), "BS:",  bs)
         print("Duplicate Orders - Done")
         return
-
-    # def post_read(self):
-    #     print("Custmizing")
-    #     return
 
 def initOrdersParams():
     for ord in ords.getBase():
