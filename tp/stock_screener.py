@@ -7,7 +7,7 @@ from ta.momentum import RSIIndicator
 from MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_debug_list
 
 from position import Positions
-from sc_util import StockFilterAttributes
+from sc_util import StockFilterAttributes, get_yoyo_metrics
 from tp.all_history import Historys
 # from tp.excel_support import ExcelCreator, FillColor, ConditionOp, Condition
 from tp.order import Orders
@@ -20,7 +20,8 @@ RSI_OVERSOLD_MINUS = 22
 
 IntraDayKey = "Intraday %"
 # Ticker	last	BS?	Pos	Intraday %	OC_gap%	ONight Gap%	High	Low	RSI	BS_IND	Pos
-interested_fields = ["Ticker",  "last", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
+# interested_fields = ["Ticker",  "last", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
+interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "max_swing", "avg_swing"] #, "Pos"]
 
 # def init_stock_screener():
 positions = Positions()
@@ -118,6 +119,7 @@ def append_filter_to_result(sfa, result):
         result.append(
             [sfa.Symbol.getBase()
                 , sfa.close_today.getBase()
+                , sfa.pe
                 , sfa.today_high.getBase()
                 , sfa.today_low.getBase()
                 , sfa.bd_advise
@@ -127,6 +129,9 @@ def append_filter_to_result(sfa, result):
                 , sfa.overnight_gap.getBase()
                 , rsival
                 , sfa.bs_indicator
+            , sfa.is_yoyo
+            , sfa.yo_max_swing
+            , sfa.yo_avg_daily_swing
              ])
 
 
@@ -154,13 +159,23 @@ def find_stocks_multi():
                 continue
             rsi, bs_indicator, bd_advise = get_rsi(data, ticker)
             pos = positions.getTotalQty(ticker)
+            pe = positions.getPE(ticker)
+            if pe:
+                pe = pe.getBase()
+            else:
+                pe = None
             if pos == 0 or pos is None:
                 if not bd_advise:
                     bd_advise = "NA"
                 if bd_advise.endswith("Sell"):
                     bd_advise = "NA"
 
-            sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos)
+            yoyo_metrix = get_yoyo_metrics(ticker_symbol=ticker)
+            yo_avg_daily_swing, yo_max_swing, is_yoyo = yoyo_metrix['avg_daily_swing'], yoyo_metrix['max_swing'], yoyo_metrix['is_yoyo']
+
+            sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos, pe, is_yoyo=is_yoyo, yo_avg_daily_swing=yo_avg_daily_swing, yo_max_swing=yo_max_swing)
+
+            # sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos)
             open_close_gap_abs = abs(sfa.open_close_gap_per.getBase())
             if sfa.intraday_range_per.getBase() > 3.5:
                 if open_close_gap_abs < 1.5:
