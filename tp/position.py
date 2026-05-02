@@ -1,8 +1,8 @@
 import common_include as C
 
-from TradeUtil import *
+from tp.TradeUtil import *
 
-from all_history import Historys #, historySummary
+from tp.all_history import Historys #, historySummary
 from tp.tp_include import SmallMrkCapValue
 
 # Symbol	Last	% Chg	% G/L	Quantity	Account	Day Range	News	Prev Close
@@ -54,6 +54,13 @@ class Position(BaseTrade):
         return ps
 
     def setEarnigAlert(self):
+        if self.EarningsDate:
+            if not self.EarningsDate.getBase():
+                self.earningAlert = None
+                return
+        if not self.EarningsDate:
+            self.earningAlert = None
+            return
         NoOfDays = self.EarningsDate.getNoDaysFromToday()
         if  NoOfDays < 10 and NoOfDays > -3:
             self.earningAlert = C.BaseInt(NoOfDays)
@@ -116,11 +123,15 @@ class Positions(BaseTrades):
     def getTotalQty(self, sym):
         total = 0
         for pos in self.getBase():
+            if not isinstance(pos, Position):
+                continue
             if pos.Symbol.getBase() == sym:
                 total += pos.Quantity.getBase()
         return total
     def getFirstPos(self, sym):
         for pos in self.getBase():
+            if not isinstance(pos, Position):
+                continue
             if pos.Symbol.getBase() == sym:
                 return pos
         return None
@@ -134,6 +145,8 @@ class Positions(BaseTrades):
     def getPositionsValue(self, sym):
         total = 0
         for pos in self.getBase():
+            if not isinstance(pos, Position):
+                continue
             if pos.Symbol.getBase() == sym:
                 total += pos.Value.getBase()
         return total
@@ -144,6 +157,8 @@ class Positions(BaseTrades):
     def isPennyStock(self, sym):
         found = False
         for pos in self.getBase():
+            if not isinstance(pos, Position):
+                continue
             if not found and pos.Symbol.getBase() == sym:
                 found = True
                 if pos.isPennyStock():

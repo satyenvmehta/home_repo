@@ -91,7 +91,7 @@ def isMFSym(sym):
     return False
 
 ExceptionTicker = [
-'L4135L100','SPAXX','SRNEQ','TSPH', 'SCLX', 'SRNE', "FZDXX", "MODVQ"
+'L4135L100','SPAXX','SRNEQ', "FZDXX", "MODVQ"
 ]
 MutFundList = [
     'FAGIX', 'FBIOX', 'FDCPX', 'FDRXX', 'FHIFX', 'FHKCX', 'FIDSX', 'FIEUX', 'FNBGX', 'FOCPX', 'FPHAX', 'FRESX',

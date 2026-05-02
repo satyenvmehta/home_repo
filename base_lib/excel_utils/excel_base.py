@@ -11,12 +11,15 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 import re
 
+# from base_lib.core.formatters import FillColor
+# import common_include as C
 
 # ----------------------------
 # Enums (no magic strings)
 # ----------------------------
 
 class FillColor(Enum):
+    LIGHT_GRAY = "ADD8E6"
     YELLOW = "FFFF00"
     GREEN  = "CCFFCC"
     RED    = "FFC7CE"
@@ -24,12 +27,19 @@ class FillColor(Enum):
 
 
 class ConditionOp(Enum):
+    # CONTAINS = None
     GT = ">"
     LT = "<"
     GTE = ">="
     LTE = "<="
     EQ = "=="
     BETWEEN = "between"
+    NOT_CONTAINS = "not_contains"
+    CONTAINS = "contains"
+    def __str__(self):
+        return self.value
+    def __repr__(self):
+        return self.value
 
 
 @dataclass(frozen=True)
@@ -144,3 +154,7 @@ class ExcelFileBase(ABC):
     @abstractmethod
     def save(self) -> None:
         ...
+
+
+if __name__ == "__main__":
+    create_excel(filen, df_dict, apply_formatter)

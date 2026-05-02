@@ -1,5 +1,12 @@
 from datetime import datetime
 import sys
+
+from tp.all_history import Historys
+from tp.init_refs import initRefData
+from tp.order import Orders
+from tp.position import Positions
+from tp.stock_screener import stock_screener_exec
+
 # base_lib = r'G:\My Drive\Software\PycharmProjects\base_lib'
 # sys.path.append(base_lib)
 
@@ -10,7 +17,7 @@ import sys
 # from tp.market.client_fe import MarketPrice
 
 ExceptionTicker = [
-'L4135L100','SPAXX','SRNEQ','TSPH', 'SCLX', 'SRNE', "FZDXX"
+'L4135L100','SPAXX','SRNEQ','TSPH',  "FZDXX"
 ]
 
 Debug_tickers = ['TQQQ' ]
@@ -48,6 +55,8 @@ def pending_items():
     print("Repot competed on " + str(datetime.now().date()) + " " + str(datetime.now().time()) )
     return
 import trade_processing
+
+
 if __name__ == '__main__':
 
     # from set_path import append_lib_path
@@ -58,6 +67,11 @@ if __name__ == '__main__':
     # if 'SPAXX' in ExceptionTicker:
     #     raise Exception('SPAXX')
 
+    hist_vals, pos_vals, ords_vals = initRefData()
+    if not hist_vals or not pos_vals or not ords_vals:
+        print("Error initializing data")
+        exit(1)
+    stock_screener_exec()
     trade_processing.tp()
     pending_items()
 

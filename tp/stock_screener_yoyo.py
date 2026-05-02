@@ -5,7 +5,7 @@ import common_include as C
 from ta.momentum import RSIIndicator
 
 from MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_debug_list
-from base_lib.core.excel_classes import FillColor
+from base_lib.core.old_excel_classes import FillColor
 
 from position import Positions
 from sc_util import StockFilterAttributes

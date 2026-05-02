@@ -4,7 +4,7 @@ import pandas as pd
 
 import common_include as C
 from tp.market.get_price import getHistoricalData, getTickerInfo
-from TradeUtil import  prep_ticker_list, prep_debug_list
+from tp.TradeUtil import  prep_ticker_list, prep_debug_list
 from tp.market.validate_ticker import _validate_ticker
 
 RefreshInterval = 7

@@ -65,6 +65,8 @@ class BaseTrades(C.BaseReaderWriter):
 
     def post_read(self):
         for item in self.getBase():
+            if not item:
+                continue
             if isinstance(item, self.cls):
                 # item.setDescDetails()
                 if self.getDebug():

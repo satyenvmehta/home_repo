@@ -14,7 +14,7 @@ posThreshold = threshold
 negThreshold = -threshold
 import common_include as C
 header_lines = 6
-from tp_include import *
+from tp.tp_include import *
 
 @C.dataclass
 class History(BaseTrade):
@@ -68,7 +68,7 @@ class History(BaseTrade):
                    data_dict['Price'],	data_dict['Amount'],data_dict['Account'], data_dict['Description'])
         # o.noOfDaysSinceTrans()
         return o
-from account import AccountManager
+from tp.account import AccountManager
 
 @C.dataclass
 class Historys(BaseTrades):

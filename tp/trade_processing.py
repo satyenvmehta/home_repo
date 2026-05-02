@@ -1,12 +1,18 @@
 import pandas as pd
 import common_include as C
+from tp.init_refs import initRefData, create_ticker_list
+from tp.order import initOrdersParams
 
-Debug_Ticker = "PATH"
+Debug_Ticker = "ABTC"
 
-from order import Orders, Order
-from position import Positions, Position
-from all_history import Historys #,  historySummary
+# from order import Orders, Order
+# from all_history import Historys #,  historySummary
 from inteli_scan import InteliScans, InteliScan
+
+from tp.all_history import Historys
+from tp.order import Orders, Order
+from tp.position import Position
+
 
 tooFar2TradeThreshold = 5
 BT = 12
@@ -116,17 +122,25 @@ def apply_number_format_by_header(
             # print(col_name)
             ws.set_column(col_idx, col_idx, None, num_fmt)
 
+# hist_vals = Historys()
+# pos_vals = Positions()
+# ords_vals = Orders()
+#
+# def initRefData(h=None):
+#     return hist_vals, pos_vals, ords_vals
+
 @C.dataclass
 class TradeProcessing(C.BaseObject):
     orders: Orders = None
     historys: Historys = None
 
     def __post_init__(self):
-        self.historys = Historys()
+        self.historys, self.positions, self.orders = initRefData()
+        # self.historys = Historys()
         self.hist_summ = self.historys
-        self.positions = Positions()
+        # self.positions = Positions()
         self.positions.setHistorys(self.historys)
-        self.orders = Orders()
+        # self.orders = Orders()
         self.inteli_scans = InteliScans()
         self.results = Results()
         self.bs_ext = ""
@@ -717,12 +731,13 @@ class TradeProcessing(C.BaseObject):
             self.appendToTkrSet(tksSet, tkr)
         for tkr in self.uniqPosList:
             self.appendToTkrSet(tksSet, tkr)
+        # tkrs = create_ticker_list()
         tkrs = tksSet.sort(key=None, reverse=False)
         tksSet.saveToCSV(C.ticker_file, header=["Symbol"])
 
-        # self.idlePos_tkrs = sorted(list(set([x for x in self.uniqPosList if x not in uords_tkr])))
+        self.idlePos_tkrs = sorted(list(set([x for x in self.uniqPosList if x not in uords_tkr])))
         self.tkr_acts = C.BaseList()
-        print("Processing..")
+        print("Processing..", len(tkrs), " tickers")
         for tkr in tkrs:
             tobj = C.BaseTradeSymbol(tkr)
             if not tobj.validate():

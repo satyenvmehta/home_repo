@@ -77,6 +77,13 @@ class ExcelUpdater(ExcelFileBase):
         if condition.op == ConditionOp.BETWEEN:
             low, high = condition.value
             rule = CellIsRule(operator="between", formula=[str(low), str(high)], fill=fill)
+        elif condition.op == ConditionOp.CONTAINS:
+            ws.conditional_format(cell_range, {
+                "type": "text",
+                "criteria": "containing",
+                "value": condition.value,
+                "format": fmt
+            })
         else:
             rule = CellIsRule(operator=op_map[condition.op], formula=[str(condition.value)], fill=fill)
 

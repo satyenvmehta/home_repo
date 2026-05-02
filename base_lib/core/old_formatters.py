@@ -1,3 +1,7 @@
+
+'''
+
+
 from tp.stock_screener import RSI_OVERBOUGHT, RSI_OVERSOLD
 from enum import Enum
 
@@ -8,6 +12,7 @@ class ConditionOp(Enum):
     LTE = "<="    # less than or equal
     EQ  = "=="    # equal
     BETWEEN = "between"
+    CONTAINS = "contains"
 from enum import Enum
 
 class FillColor(Enum):
@@ -23,6 +28,7 @@ ConditionOp = {
     ConditionOp.LTE: "less than or equal",
     ConditionOp.EQ: "equal",
     ConditionOp.BETWEEN: "between"
+    , ConditionOp.CONTAINS: "contains"
 }
 
 class Condition:
@@ -45,3 +51,5 @@ def xlswriter_formatter(sheet, workbook, df, sheet_name):
                                                 'value': RSI_OVERSOLD,
                                                 'format': workbook.add_format({'bg_color': '#FFC7CE',
                                                                                'font_color': '#9C0006'})})
+
+'''

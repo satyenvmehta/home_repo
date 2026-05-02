@@ -81,20 +81,24 @@ class ExcelCreator(ExcelFileBase):
         ws = self.get_sheet(sheet)
         r, c = self.cell_to_rc(cell)
         ws.write(r, c, "", self._fmt_fill(color))
+        return
 
     def fill_range(self, sheet: str, cell_range: str, color: FillColor) -> None:
         ws = self.get_sheet(sheet)
         # xlsxwriter trick: apply a static format to every cell in the range
         ws.conditional_format(cell_range, {"type": "no_errors", "format": self._fmt_fill(color)})
+        return
 
     def fill_row(self, sheet: str, row: int, color: FillColor) -> None:
         # STRUCTURAL: applies to entire row (Excel semantics)
         ws = self.get_sheet(sheet)
         ws.set_row(row - 1, None, self._fmt_fill(color))
+        return
 
     def fill_column(self, sheet: str, col: int, color: FillColor) -> None:
         ws = self.get_sheet(sheet)
         ws.set_column(col - 1, col - 1, None, self._fmt_fill(color))
+        return
 
     def fill_row_for_df(self, sheet: str, row: int, df: pd.DataFrame, color: FillColor) -> None:
         """
@@ -103,11 +107,11 @@ class ExcelCreator(ExcelFileBase):
         last_col = df.shape[1]
         rng = f"A{row}:{self.col_letter(last_col)}{row}"
         self.fill_range(sheet, rng, color)
+        return
 
     def conditional_format(self, sheet: str, cell_range: str, condition: Condition) -> None:
         ws = self.get_sheet(sheet)
         fmt = self._fmt_fill(condition.color)
-
         if condition.op == ConditionOp.BETWEEN:
             low, high = condition.value
             ws.conditional_format(cell_range, {
@@ -117,6 +121,13 @@ class ExcelCreator(ExcelFileBase):
                 "maximum": high,
                 "format": fmt
             })
+        elif condition.op == ConditionOp.CONTAINS:
+            ws.conditional_format(cell_range, {
+                "type": "text",
+                "criteria": "containing",
+                "value": condition.value,
+                "format": fmt
+            })
         else:
             ws.conditional_format(cell_range, {
                 "type": "cell",
@@ -124,6 +135,7 @@ class ExcelCreator(ExcelFileBase):
                 "value": condition.value,
                 "format": fmt
             })
+        return
 
     def border_used_range(self, sheet: str) -> None:
         """
@@ -142,11 +154,13 @@ class ExcelCreator(ExcelFileBase):
         last_col = self.col_letter(ncols)
         rng = f"A1:{last_col}{nrows}"
         ws.conditional_format(rng, {"type": "no_errors", "format": self._fmt_border_thin()})
+        return
 
     def save(self) -> None:
         # If you used a `with pd.ExcelWriter(...) as writer`, the writer closes automatically.
         # Calling save() is fine too.
         self.writer.close()
+        return
 
     # 1) Get stored used dims
     def get_used_dims(self, sheet: str) -> tuple[int, int]:
@@ -165,6 +179,7 @@ class ExcelCreator(ExcelFileBase):
         """
         ws = self.get_sheet(sheet)
         ws.freeze_panes(row, col)
+        return
 
     # 3) Fill first column only where data exists (data-aware)
     def fill_first_col_for_df(self, sheet: str, df: pd.DataFrame, color: FillColor) -> None:
@@ -173,6 +188,7 @@ class ExcelCreator(ExcelFileBase):
         """
         nrows = df.shape[0] + 1
         self.fill_range(sheet, f"A1:A{nrows}", color)
+        return
 
     def set_auto_filter_for_df(self, sheet: str, df):
         """
@@ -213,20 +229,69 @@ class ExcelCreator(ExcelFileBase):
             ws.set_column(i, i, width+2)
         return
 
+    def bs_formatter(self, df, sheet_name, col_id: str):
+        max_rows = df.shape[0] + 1
+        bs_range = f'{col_id}2:{col_id}{max_rows}'
+        self.conditional_format(
+            sheet_name,
+            bs_range,
+            Condition(
+                ConditionOp.CONTAINS,
+                "Ign",
+                FillColor.LIGHT_GRAY)
+        )
+        self.conditional_format(
+            sheet_name,
+            bs_range,
+            Condition(
+                ConditionOp.CONTAINS,
+                "Buy",
+                FillColor.GREEN)
+        )
+        self.conditional_format(
+            sheet_name,
+            bs_range,
+            Condition(
+                ConditionOp.CONTAINS,
+                "Sell",
+                FillColor.RED)
+        )
+        self.conditional_format(
+            sheet_name,
+            bs_range,
+            Condition(
+                ConditionOp.CONTAINS,
+                "Hold",
+                FillColor.YELLOW)
+        )
+
+        return
+    # def apply_formatter(self, sheet_name, df):
+    #     # example: highlight big values on Summary
+    #     max_rows = df.shape[0]
+    #     # b_range = f"B2:B{max_rows}"
+    #     # self.conditional_format(
+    #     #     sheet_name,
+    #     #     b_range,
+    #     #     Condition(ConditionOp.GT, 170, FillColor.RED)
+    #     # )
+    #     return
+
     def common_formatting_for_sheet(self, sheet_name,  df):
         self.fill_row_for_df(sheet_name, 1, df, FillColor.YELLOW)
         self.fill_first_col_for_df(sheet_name, df, FillColor.BLUE)
         self.freeze_panes(sheet_name, row=1, col=1)
         self.auto_col_width_for_df(sheet_name, df)
         self.set_auto_filter_for_df(sheet_name, df)
+        # self.apply_formatter(sheet_name, df)
         return
 
 
 from typing import Callable, Dict, Optional
 # Type for app custom formatter:
 # def custom_formatter(excel: ExcelCreator, df_dict: dict[str, pd.DataFrame]) -> None
-CustomFormatter = Callable[["ExcelCreator", Dict[str, pd.DataFrame]], None]
-
+# CustomFormatter = Callable[["ExcelCreator", Dict[str, pd.DataFrame]], None]
+CustomFormatter = Callable[[ExcelCreator, pd.DataFrame, str], None]
 # ------------------------------------------------------------
 # Wrapper function: create_excel(...)
 # Put this at module level in excel_creator.py
@@ -284,22 +349,26 @@ if __name__ == "__main__":
 
     df_summary = pd.DataFrame({"Metric": ["Revenue", "Cost"], "Value": [1200, 800]})
     df_details = pd.DataFrame({"Item": ["A", "B"], "Amount": [50, 200]})
+    df_bs = pd.DataFrame({"Ticker": ["AAPL", "MSFT", "ABC"], "Action": ["Buy", "Sell", "Buy_Ign"]})
 
     df_dict = {
         "Summary": df_summary,
         "Details": df_details,
+        "BS": df_bs
     }
 
     def my_custom_formatter(excel, df, sheet_name):
         # example: highlight big values on Summary
-        excel.conditional_format(
-            sheet_name,
-            "B2:B100",
-            Condition(ConditionOp.GT, 170, FillColor.RED)
-        )
+        # excel.conditional_format(
+        #     sheet_name,
+        #     "B2:B100",
+        #     Condition(ConditionOp.GT, 170, FillColor.RED)
+        # )
+        excel.bs_formatter(df, sheet_name, 'B')
+        return
 
     C.create_excel(
-        r"C:\tmp\report4.xlsx",
+        r"C:\tmp\report41.xlsx",
         df_dict,
         custom_formatter_method=my_custom_formatter,
     )

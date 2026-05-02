@@ -4,11 +4,16 @@ import pandas as pd
 import common_include as C
 from ta.momentum import RSIIndicator
 
-from MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_debug_list
+from base_lib.excel_utils.excel_base import FillColor
+# from base_lib.core.formatters import FillColor
+# from base_lib.core.formatters import FillColor
+from tp.MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_debug_list
 
-from position import Positions
-from sc_util import StockFilterAttributes, get_yoyo_metrics
-from tp.all_history import Historys
+# from position import Positions
+from tp.sc_util import StockFilterAttributes, get_yoyo_metrics
+from tp.init_refs import initRefData
+# from tp.all_history import Historys
+# from tp.main import initRefData
 # from tp.excel_support import ExcelCreator, FillColor, ConditionOp, Condition
 from tp.order import Orders
 
@@ -24,10 +29,11 @@ IntraDayKey = "Intraday %"
 interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "max_swing", "avg_swing"] #, "Pos"]
 
 # def init_stock_screener():
-positions = Positions()
-orders = Orders()
-historys = Historys()
+# positions = Positions()
+# orders = Orders()
+# historys = Historys()
     # return positions, orders, historys
+# historys, positions, orders = initRefData()
 
 def getRSI(df, window=RSI_WINDOW):
     delta = df["Close"].diff()
@@ -39,7 +45,7 @@ def getRSI(df, window=RSI_WINDOW):
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
-def get_orders_exists(ticker):
+def get_orders_exists(ticker, orders):
     be = orders.exists(ticker, "Buy")
     se = orders.exists(ticker, "Sell")
     if be and se:
@@ -51,7 +57,7 @@ def get_orders_exists(ticker):
     return False, False
 
 IGNORE = "_Ign"
-def check_recent_history_price(ticker, bs, last):
+def check_recent_history_price(ticker, bs, last, historys):
     recent_price =  historys.recent_price(ticker, bs)
     ext_str = ""
     if not recent_price:
@@ -69,12 +75,12 @@ def check_recent_history_price(ticker, bs, last):
         ext_str = IGNORE
     return ext_str
 
-def get_rsi(data, ticker):
+def get_rsi(data, ticker, historys, orders):
     df = data[ticker].dropna()
     if len(df) < RSI_WINDOW + 1:
         return None, None, None
 
-    be, se = get_orders_exists(ticker)
+    be, se = get_orders_exists(ticker, orders)
 
     rsi = RSIIndicator(df['Close'], window=RSI_WINDOW).rsi().iloc[-1]
     if rsi > RSI_OVERBOUGHT_PLUS:
@@ -95,7 +101,7 @@ def get_rsi(data, ticker):
 
     close_price = float(df['Close'].iloc[-1])
 
-    price_ind = check_recent_history_price(ticker=ticker, bs=bd_advise, last=close_price)
+    price_ind = check_recent_history_price(ticker=ticker, bs=bd_advise, last=close_price, historys=historys)
     if price_ind == IGNORE:
         bd_advise = bd_advise + price_ind
 
@@ -135,7 +141,7 @@ def append_filter_to_result(sfa, result):
              ])
 
 
-def find_stocks_multi():
+def find_stocks_multi(historys, positions, orders):
     # Get all tickers at once
     mrk_data = MarketData(debug=False)
     tickers = mrk_data.getTickers()
@@ -157,7 +163,7 @@ def find_stocks_multi():
             df = data[ticker].dropna().tail(2)
             if len(df) < 2:
                 continue
-            rsi, bs_indicator, bd_advise = get_rsi(data, ticker)
+            rsi, bs_indicator, bd_advise = get_rsi(data, ticker, historys, orders)
             pos = positions.getTotalQty(ticker)
             pe = positions.getPE(ticker)
             if pe:
@@ -209,13 +215,16 @@ def date_now(fmt):
 
 def fill_row_for_df(self, sheet, row: int, df, color):
     last_col = df.shape[1]
-    rng = f"A{row}:{col_letter(last_col)}{row}"
+    col_letter = "A"
+    rng = f"{col_letter}{row}:{last_col}{row}"
     self.fill_range(sheet, rng, color)
 
 def xlswriter_formatter(sheet, workbook, df, sheet_name):
     max_cols = df.shape[1]
     max_rows = df.shape[0]
     J_range = f'J2:J{max_rows}'
+    bs_range = f'F2:F{max_rows}'
+
     fill_row_for_df(sheet_name, 1, df, FillColor.YELLOW)
     sheet.conditional_format(J_range, {'type': 'cell',
                                                 'criteria': 'greater than',
@@ -228,19 +237,18 @@ def xlswriter_formatter(sheet, workbook, df, sheet_name):
                                                 'format': workbook.add_format({'bg_color': '#FFC7CE',
                                                                                'font_color': '#9C0006'})})
 
+# def common_formatter(excel, df, sheet_name):
+
+
 def apply_formatter(excel, df, sheet_name):
-    # excel.fill_row_for_df(sheet_name, 1, df, FillColor.YELLOW)
-    excel.conditional_format(
-        sheet_name,
-        "B2:B10",
-        C.Condition(C.ConditionOp.GT, 50, C.FillColor.RED)
-    )
-if __name__ == "__main__":
-    d = date_now("%Y-%m-%d %H:%M")
-    print(d)
-    print("started")
-    df_15, df_more_15, df_rest = find_stocks_multi()
-    All_data_df = pd.concat([df_15, df_more_15, df_rest], ignore_index=True).sort_values(by="RSI", ascending=False)
+    excel.bs_formatter(df, sheet_name, 'F')
+    return
+
+def stock_screener_exec():
+    historys, positions, orders = initRefData()
+    df_15, df_more_15, df_rest = find_stocks_multi(historys, positions, orders)
+    All_data_df = pd.concat([df_15,
+                             df_more_15, df_rest], ignore_index=True).sort_values(by="RSI", ascending=False)
     print(df_15)
     print(df_more_15)
     print(df_rest)
@@ -252,5 +260,12 @@ if __name__ == "__main__":
     SheetNames = [AllRecs, OC_LT_15, OC_GT_15, Rest]
     df_dict = {SheetNames[i]: df_list[i] for i in range(len(SheetNames))}
     C.create_excel(filen, df_dict, apply_formatter)
+    d = date_now("%Y-%m-%d %H:%M")
+    print(d)
+    return
+
+if __name__ == "__main__":
+    print("started")
+    stock_screener_exec()
     print("Done")
 

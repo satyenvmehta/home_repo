@@ -1,6 +1,8 @@
 # ============================================================
 # excel_framework.py
 # ============================================================
+'''
+
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -9,15 +11,18 @@ from pathlib import Path
 from typing import Any, Callable, Tuple
 import re
 
+from base_lib.core.formatters import FillColor
+
+
 # ============================================================
 # Enums
 # ============================================================
 
-class FillColor(Enum):
-    YELLOW = "FFFF00"
-    GREEN  = "CCFFCC"
-    RED    = "FFC7CE"
-    BLUE   = "ADD8E6"
+# class FillColor(Enum):
+#     YELLOW = "FFFF00"
+#     GREEN  = "CCFFCC"
+#     RED    = "FFC7CE"
+#     BLUE   = "ADD8E6"
 
 
 class ConditionOp(Enum):
@@ -292,3 +297,4 @@ def create_excel_file(full_path: Path, mode: str = "create") -> ExcelFileBase:
 
 
 
+'''

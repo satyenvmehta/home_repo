@@ -1,5 +1,5 @@
 import common_include as C
-from TradeUtil import BaseTrades
+from tp.TradeUtil import BaseTrades
 
 @C.dataclass
 class StockScreener(C.BaseObject):
