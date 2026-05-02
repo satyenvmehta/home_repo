@@ -229,6 +229,27 @@ class ExcelCreator(ExcelFileBase):
             ws.set_column(i, i, width+2)
         return
 
+    def get_col_range(self, df, col_id):
+        max_rows = df.shape[0] + 1
+        range = f'{col_id}2:{col_id}{max_rows}'
+        return range
+
+    def tf_formatter(self, df, sheet_name, col_id):
+        range = self.get_col_range(df, col_id)
+        self.conditional_format(
+            sheet_name, range, Condition(
+                ConditionOp.CONTAINS,
+                "TRUE",
+                FillColor.GREEN
+            ))
+        self.conditional_format(
+            sheet_name, range, Condition(
+                ConditionOp.CONTAINS,
+                "FALSE",
+                FillColor.RED
+            ))
+        return
+
     def bs_formatter(self, df, sheet_name, col_id: str):
         max_rows = df.shape[0] + 1
         bs_range = f'{col_id}2:{col_id}{max_rows}'

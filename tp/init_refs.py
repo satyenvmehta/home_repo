@@ -40,7 +40,7 @@ def initRefData():
         return None, None, None
     C.TickersSet = create_ticker_list()
     C.NoOfTickers = C.TickersSet.size()
-    print("No of unique tickers: " + str(C.NoOfTickers))
+    print("No. of unique tickers: " + str(C.NoOfTickers))
     return hist_vals, pos_vals, ords_vals
 
 if __name__ == '__main__':

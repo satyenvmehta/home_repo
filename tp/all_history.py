@@ -279,7 +279,7 @@ class Historys(BaseTrades):
             return self.summary_df
         history_trades_df = self.getDF()
         # history_trades_df[Price].replace({'\,': ''})
-        history_trades_df['price'] = history_trades_df[Price].replace({'\$': ''}, regex=True).replace({',': ''}, regex=True).astype(float)
+        history_trades_df['price'] = history_trades_df[Price].replace(r'\$', '', regex=True).replace(',', '', regex=True).astype(float)
         history_trades_df['quantity'] = history_trades_df[Quantity].replace({',': ''}, regex=True).astype(float)
 
         # Convert 'trade_date' to datetime for any date-based operations

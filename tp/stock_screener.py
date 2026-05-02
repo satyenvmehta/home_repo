@@ -242,6 +242,7 @@ def xlswriter_formatter(sheet, workbook, df, sheet_name):
 
 def apply_formatter(excel, df, sheet_name):
     excel.bs_formatter(df, sheet_name, 'F')
+    excel.tf_formatter(df, sheet_name, 'M')
     return
 
 def stock_screener_exec():
@@ -252,7 +253,7 @@ def stock_screener_exec():
     print(df_15)
     print(df_more_15)
     print(df_rest)
-    filen =  "G:\My Drive\\vepar\\stock_screener_" + date_now("%Y-%m-%d") + ".xlsx"
+    filen =  r"G:\My Drive\vepar\stock_screener_" + date_now("%Y-%m-%d") + ".xlsx"
     # filen_2 = filen.replace(".xlsx", "_2.xlsx")
     sheet_name = date_now("%b_%d")  # e.g., "Aug_09"
 
