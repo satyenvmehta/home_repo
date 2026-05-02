@@ -3,7 +3,7 @@ import common_include as C
 from tp.init_refs import initRefData, create_ticker_list
 from tp.order import initOrdersParams
 
-Debug_Ticker = "ABTC"
+Debug_Ticker = "AAOI"
 
 # from order import Orders, Order
 # from all_history import Historys #,  historySummary
