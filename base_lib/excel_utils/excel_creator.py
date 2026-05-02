@@ -225,78 +225,8 @@ class ExcelCreator(ExcelFileBase):
 
             best = max(best, int(max_len))
             width = min(max(best, min_width), max_width)
-
             ws.set_column(i, i, width+2)
         return
-
-    def get_col_range(self, df, col_id):
-        max_rows = df.shape[0] + 1
-        range = f'{col_id}2:{col_id}{max_rows}'
-        return range
-
-    def tf_formatter(self, df, sheet_name, col_id):
-        range = self.get_col_range(df, col_id)
-        self.conditional_format(
-            sheet_name, range, Condition(
-                ConditionOp.CONTAINS,
-                "TRUE",
-                FillColor.GREEN
-            ))
-        self.conditional_format(
-            sheet_name, range, Condition(
-                ConditionOp.CONTAINS,
-                "FALSE",
-                FillColor.RED
-            ))
-        return
-
-    def bs_formatter(self, df, sheet_name, col_id: str):
-        max_rows = df.shape[0] + 1
-        bs_range = f'{col_id}2:{col_id}{max_rows}'
-        self.conditional_format(
-            sheet_name,
-            bs_range,
-            Condition(
-                ConditionOp.CONTAINS,
-                "Ign",
-                FillColor.LIGHT_GRAY)
-        )
-        self.conditional_format(
-            sheet_name,
-            bs_range,
-            Condition(
-                ConditionOp.CONTAINS,
-                "Buy",
-                FillColor.GREEN)
-        )
-        self.conditional_format(
-            sheet_name,
-            bs_range,
-            Condition(
-                ConditionOp.CONTAINS,
-                "Sell",
-                FillColor.RED)
-        )
-        self.conditional_format(
-            sheet_name,
-            bs_range,
-            Condition(
-                ConditionOp.CONTAINS,
-                "Hold",
-                FillColor.YELLOW)
-        )
-
-        return
-    # def apply_formatter(self, sheet_name, df):
-    #     # example: highlight big values on Summary
-    #     max_rows = df.shape[0]
-    #     # b_range = f"B2:B{max_rows}"
-    #     # self.conditional_format(
-    #     #     sheet_name,
-    #     #     b_range,
-    #     #     Condition(ConditionOp.GT, 170, FillColor.RED)
-    #     # )
-    #     return
 
     def common_formatting_for_sheet(self, sheet_name,  df):
         self.fill_row_for_df(sheet_name, 1, df, FillColor.YELLOW)
@@ -371,7 +301,6 @@ if __name__ == "__main__":
     df_summary = pd.DataFrame({"Metric": ["Revenue", "Cost"], "Value": [1200, 800]})
     df_details = pd.DataFrame({"Item": ["A", "B"], "Amount": [50, 200]})
     df_bs = pd.DataFrame({"Ticker": ["AAPL", "MSFT", "ABC"], "Action": ["Buy", "Sell", "Buy_Ign"]})
-
     df_dict = {
         "Summary": df_summary,
         "Details": df_details,
@@ -379,12 +308,6 @@ if __name__ == "__main__":
     }
 
     def my_custom_formatter(excel, df, sheet_name):
-        # example: highlight big values on Summary
-        # excel.conditional_format(
-        #     sheet_name,
-        #     "B2:B100",
-        #     Condition(ConditionOp.GT, 170, FillColor.RED)
-        # )
         excel.bs_formatter(df, sheet_name, 'B')
         return
 

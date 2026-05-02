@@ -156,5 +156,62 @@ class ExcelFileBase(ABC):
         ...
 
 
+    def get_col_range(self, df, col_id):
+        max_rows = df.shape[0] + 1
+        range = f'{col_id}2:{col_id}{max_rows}'
+        return range
+
+    def tf_formatter(self, df, sheet_name, col_id):
+        range = self.get_col_range(df, col_id)
+        self.conditional_format(
+            sheet_name, range, Condition(
+                ConditionOp.CONTAINS,
+                "TRUE",
+                FillColor.GREEN
+            ))
+        self.conditional_format(
+            sheet_name, range, Condition(
+                ConditionOp.CONTAINS,
+                "FALSE",
+                FillColor.RED
+            ))
+        return
+
+    def bs_formatter(self, df, sheet_name, col_id: str):
+        bs_range = self.get_col_range(df, col_id)
+        self.conditional_format(
+            sheet_name,
+            bs_range,
+            Condition(
+                ConditionOp.CONTAINS,
+                "Ign",
+                FillColor.LIGHT_GRAY)
+        )
+        self.conditional_format(
+            sheet_name,
+            bs_range,
+            Condition(
+                ConditionOp.CONTAINS,
+                "Buy",
+                FillColor.GREEN)
+        )
+        self.conditional_format(
+            sheet_name,
+            bs_range,
+            Condition(
+                ConditionOp.CONTAINS,
+                "Sell",
+                FillColor.RED)
+        )
+        self.conditional_format(
+            sheet_name,
+            bs_range,
+            Condition(
+                ConditionOp.CONTAINS,
+                "Hold",
+                FillColor.YELLOW)
+        )
+        return
+
 if __name__ == "__main__":
-    create_excel(filen, df_dict, apply_formatter)
+    ExcelFileBase(filen, df_dict, apply_formatter)
