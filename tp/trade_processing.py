@@ -1,12 +1,8 @@
 import pandas as pd
 import common_include as C
 from tp.init_refs import initRefData, create_ticker_list
-from tp.order import initOrdersParams
 
 Debug_Ticker = "AAOI"
-
-# from order import Orders, Order
-# from all_history import Historys #,  historySummary
 from inteli_scan import InteliScans, InteliScan
 
 from tp.all_history import Historys
@@ -84,17 +80,11 @@ class tkr_action(C.BaseObject):
 
 
 def apply_formatter(excel, df, sheet_name):
-    # excel.fill_row_for_df(sheet_name, 1, df, FillColor.YELLOW)
-    # nrows = df.shape[0] + 1
-    # last_col = df.shape[1]
-    # for col in
-    # range =
-    # excel.conditional_format(
-    #     sheet_name,
-    #     "B2:B10",
-    #     C.Condition(C.ConditionOp.GT, 50, C.FillColor.RED)
-    #
     apply_number_format_by_header(excel, df, sheet_name)
+    if sheet_name == 'Results':
+        excel.bs_formatter(df, sheet_name, 'B')
+        excel.bs_formatter(df, sheet_name, 'C')
+        excel.bs_formatter(df, sheet_name, 'Q')
     return
 
 
@@ -896,10 +886,6 @@ class TradeProcessing(C.BaseObject):
             self.Action("BO", "Buy Order ")  # same for Buy
         if buy_sell.isBuyAndSellSet():
             self.ValidateOrderLimitPrices()
-        # if buy_sell.multiBuyCounts():
-        #     self.Action("BM", "Remove multi Buys")
-        # if buy_sell.multiSellCounts():
-        #     self.Action("SM", "Remove multi Sell")
         return
 
     def getVantageMissingPos(self):
@@ -929,9 +915,6 @@ def Dbg_save_file(b):
     b._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, altFilename=C.alt_output_file)
     exit(1)
 
-
-
-
 def tp():
     b = TradeProcessing()
     # Dbg_save_file(b)
@@ -941,12 +924,14 @@ def tp():
     # b.analyzeSectorDistribution()
     b.saveResults()
     b.securityToBeSold()
+    print(C.date_now("%Y-%m-%d %H:%M"))
     print("Done..")
 
     # b.report()
 
 if __name__ == '__main__':
     # print(get_market_price("AAPL"))
+    print(C.date_now())
     tp()
 
 

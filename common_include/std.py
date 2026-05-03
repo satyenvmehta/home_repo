@@ -5,6 +5,9 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta, timezone
 from typing import Any, Optional, Union, Iterable, Iterator, Sequence, Mapping, Callable, TypeVar, Generic
 
+def date_now(fmt="%Y-%m-%d %H:%M"):
+    return datetime.now().strftime(fmt)
+
 __all__ = [
     "dataclass", "field",
     # "Path",
@@ -12,4 +15,5 @@ __all__ = [
     "Any", "Optional", "Union",
     "Iterable", "Iterator", "Sequence", "Mapping",
     "Callable", "TypeVar", "Generic",
+    "date_now"
 ]

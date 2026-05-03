@@ -210,8 +210,8 @@ OC_GT_15 = "open_close_GT_1.5"
 Rest = "rest"
 
 
-def date_now(fmt):
-    return C.datetime.now().strftime(fmt)
+# def date_now(fmt):
+#     return C.datetime.now().strftime(fmt)
 
 def fill_row_for_df(self, sheet, row: int, df, color):
     last_col = df.shape[1]
@@ -253,15 +253,15 @@ def stock_screener_exec():
     print(df_15)
     print(df_more_15)
     print(df_rest)
-    filen =  r"G:\My Drive\vepar\stock_screener_" + date_now("%Y-%m-%d") + ".xlsx"
+    filen =  r"G:\My Drive\vepar\stock_screener_" + C.date_now("%Y-%m-%d") + ".xlsx"
     # filen_2 = filen.replace(".xlsx", "_2.xlsx")
-    sheet_name = date_now("%b_%d")  # e.g., "Aug_09"
+    sheet_name = C.date_now("%b_%d")  # e.g., "Aug_09"
 
     df_list = [All_data_df, df_15, df_more_15, df_rest]
     SheetNames = [AllRecs, OC_LT_15, OC_GT_15, Rest]
     df_dict = {SheetNames[i]: df_list[i] for i in range(len(SheetNames))}
     C.create_excel(filen, df_dict, apply_formatter)
-    d = date_now("%Y-%m-%d %H:%M")
+    d = C.date_now("%Y-%m-%d %H:%M")
     print(d)
     return
 
