@@ -121,17 +121,23 @@ class Orders(BaseTrades):
         if nres.size() == 0:
             return None
         return nres
+    def findOpen(self, ords):
+        for o in ords.getBase():
+            if isinstance(o, Order):
+                if o.isOpen():
+                    return o
+        return None
     def get_bs_orders(self, sym):
         res = self.findSymbol(sym, 'B')
         if not res:
             bo = None
         else:
-            bo = res.getFirst()
+            bo = self.findOpen(res)
         res = self.findSymbol(sym, 'S')
         if not res:
             so = None
         else:
-            so = res.getFirst()
+            so = self.findOpen(res)
         return bo, so
 
     def isMultipleOrders(self, sym, bs):
@@ -207,6 +213,7 @@ def orderFileTesting():
 
 if __name__ == '__main__':
     ords = Orders()
+    b, s = ords.get_bs_orders('LEN')
     ords.printDuplicateOrders()
     # orderFileTesting()
 

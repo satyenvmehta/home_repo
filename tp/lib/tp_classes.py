@@ -1,9 +1,13 @@
-import common_include as C
+# import common_include as C
+from dataclasses import dataclass
+
+from base_lib.core.base_classes import BaseObjectItem, BaseMoney, BaseString, BaseFloat, BaseDate, BaseObject
+from base_lib.core.base_container_classes import BaseSet
 
 OPEN = 'O'
 FILLED = 'F'
-@C.dataclass
-class BaseCustomStatus(C.BaseObjectItem):
+@dataclass
+class BaseCustomStatus(BaseObjectItem):
     def __post_init__(self):
         self.origStatus = self.getBase()
         tmp = str(self.getBase())[0]
@@ -16,7 +20,7 @@ class BaseCustomStatus(C.BaseObjectItem):
     def getOrigStatus(self):
         if isinstance(self.origStatus, str):
             return self.origStatus
-        if isinstance(self.origStatus, C.BaseObject):
+        if isinstance(self.origStatus, BaseObject):
             return self.origStatus.getBase()
         return None
     def isStatus(self, status):
@@ -34,8 +38,8 @@ class BaseCustomStatus(C.BaseObjectItem):
 BUY = 'B'
 SELL = 'S'
 
-@C.dataclass
-class BaseBuySell(C.BaseObjectItem):
+@dataclass
+class BaseBuySell(BaseObjectItem):
     def __post_init__(self):
         # tmp = str(self.getBase())[0]
 
@@ -60,8 +64,8 @@ class BaseBuySell(C.BaseObjectItem):
         # print(sym)
         return base_str
 
-@C.dataclass
-class BuySellSet(C.BaseSet):
+@dataclass
+class BuySellSet(BaseSet):
     def _multiEntries(self, obj):
         if not self.has(obj):
             return False
@@ -151,8 +155,8 @@ def robust_option_parser(symbol):
 
     return "Not an Option Symbol"
 
-@C.dataclass
-class BaseTradeSymbol(C.BaseObjectItem):
+@dataclass
+class BaseTradeSymbol(BaseObjectItem):
     def __post_init__(self):
         return
     def __str__(self):
@@ -170,7 +174,7 @@ class BaseTradeSymbol(C.BaseObjectItem):
             return BaseOptionSymbol(self.getBase())
         return None
     def __eq__(self, other):
-        if isinstance(other, C.BaseObject):
+        if isinstance(other, BaseObject):
             if self.getBase() == other.getBase():
                 return True
         else:
@@ -189,8 +193,8 @@ class BaseTradeSymbol(C.BaseObjectItem):
             return False
         return True
 
-@C.dataclass
-class BaseTradePrice(C.BaseMoney):
+@dataclass
+class BaseTradePrice(BaseMoney):
     def __post_init__(self):
         super().__post_init__()
         return
@@ -199,13 +203,13 @@ class BaseTradePrice(C.BaseMoney):
 
     # format_str = '$#,##0.00' #"${:,.2f}"
 
-@C.dataclass
-class BaseOptionSymbol(C.BaseObjectItem):
+@dataclass
+class BaseOptionSymbol(BaseObjectItem):
     def __post_init__(self):
-        self.tkr = C.BaseString("")
-        self.exp = C.BaseDate("01/01/2000")
-        self.strike = C.BaseFloat(0.0)
-        self.opt_type = C.BaseString("C")
+        self.tkr = BaseString("")
+        self.exp = BaseDate("01/01/2000")
+        self.strike = BaseFloat(0.0)
+        self.opt_type = BaseString("C")
         self.parse()
         return
     def getDesc(self):
@@ -213,10 +217,10 @@ class BaseOptionSymbol(C.BaseObjectItem):
     def parse(self):
         result = robust_option_parser(self.getBase())
         if isinstance(result, dict):
-            self.tkr = C.BaseString(result["Ticker"])
-            self.exp = C.BaseDate(result["Expiry"])
-            self.strike = C.BaseFloat(result["Strike"])
-            self.opt_type = C.BaseString(result["Type"])
+            self.tkr = BaseString(result["Ticker"])
+            self.exp = BaseDate(result["Expiry"])
+            self.strike = BaseFloat(result["Strike"])
+            self.opt_type = BaseString(result["Type"])
         return
     def get_tkr(self):
         return self.tkr

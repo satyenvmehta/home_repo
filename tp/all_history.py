@@ -1,5 +1,5 @@
 from datetime import timedelta
-from encodings.punycode import selective_len
+# from encodings.punycode import selective_len
 
 import pandas as pd
 from pandas import DataFrame
@@ -104,7 +104,24 @@ class Historys(BaseTrades):
         self.updateDateFormat()
         self.updateDFDescriptionToBS()
         self.history_since()
+        self.collectBestBuySellPrices()
         return
+
+    def collectBestBuySellPrices(self):
+        print("Preparing BS Values..")
+        self.bs_prices = C.BaseDict()
+        for sym in self.all_symbols:
+            # if not isinstance(item, History):
+            #     continue
+            # sym = item.Symbol.getBase()
+            bp, sp = self.findLatestBestPrices(sym)
+            self.bs_prices.append(key = sym, value = [bp, sp])
+            print(".", end="")
+        print(f"\nBest Prices Collected for {self.bs_prices.size()} symbols")
+        return
+    def getBSPricesForSym(self, sym):
+        return self.bs_prices.getValue(sym)
+
 
     def updateDFDescriptionToBS(self):
         df = self.getDF()
@@ -386,17 +403,53 @@ class Historys(BaseTrades):
     def getGainLossForSymbol(self, sym):
         return self.getFloatValueForSymbol(sym, 'gain_loss')
 
-    def recent_price(self, ticker, bs):
-        sym_hist = self.getRecordsForSym(sym=ticker)
-        if len(sym_hist) == 0:
+    def _findLastestLowestBuyPrice(self, sym):
+        sym_hist = self.getRecordsForSym(sym)
+        buy_recs = sym_hist.loc[sym_hist['quantity'] > 0, ['quantity', 'price', 'trade_date']]
+        if len(buy_recs) == 0:
             return None
+        max_date = buy_recs['trade_date'].max()
+        latest_recs = buy_recs[buy_recs['trade_date'] == max_date]
+        ref_price = None
+        for _, last_buy_rec in latest_recs.iterrows():
+            if ref_price is None:
+                ref_price = last_buy_rec['price']
+                continue
+            if last_buy_rec['price'] < ref_price:
+                ref_price = last_buy_rec['price']
+        return ref_price
+    def _findLatestHighestSellPrice(self, sym):
+        sym_hist = self.getRecordsForSym(sym=sym)
+        sell_recs = sym_hist.loc[sym_hist['quantity'] < 0, ['quantity', 'price', 'trade_date']]
+        if len(sell_recs) == 0:
+            return None
+        max_date = sell_recs['trade_date'].max()
+        latest_recs = sell_recs[sell_recs['trade_date'] == max_date]
+        ref_price = None
+        for _, last_sell_rec in latest_recs.iterrows():
+            if ref_price is None:
+                ref_price = last_sell_rec['price']
+                continue
+            if last_sell_rec['price'] > ref_price:
+                ref_price = last_sell_rec['price']
+        return ref_price
+    def findLatestBestPrices(self, sym):
+        bp = self._findLastestLowestBuyPrice(sym)
+        sp = self._findLatestHighestSellPrice(sym)
+        return bp, sp
+
+    def recent_price(self, ticker, bs="Buy"):
+        bsv = self.getBSPricesForSym(ticker)
+        # sym_hist = self.getRecordsForSym(sym=ticker)
+        if bsv is None:
+            return None
+        bp, sp = bsv[0], bsv[1]
         if bs.endswith('Buy'):
-            rec_found = sym_hist[sym_hist['quantity'] > 0].head(1)
+            bestPrice = bp
         else:
-            rec_found = sym_hist[sym_hist['quantity'] < 0].head(1)
-        if rec_found.empty:
-            return None
-        return rec_found['price'].iloc[0]
+            bestPrice = sp
+
+        return bestPrice
 
 
     def getHistory(self, ticker):
@@ -434,12 +487,23 @@ def check_recent_history_price(hs, ticker, bs):
     return hs.recent_price(ticker, bs)
 
 if __name__ == '__main__':
+    print(C.hist_file)
+    tkr = "VIA"
+    C.hist_file = r"G:\My Drive\vepar\all_history_" + tkr + ".csv"
+    print(C.hist_file)
     ht = Historys()
-    tkr = 'MBLY'
+    print(ht.getBSPricesForSym(tkr))
+    print(ht.recent_price(ticker=tkr))
+    print(ht.getBSPricesForSym('IBM'))
+    # lbp = ht.findLastestLowestBuyPrice(tkr)
+    # print("LBP ", lbp)
+    # lsp = ht.findLatestHighestSellPrice(tkr)
+    # print("LSP ", lsp)
+    # tkr = 'UMAC'
     price = check_recent_history_price(ht, tkr, 'Buy')
-    print(price)
+    print("Buy ", price)
     sell_pr = check_recent_history_price(ht, tkr, 'Sell')
-    print(sell_pr)
+    print("Sell ", sell_pr)
 
     print(ht.isAnIdleSymbol('MS'))
 

@@ -5,17 +5,11 @@ import common_include as C
 from ta.momentum import RSIIndicator
 
 from base_lib.excel_utils.excel_base import FillColor
-# from base_lib.core.formatters import FillColor
-# from base_lib.core.formatters import FillColor
-from tp.MrktDataUtil import  MarketData #() ignore_ticker, prep_ticker_list, prep_debug_list
+from tp.market.MrktDataUtil import  MarketDataHistory  # () ignore_ticker, prep_ticker_list, prep_debug_list
 
-# from position import Positions
 from tp.sc_util import StockFilterAttributes, get_yoyo_metrics
 from tp.init_refs import initRefData
-# from tp.all_history import Historys
-# from tp.main import initRefData
-# from tp.excel_support import ExcelCreator, FillColor, ConditionOp, Condition
-from tp.order import Orders
+
 
 RSI_WINDOW = 14
 RSI_OVERBOUGHT = 69
@@ -28,22 +22,16 @@ IntraDayKey = "Intraday %"
 # interested_fields = ["Ticker",  "last", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
 interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "max_swing", "avg_swing"] #, "Pos"]
 
-# def init_stock_screener():
-# positions = Positions()
-# orders = Orders()
-# historys = Historys()
-    # return positions, orders, historys
-# historys, positions, orders = initRefData()
 
-def getRSI(df, window=RSI_WINDOW):
-    delta = df["Close"].diff()
-    up = delta.clip(lower=0)
-    down = -1 * delta.clip(upper=0)
-    average_gain = up.rolling(window).mean()
-    average_loss = down.rolling(window).mean()
-    rs = average_gain / average_loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
+# def getRSI(df, window=RSI_WINDOW):
+#     delta = df["Close"].diff()
+#     up = delta.clip(lower=0)
+#     down = -1 * delta.clip(upper=0)
+#     average_gain = up.rolling(window).mean()
+#     average_loss = down.rolling(window).mean()
+#     rs = average_gain / average_loss
+#     rsi = 100 - (100 / (1 + rs))
+#     return rsi
 
 def get_orders_exists(ticker, orders):
     be = orders.exists(ticker, "Buy")
@@ -75,14 +63,20 @@ def check_recent_history_price(ticker, bs, last, historys):
         ext_str = IGNORE
     return ext_str
 
+def calc_rsi_for_tkr(tkr_df):
+    close_prices = tkr_df['Close']
+    rsi = RSIIndicator(close_prices, window=RSI_WINDOW).rsi().iloc[-1]
+    return rsi
+
 def get_rsi(data, ticker, historys, orders):
     df = data[ticker].dropna()
     if len(df) < RSI_WINDOW + 1:
         return None, None, None
 
+    rsi = calc_rsi_for_tkr(df)
+
     be, se = get_orders_exists(ticker, orders)
 
-    rsi = RSIIndicator(df['Close'], window=RSI_WINDOW).rsi().iloc[-1]
     if rsi > RSI_OVERBOUGHT_PLUS:
         bs_indicator = "Overbought+"
         bd_advise = "StrongSell"
@@ -143,7 +137,7 @@ def append_filter_to_result(sfa, result):
 
 def find_stocks_multi(historys, positions, orders):
     # Get all tickers at once
-    mrk_data = MarketData(debug=False)
+    mrk_data = MarketDataHistory(debug=False)
     tickers = mrk_data.getTickers()
     data = mrk_data.getHistoricalData()
 

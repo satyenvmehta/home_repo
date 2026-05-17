@@ -6,13 +6,19 @@ from pprint import pprint
 
 import pandas as pd
 from pandas import DataFrame
-from datetime import  datetime 
+from datetime import  datetime
+
+import time
 
 def getTodayYYYYMMDD():
     # print({"DEBUG:" : type(dt) } )
     dt1 = datetime.today().strftime('%Y%m%d') 
     return dt1
 
+def sleep_sec(s):
+    time.sleep(s)
+    return
+#
 from base_lib.core.sys_utils import Today
 
 @dataclass
