@@ -19,7 +19,7 @@ from base_lib.core.base_container_classes import BaseTuple
 from base_lib.core.base_container_classes import BaseDF
 from base_lib.core.base_container_classes import BaseFileObject
 from base_lib.core.base_container_classes import BaseReaderWriter
-from base_lib.core.base_app_classes import getDeltaPercentage, getNoOfBusinessDaysFromDate
+from base_lib.core.base_app_classes import getDeltaPercentage, getNoOfBusinessDaysFromDate, clean_price
 
 from base_lib.core.files_include import (ticker_file, sp_500_file, nasd_100_file,
                                          my_symbol_xls_file, output_file, alt_output_file,
@@ -54,6 +54,7 @@ __all__ = [
     , "output_file",
     "getDeltaPercentage",
     "getNoOfBusinessDaysFromDate",
+    "clean_price",
     "BaseReaderWriter",
     "alt_output_file",
     "hist_file"

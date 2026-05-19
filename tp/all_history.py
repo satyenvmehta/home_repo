@@ -6,7 +6,7 @@ from pandas import DataFrame
 
 from dateutil.utils import today
 
-from tp.TradeUtil import BaseTrade, BaseTrades
+from tp.TradeUtil import BaseTrade, BaseTrades, get_trade_refs
 
 threshold = 5
 
@@ -110,18 +110,18 @@ class Historys(BaseTrades):
     def collectBestBuySellPrices(self):
         print("Preparing BS Values..")
         self.bs_prices = C.BaseDict()
+        cnt = 0
         for sym in self.all_symbols:
-            # if not isinstance(item, History):
-            #     continue
-            # sym = item.Symbol.getBase()
+            cnt = cnt + 1
             bp, sp = self.findLatestBestPrices(sym)
             self.bs_prices.append(key = sym, value = [bp, sp])
+            if cnt % 100 == 0:
+                print("")
             print(".", end="")
         print(f"\nBest Prices Collected for {self.bs_prices.size()} symbols")
         return
     def getBSPricesForSym(self, sym):
         return self.bs_prices.getValue(sym)
-
 
     def updateDFDescriptionToBS(self):
         df = self.getDF()
@@ -244,10 +244,6 @@ class Historys(BaseTrades):
     def isApproved2Sell(self, sym):
         return self.sell_bucket._exists(sym)
 
-    # def getLastQuantity(self, sym):
-    #     qty = self.summary_df.loc[self.summary_df['Symbol'] == sym, 'last_qty'].iloc[0]
-    #     return abs(qty)
-
     def hasHistory(self, sym):
         if sym in self.summary_df['Symbol'].values:
             return True
@@ -268,17 +264,6 @@ class Historys(BaseTrades):
 
     def getLastTradeDate(self, sym):
         return self.getSummaryAttrForSymbolFromDF(sym, last_trade_date).strftime('%Y-%m-%d')
-
-    # def _isAnIdleSecurity(self, sym, days_since_last=30):
-    #     print("Invalid call for isAnIdleSecurity")
-    #     self.idle_symbols = None
-    #     return None
-    #     last_trd_date = self.getLastTradeDate(sym)
-    #     if last_trd_date is None:
-    #         return True
-    #     if last_trd_date.isOlderThan(days_since_last):
-    #         return True
-    #     return sym in self.idle_symbols
 
     def getSummaryAttrForSymbolFromDF(self, sym, attr):
         df = self.getSummary()
@@ -434,8 +419,12 @@ class Historys(BaseTrades):
                 ref_price = last_sell_rec['price']
         return ref_price
     def findLatestBestPrices(self, sym):
-        bp = self._findLastestLowestBuyPrice(sym)
-        sp = self._findLatestHighestSellPrice(sym)
+        bp, sp = get_trade_refs(self.getDF(), sym)
+        # VIA == > [14.57, 17.9]
+        # VIAV == > [50.5, 55.15]
+
+        # bp = self._findLastestLowestBuyPrice(sym)
+        # sp = self._findLatestHighestSellPrice(sym)
         return bp, sp
 
     def recent_price(self, ticker, bs="Buy"):
@@ -492,6 +481,8 @@ if __name__ == '__main__':
     C.hist_file = r"G:\My Drive\vepar\all_history_" + tkr + ".csv"
     print(C.hist_file)
     ht = Historys()
+    for tkr in ht.getAllSymbols():
+        print(tkr, "==>" , ht.getBSPricesForSym(tkr))
     print(ht.getBSPricesForSym(tkr))
     print(ht.recent_price(ticker=tkr))
     print(ht.getBSPricesForSym('IBM'))

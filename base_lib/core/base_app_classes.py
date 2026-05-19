@@ -27,6 +27,17 @@ def getChangePercentFromList(prices):
     if len(prices) < 2:
         return 0
     return getChangePercent(prices[-2], prices[-1])
+
+
+def clean_price(series):
+    return (
+        series.astype(str)
+              .str.replace("$", "", regex=False)
+              .str.replace(",", "", regex=False)
+              .str.strip()
+              .astype(float)
+    )
+
 if __name__ == "__main__":
     print("This is base_app_classes.py")
     # Define two dates

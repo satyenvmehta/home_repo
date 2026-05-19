@@ -1,8 +1,6 @@
 import common_include as C
 import pandas as pd
 
-
-
 @C.dataclass
 class BaseTrade(C.BaseObject):
     Symbol: C.BaseTradeSymbol = None
@@ -232,13 +230,9 @@ class OrderSampleClass(BaseTrade):
     def __post_init__(self):
         return
 
-    # def getBuySell(self):
-    #     return "B"
-
     @classmethod
     def from_dict(cls, data_dict):
         return cls(data_dict['Symbol'], data_dict['Last'], data_dict['Description'], data_dict['Status'], data_dict['Account'])
-
 
 @C.dataclass
 class OrdersSampleClass(BaseTrades):
@@ -269,17 +263,51 @@ def orderFileTesting():
     print(df)
     return
 
+# =========================================================
+# REFERENCE + SIGNAL LOGIC
+# =========================================================
+def get_trade_refs(df, ticker):
+    d = df[df["Symbol"] == ticker].copy()
 
-# def getBestPrice(symbol):
-#     price = positions.getLastPrice(symbol)
-#     if price is not None:
-#         return price
-#     info = C.getTickerInfo(symbol)
-#     price = info.get('regularMarketPrice')
-#     if price is None:
-#         price = info.get('currentPrice')
-#     return price
+    d["Price"] = C.clean_price(d["Price"])
+    d["trade_date"] = pd.to_datetime(d["trade_date"])
 
+    latest_date = d["trade_date"].max()
+    latest_day = d[d["trade_date"] == latest_date]
+
+    has_buy = (latest_day["quantity"] > 0).any()
+    has_sell = (latest_day["quantity"] < 0).any()
+
+    if has_buy and has_sell:
+        buy_ref = latest_day[latest_day["quantity"] > 0]["Price"].min()
+        sell_ref = latest_day[latest_day["quantity"] < 0]["Price"].max()
+
+    elif has_buy and not has_sell:
+        buy_ref = latest_day[latest_day["quantity"] > 0]["Price"].min()
+        sell_ref = buy_ref
+
+    elif has_sell and not has_buy:
+        sell_ref = latest_day[latest_day["quantity"] < 0]["Price"].max()
+        buy_ref = sell_ref
+
+    else:
+        buy_ref = None
+        sell_ref = None
+
+    if buy_ref is not None:
+        buy_ref = round(buy_ref, 2)
+    if sell_ref is not None:
+        sell_ref = round(sell_ref, 2)
+
+    return buy_ref, sell_ref
+
+def get_signal(cp, buy_ref, sell_ref):
+    if sell_ref is not None and cp > sell_ref * 1.10:
+        return "SELL"
+
+    if buy_ref is not None and cp < buy_ref * 0.90:
+        return "BUY"
+    return "HOLD"
 
 if __name__ == '__main__':
     orderFileTesting()

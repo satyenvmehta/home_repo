@@ -3,7 +3,7 @@ import common_include as C
 from tp.init_refs import initRefData, create_ticker_list
 from tp.market.get_price import get_market_price
 
-Debug_Ticker = "AAOI"
+Debug_Ticker = "ARE"
 from inteli_scan import InteliScans, InteliScan
 
 from tp.all_history import Historys
@@ -127,11 +127,8 @@ class TradeProcessing(C.BaseObject):
 
     def __post_init__(self):
         self.historys, self.positions, self.orders = initRefData()
-        # self.historys = Historys()
         self.hist_summ = self.historys
-        # self.positions = Positions()
         self.positions.setHistorys(self.historys)
-        # self.orders = Orders()
         self.inteli_scans = InteliScans()
         self.results = Results()
         self.bs_ext = ""
@@ -158,7 +155,7 @@ class TradeProcessing(C.BaseObject):
             return 0
         if self.hist_summ.getNoOfBusDaysSinceLastTrade(self.curr_ticker) > ShortTermDays:
             return 0
-        last_hist_price, bp, sp = self.getLastHistPrices()
+        last_hist_price, bp, sp = self.lastHistPrice, self.lastBuyPrice, self.lastSellPrice
         if not last_hist_price:
             return 0
         if isinstance(last_hist_price, C.BaseTradePrice):
@@ -168,6 +165,7 @@ class TradeProcessing(C.BaseObject):
         self._debug()
         tkr = self.curr_ticker
         self.STRecomm = HOLD
+        stDeltaBuy, stDeltaSell = 0, 0
         if not self.lastP:
             return
         last_hist_price = self.getLastSTPrice()
@@ -177,19 +175,24 @@ class TradeProcessing(C.BaseObject):
             lastP = self.lastP.getBase()
         else:
             lastP = self.lastP
+
+        if self.lastBuyPrice:
+            stDeltaBuy = round(C.getDeltaPercentage(lastP, self.lastBuyPrice), 2)
+        if self.lastSellPrice:
+            stDeltaSell = round(C.getDeltaPercentage(lastP, self.lastSellPrice), 2)
         self.STDeltaP = round(C.getDeltaPercentage(lastP, last_hist_price), 2)
 
-        if self.STDeltaP < -ShortTermGnLPercentageBuy:
+        if stDeltaBuy < -ShortTermGnLPercentageBuy:
             self.STRecomm = ShortTermBuy + self.buy_exist
             return
-        if self.STDeltaP < -STLPerc:
+        if stDeltaBuy < -STLPerc:
             self.STRecomm = STBuyLimit + self.buy_exist
             return
         if self.positions.existsForSym(self.curr_ticker):
-            if self.STDeltaP > ShortTermGnLPercentageSell:
+            if stDeltaSell > ShortTermGnLPercentageSell:
                 self.STRecomm = ShortTermSell + self.sell_exist
                 return
-            if self.STDeltaP > STLPerc:
+            if stDeltaSell > STLPerc:
                 self.STRecomm = STSellLimit + self.sell_exist
         return
 
@@ -285,7 +288,7 @@ class TradeProcessing(C.BaseObject):
             suggested_price = price  #.replace('$',  '')
         suggested_price = round(suggested_price, 2)
         if self.tickerHasHistory():
-            hp, bp, sp = self.getLastHistPrices()
+            hp, bp, sp = self.lastHistPrice, self.lastBuyPrice, self.lastSellPrice
             bs = bs + "@" + str(suggested_price).strip() + \
                  "_" + self.bs_ext + "_" + str(hp) + "_" + str(self.getLastHistQuantity())
             if bs.startswith("Sell"):
@@ -338,6 +341,9 @@ class TradeProcessing(C.BaseObject):
     def initDefaults(self):
         self.earningAlert = None
         self.lastP = 0
+        self.lastBuyPrice = None
+        self.lastSellPrice = None
+        self.lastHistPrice = None
         self.yieldVal = 0
         self.IdleSecurity = "NA"
         self.PerGnL = 0
@@ -362,6 +368,7 @@ class TradeProcessing(C.BaseObject):
         self.STDeltaP, self.STRecomm = 0, HOLD
         self.isAnOption = self.curr_tkr_obj.isOpt()
         self.setCurrentPosOrderVantage(acct=tkr_act.acct)
+        self.lastHistPrice, self.lastBuyPrice, self.lastSellPrice = self.getLastHistPrices()
         return
 
     def getBestPriceForSymbols(self, symbols):
@@ -375,24 +382,26 @@ class TradeProcessing(C.BaseObject):
         if self.lastP:
             return
         if self.curr_pos_obj:
-            self.lastP = self.curr_pos_obj.Last.getBase()
-            if self.lastP:
+            lastP = self.curr_pos_obj.Last.getBase()
+            if lastP:
+                self.lastP = lastP
                 return
         ord_based_lastP = self.orders.getLastPrice(symbol)
         if ord_based_lastP:
             self.lastP = ord_based_lastP.getBase()
-            print({"Found Price from Orders for ": symbol, "Prices = ": self.lastP})
             return
 
-        self.lastP = get_market_price(symbol)
-        if self.lastP:
+        lastP = get_market_price(symbol)
+        if lastP:
+            self.lastP = lastP
             print({"Found Price from MarketPrice for ": symbol, "Prices = ": self.lastP})
             return
+        self.lastP = self.lastHistPrice
 
-        if self.tickerHasHistory():
-            self.lastP, bp, sp = self.getLastHistPrices()
-        if self.lastP:
-            print({"Found Price from history for ": symbol, "Prices = ": self.lastP})
+        # if self.tickerHasHistory():
+        #     self.lastP, bp, sp = self.getLastHistPrices()
+        # if self.lastP:
+        #     print({"Found Price from history for ": symbol, "Prices = ": self.lastP})
         return
     def setActionParams(self):
         self.getBestPriceForSymbol()
@@ -438,7 +447,7 @@ class TradeProcessing(C.BaseObject):
     def getBuyNEWParams(self):
         self.bsh = "NEW"
         if self.lastP:
-            hp, bp, sp = self.getLastHistPrices()
+            bp = self.lastBuyPrice
             if bp:
                 percDiff = 100 * (bp - self.lastP) / self.lastP
             else:
@@ -457,7 +466,7 @@ class TradeProcessing(C.BaseObject):
         self.getBestPriceForSymbol()
         currP = self.lastP
         if not currP:
-            return None, None
+            return None, None, None
         if self.tickerHasHistory():
             h_qty = self.getLastHistQuantity()
         else:
@@ -517,7 +526,7 @@ class TradeProcessing(C.BaseObject):
         return str(C.BaseMoney(lp)), C.BaseInt(qty)
 
     def _setNextBuySellRefPrices(self):
-        lhp, bp, sp = self.getLastHistPrices()
+        lhp, bp, sp = self.lastP, self.lastBuyPrice, self.lastSellPrice
         if not lhp:
             return
         if not bp:
@@ -630,7 +639,7 @@ class TradeProcessing(C.BaseObject):
             self.bs_ext = ""
             return
 
-        hp, bp, sp = self.getLastHistPrices()
+        hp, bp, sp = self.lastP, self.lastBuyPrice, self.lastSellPrice
         if not hp:
             return
 
