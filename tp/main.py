@@ -71,9 +71,10 @@ if __name__ == '__main__':
     if not hist_vals or not pos_vals or not ords_vals:
         print("Error initializing data")
         exit(1)
-    stock_screener_exec()
     trade_processing.tp()
+    stock_screener_exec()
     pending_items()
+
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

@@ -31,9 +31,6 @@ class History(BaseTrade):
     def getQuantity(self):
         return self.Quantity.getBase()
 
-    # def isAnIdleSecurity(self):
-    #     return self.Date.isOlderThan(45)
-
     def __str__(self):
         ps = str(self.Symbol) + "|" + str(self.Price)  + "|"+ str(self.Quantity)  + "|" + str(self.Description)
         return ps
@@ -340,8 +337,7 @@ class Historys(BaseTrades):
         return int(self.getSummaryAttrForSymbolFromDF(sym, 'days_since_last'))
     def getNoOfBusDaysSinceLastTrade(self, sym):
         return int(self.getSummaryAttrForSymbolFromDF(sym, 'bus_days_since_last'))
-    # def getLastTradeDate(self, sym):
-    #     return self.getSummaryAttrForSymbolFromDF(sym, last_trade_date)
+
     def getNoOfDaysSinceFirstTrade(self, sym):
         return int(self.getSummaryAttrForSymbolFromDF(sym, 'days_since_first'))
 
@@ -388,43 +384,10 @@ class Historys(BaseTrades):
     def getGainLossForSymbol(self, sym):
         return self.getFloatValueForSymbol(sym, 'gain_loss')
 
-    def _findLastestLowestBuyPrice(self, sym):
-        sym_hist = self.getRecordsForSym(sym)
-        buy_recs = sym_hist.loc[sym_hist['quantity'] > 0, ['quantity', 'price', 'trade_date']]
-        if len(buy_recs) == 0:
-            return None
-        max_date = buy_recs['trade_date'].max()
-        latest_recs = buy_recs[buy_recs['trade_date'] == max_date]
-        ref_price = None
-        for _, last_buy_rec in latest_recs.iterrows():
-            if ref_price is None:
-                ref_price = last_buy_rec['price']
-                continue
-            if last_buy_rec['price'] < ref_price:
-                ref_price = last_buy_rec['price']
-        return ref_price
-    def _findLatestHighestSellPrice(self, sym):
-        sym_hist = self.getRecordsForSym(sym=sym)
-        sell_recs = sym_hist.loc[sym_hist['quantity'] < 0, ['quantity', 'price', 'trade_date']]
-        if len(sell_recs) == 0:
-            return None
-        max_date = sell_recs['trade_date'].max()
-        latest_recs = sell_recs[sell_recs['trade_date'] == max_date]
-        ref_price = None
-        for _, last_sell_rec in latest_recs.iterrows():
-            if ref_price is None:
-                ref_price = last_sell_rec['price']
-                continue
-            if last_sell_rec['price'] > ref_price:
-                ref_price = last_sell_rec['price']
-        return ref_price
     def findLatestBestPrices(self, sym):
         bp, sp = get_trade_refs(self.getDF(), sym)
         # VIA == > [14.57, 17.9]
         # VIAV == > [50.5, 55.15]
-
-        # bp = self._findLastestLowestBuyPrice(sym)
-        # sp = self._findLatestHighestSellPrice(sym)
         return bp, sp
 
     def recent_price(self, ticker, bs="Buy"):
@@ -440,17 +403,15 @@ class Historys(BaseTrades):
 
         return bestPrice
 
-
-    def getHistory(self, ticker):
-        sym_hist = self.summary_df.loc[self.summary_df['Symbol'] == ticker]
-        return sym_hist
-    def resetForNextSym(self, sym):
-        self.ref_price = self.getLastPrice(sym)
-        self.ref_qty = self.getLastQuantity(sym)
-        self.ref_action = self.getLastAction(sym)
-        self.ref_obj_list = self.getRefObjsForSymbol(sym)
-        pass
-
+    # def getHistory(self, ticker):
+    #     sym_hist = self.summary_df.loc[self.summary_df['Symbol'] == ticker]
+    #     return sym_hist
+    # def resetForNextSym(self, sym):
+    #     self.ref_price = self.getLastPrice(sym)
+    #     self.ref_qty = self.getLastQuantity(sym)
+    #     self.ref_action = self.getLastAction(sym)
+    #     self.ref_obj_list = self.getRefObjsForSymbol(sym)
+    #     pass
 
 def Dbg_DF():
     data = {
