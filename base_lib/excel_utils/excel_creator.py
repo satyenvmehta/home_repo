@@ -137,6 +137,18 @@ class ExcelCreator(ExcelFileBase):
             })
         return
 
+    def condition_format_row(self, sheet, df, row_id, condition):
+        max_col = df.shape[1]
+        print("max_col: ", max_col)
+        cell_range = rf"A{row_id}:{max_col}{row_id}"
+        self.conditional_format(sheet, cell_range, condition)
+        return
+    def condition_format_col(self, sheet, df, col_name, condition):
+        col_id = df.columns.get_loc(col_name) + 1
+        cell_range = rf"{col_id}:{col_id}"
+        self.conditional_format(sheet, cell_range, condition)
+        return
+
     def border_used_range(self, sheet: str) -> None:
         """
         Borders only where data exists:
@@ -301,18 +313,23 @@ if __name__ == "__main__":
     df_summary = pd.DataFrame({"Metric": ["Revenue", "Cost"], "Value": [1200, 800]})
     df_details = pd.DataFrame({"Item": ["A", "B"], "Amount": [50, 200]})
     df_bs = pd.DataFrame({"Ticker": ["AAPL", "MSFT", "ABC"], "Action": ["Buy", "Sell", "Buy_Ign"]})
+    df_RYG = pd.DataFrame({"Stock": ["AAPL", "MSFT", "ABC"], "noOfFlips": [1, 3, 5]})
     df_dict = {
         "Summary": df_summary,
         "Details": df_details,
         "BS": df_bs
+        ,"RYG":df_RYG
     }
 
     def my_custom_formatter(excel, df, sheet_name):
         excel.bs_formatter(df, sheet_name, 'B')
+        ryg = {'col_name': 'noOfFlips', 'green': 5, 'red': 2}
+        excel.custom_RYG_formatter(df, sheet_name, ryg)
         return
 
-    C.create_excel(
+    x = C.create_excel(
         r"C:\tmp\report41.xlsx",
         df_dict,
         custom_formatter_method=my_custom_formatter,
     )
+    print(x)

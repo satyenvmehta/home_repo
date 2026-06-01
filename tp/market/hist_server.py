@@ -1,12 +1,14 @@
 import socket
-import market_include
+
 import get_price
 
 import pandas as pd
 import pickle
 
+from tp.lib.mrkt_include import HIST_PORT
+
 HOST = 'localhost'  # Standard loopback interface address (localhost)
-PORT = market_include.HIST_PORT  # Port to listen on (non-privileged ports are > 1023)
+PORT = HIST_PORT  # Port to listen on (non-privileged ports are > 1023)
 
 
 data = {

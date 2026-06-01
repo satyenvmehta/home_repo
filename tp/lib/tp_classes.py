@@ -1,4 +1,4 @@
-# import common_include as C
+
 from dataclasses import dataclass
 
 from base_lib.core.base_classes import BaseObjectItem, BaseMoney, BaseString, BaseFloat, BaseDate, BaseObject
@@ -233,6 +233,7 @@ class BaseOptionSymbol(BaseObjectItem):
 
     def __str__(self):
         return self.getBase()
+
 
 if __name__ == "__main__":
     for sym in ["QUBT260206C12.5", "SPY230616P00420000", "BRK.B250620C00150000", "AAPL.250620C150", "TSLA241220P200", "QUBT260206C12.5"]:

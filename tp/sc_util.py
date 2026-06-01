@@ -1,5 +1,8 @@
 import common_include as C
+from base_lib.core.base_classes import BasePrice
 from tp.TradeUtil import BaseTrades
+from tp.market.MrktDataUtil import MarketDataForTickerRedis
+
 
 @C.dataclass
 class StockScreener(C.BaseObject):
@@ -121,13 +124,14 @@ class StockFilterAttributes(C.BaseObject):
     bs_indicator:C.BaseString = None
     bd_advise:C.BaseString = None
     pos: C.BaseInt = None
-    pe : C.BaseFloat = None
+    pe : C.BasePrice = None
     yo_avg_daily_swing : C.BaseFloat = None
     yo_max_swing : C.BaseFloat = None
     is_yoyo : C.BaseBool = None
+    dir_flipts : C.BaseInt = None
 
 
-    def init_from_df(self, symbol, df, rsi, bs_indicator, bd_advise, pos, pe, yo_avg_daily_swing, yo_max_swing, is_yoyo):
+    def init_from_df(self, symbol, df, rsi, bs_indicator, bd_advise, pos, tkrObj:MarketDataForTickerRedis):
         """
         Initializes the StockFilterAttributes object from a pandas DataFrame.
 
@@ -160,11 +164,18 @@ class StockFilterAttributes(C.BaseObject):
         self.bs_indicator = bs_indicator
         self.bd_advise = bd_advise
         self.pos = pos
-        # self.pe = pe
 
-        self.is_yoyo = is_yoyo
-        self.yo_max_swing = yo_max_swing
-        self.yo_avg_daily_swing = yo_avg_daily_swing
+        self.pe = BasePrice(tkrObj.trailingPE)
+        self.sector = tkrObj.sector
+        # if tkrObj.is_yoyo==1:
+        #     self.is_yoyo = True
+        # else
+        #     self.is_yoyo = False
+        self.is_yoyo = tkrObj.is_yoyo
+        self.dir_flipts = tkrObj.direction_flips
+        self.yo_max_swing = tkrObj.max_swing
+
+        self.yo_avg_daily_swing = tkrObj.avg_daily_swing
 
         return
     def __repr__(self):
@@ -176,42 +187,6 @@ class StockFilterAttributes(C.BaseObject):
         """
         return f'StockFilterAttributes({self.Symbol}, {self.today_open}, {self.intraday_range_per}, {self.open_close_gap_per}, {self.overnight_gap}, {self.today_high}, {self.today_low}, {self.close_today}, {self.rsi}, {self.bs_indicator}, {self.bd_advise})'
 
-
-
-import yfinance as yf
-import pandas as pd
-
-daily_swing_pct_param = 6
-def get_yoyo_metrics(ticker_symbol, no_days=5):
-    # Fetch historical data (including current intraday if market is open)
-    ticker = yf.Ticker(ticker_symbol)
-    df = ticker.history(period=f"{no_days + 5}d")  # Extra days for technical buffering
-
-    if df.empty or len(df) < no_days:
-        return None
-
-    # 1. Calculate Daily Range Percentage: (High - Low) / Open
-    # This measures how much the "Yo-Yo" moved during the day
-    df['daily_swing_pct'] = (df['High'] - df['Low']) / df['Open'] * 100
-
-    # 2. Identify Direction: 1 for Green (Close > Open), -1 for Red
-    df['direction'] = df.apply(lambda x: 1 if x['Close'] > x['Open'] else -1, axis=1)
-
-    # 3. Count Directional Flips: Does it change color day-to-day?
-    df['flip'] = df['direction'].diff().fillna(0).apply(lambda x: 1 if x != 0 else 0)
-
-    # Get the last N business days
-    recent_data = df.tail(no_days)
-
-    metrics = {
-        "ticker": ticker_symbol,
-        "avg_daily_swing": round(recent_data['daily_swing_pct'].mean(), 2),
-        "max_swing": round(recent_data['daily_swing_pct'].max(), 2),
-        "direction_flips": int(recent_data['flip'].sum()),
-        "is_yoyo": recent_data['daily_swing_pct'].mean() > daily_swing_pct_param and recent_data['flip'].sum() >= (no_days / 2)
-    }
-
-    return metrics
 
 if __name__ == '__main__':
     b = StocksFundamentals()

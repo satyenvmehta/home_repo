@@ -5,11 +5,12 @@ import common_include as C
 from ta.momentum import RSIIndicator
 
 from base_lib.excel_utils.excel_base import FillColor
-from tp.market.MrktDataUtil import  MarketDataHistory  # () ignore_ticker, prep_ticker_list, prep_debug_list
+from tp.market.MrktDataUtil import MarketDataHistory,  get_ticker_data
+# () ignore_ticker, prep_ticker_list, prep_debug_list
 
-from tp.sc_util import StockFilterAttributes, get_yoyo_metrics
+
 from tp.init_refs import initRefData
-
+from tp.sc_util import StockFilterAttributes
 
 RSI_WINDOW = 14
 RSI_OVERBOUGHT = 69
@@ -20,18 +21,10 @@ RSI_OVERSOLD_MINUS = 22
 IntraDayKey = "Intraday %"
 # Ticker	last	BS?	Pos	Intraday %	OC_gap%	ONight Gap%	High	Low	RSI	BS_IND	Pos
 # interested_fields = ["Ticker",  "last", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
-interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "max_swing", "avg_swing"] #, "Pos"]
+interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "noOfFlips", "max_swing", "avg_swing"] #, "Pos"]
+# interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo",  "max_swing", "avg_swing"] #, "Pos"]
 
 
-# def getRSI(df, window=RSI_WINDOW):
-#     delta = df["Close"].diff()
-#     up = delta.clip(lower=0)
-#     down = -1 * delta.clip(upper=0)
-#     average_gain = up.rolling(window).mean()
-#     average_loss = down.rolling(window).mean()
-#     rs = average_gain / average_loss
-#     rsi = 100 - (100 / (1 + rs))
-#     return rsi
 
 def get_orders_exists(ticker, orders):
     be = orders.exists(ticker, "Buy")
@@ -110,7 +103,7 @@ def get_rsi(data, ticker, historys, orders):
 
     return C.BasePrice(rsi), bs_indicator, bd_advise
 
-def append_filter_to_result(sfa, result):
+def append_filter_to_result(sfa: StockFilterAttributes, result):
     if isinstance(result, list):
         if sfa.rsi:
             rsival = sfa.rsi.getBase()
@@ -119,7 +112,7 @@ def append_filter_to_result(sfa, result):
         result.append(
             [sfa.Symbol.getBase()
                 , sfa.close_today.getBase()
-                , sfa.pe
+                , sfa.pe.getBase()
                 , sfa.today_high.getBase()
                 , sfa.today_low.getBase()
                 , sfa.bd_advise
@@ -130,9 +123,12 @@ def append_filter_to_result(sfa, result):
                 , rsival
                 , sfa.bs_indicator
             , sfa.is_yoyo
+             , sfa.dir_flipts
             , sfa.yo_max_swing
             , sfa.yo_avg_daily_swing
-             ])
+             ]
+        )
+        return
 
 
 def find_stocks_multi(historys, positions, orders):
@@ -146,8 +142,6 @@ def find_stocks_multi(historys, positions, orders):
     rest_results = []
 
     sfa = StockFilterAttributes()
-    error_tickers = ['avxx', 'bmnz', 'hmy', 'orcl', 'orcx']
-    # tickers = error_tickers
 
     for ticker in tickers:
         try:
@@ -159,21 +153,16 @@ def find_stocks_multi(historys, positions, orders):
                 continue
             rsi, bs_indicator, bd_advise = get_rsi(data, ticker, historys, orders)
             pos = positions.getTotalQty(ticker)
-            pe = positions.getPE(ticker)
-            if pe:
-                pe = pe.getBase()
-            else:
-                pe = None
+
             if pos == 0 or pos is None:
                 if not bd_advise:
                     bd_advise = "NA"
                 if bd_advise.endswith("Sell"):
                     bd_advise = "NA"
 
-            yoyo_metrix = get_yoyo_metrics(ticker_symbol=ticker)
-            yo_avg_daily_swing, yo_max_swing, is_yoyo = yoyo_metrix['avg_daily_swing'], yoyo_metrix['max_swing'], yoyo_metrix['is_yoyo']
+            tkrObj = get_ticker_data(ticker)
 
-            sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos, pe, is_yoyo=is_yoyo, yo_avg_daily_swing=yo_avg_daily_swing, yo_max_swing=yo_max_swing)
+            sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos, tkrObj=tkrObj)
 
             # sfa.init_from_df(ticker, df, rsi, bs_indicator, bd_advise, pos)
             open_close_gap_abs = abs(sfa.open_close_gap_per.getBase())
@@ -198,45 +187,46 @@ def find_stocks_multi(historys, positions, orders):
     r_more_15 = r_more_15.sort_values(by=IntraDayKey, ascending=False)
     r_rest = r_rest.sort_values(by=IntraDayKey, ascending=False)
     return r_15,  r_more_15, r_rest
+
 AllRecs = "All"
 OC_LT_15 = "open_close_LT_1.5"
 OC_GT_15 = "open_close_GT_1.5"
 Rest = "rest"
 
 
-# def date_now(fmt):
-#     return C.datetime.now().strftime(fmt)
-
 def fill_row_for_df(self, sheet, row: int, df, color):
     last_col = df.shape[1]
     col_letter = "A"
     rng = f"{col_letter}{row}:{last_col}{row}"
     self.fill_range(sheet, rng, color)
+    return
 
 def xlswriter_formatter(sheet, workbook, df, sheet_name):
     max_cols = df.shape[1]
     max_rows = df.shape[0]
-    J_range = f'J2:J{max_rows}'
-    bs_range = f'F2:F{max_rows}'
+    RSI='J'
+    RSI_range = f'{RSI}2:{RSI}{max_rows}'
 
     fill_row_for_df(sheet_name, 1, df, FillColor.YELLOW)
-    sheet.conditional_format(J_range, {'type': 'cell',
+    sheet.conditional_format(RSI_range, {'type': 'cell',
                                                 'criteria': 'greater than',
                                                 'value': RSI_OVERBOUGHT,
                                                 'format': workbook.add_format({'bg_color': '#C6EFCE',
                                                                                'font_color': '#006100'})})
-    sheet.conditional_format(J_range, {'type': 'cell',
+    sheet.conditional_format(RSI_range, {'type': 'cell',
                                                 'criteria': 'less than',
                                                 'value': RSI_OVERSOLD,
                                                 'format': workbook.add_format({'bg_color': '#FFC7CE',
                                                                                'font_color': '#9C0006'})})
-
-# def common_formatter(excel, df, sheet_name):
-
+    return
 
 def apply_formatter(excel, df, sheet_name):
-    excel.bs_formatter(df, sheet_name, 'F')
-    excel.tf_formatter(df, sheet_name, 'M')
+    excel.bs_formatter(df, sheet_name, 'F') # BS_?
+    excel.tf_formatter(df, sheet_name, 'M')  # is_yoyo
+    ryg = {'col_name': 'noOfFlips', 'green': 5, 'red': 2}
+    excel.custom_RYG_formatter(df, sheet_name, ryg)
+    # excel.num_formatter(df, sheet_name, 'N')  # noOfFlips
+
     return
 
 def stock_screener_exec():
@@ -247,9 +237,10 @@ def stock_screener_exec():
     print(df_15)
     print(df_more_15)
     print(df_rest)
-    filen =  r"G:\My Drive\vepar\stock_screener_" + C.date_now("%Y-%m-%d") + ".xlsx"
+    date_now = C.date_now("%Y-%m-%d")
+    filen =  r"G:\My Drive\vepar\stock_screener_" + date_now + ".xlsx"
     # filen_2 = filen.replace(".xlsx", "_2.xlsx")
-    sheet_name = C.date_now("%b_%d")  # e.g., "Aug_09"
+    # sheet_name = C.date_now("%b_%d")  # e.g., "Aug_09"
 
     df_list = [All_data_df, df_15, df_more_15, df_rest]
     SheetNames = [AllRecs, OC_LT_15, OC_GT_15, Rest]

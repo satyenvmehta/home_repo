@@ -1,9 +1,10 @@
-import market_include
+
 import socket
 import get_price
+from tp.lib.mrkt_include import CURR_PORT
 
 HOST = 'localhost'  # Standard loopback interface address (localhost)
-PORT = market_include.CURR_PORT  # Port to listen on (non-privileged ports are > 1023)
+PORT = CURR_PORT  # Port to listen on (non-privileged ports are > 1023)
 
 def start():
     print("Starting Current Price server...")

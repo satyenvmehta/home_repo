@@ -2,18 +2,17 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
-
 import pandas as pd
-import yfinance as yf
 
-from base_lib.core.base_classes import BaseObject, BaseBool, sleep_sec
+from base_lib.core.base_classes import BaseObject, BaseBool
 from base_lib.core.files_include import weekly_fundamentals_file_debug, stock_fundamentals_file, my_symbol_xls_file, \
-    sp_500_file, nasd_100_file, ticker_file
-# import common_include as C
-# from tp.market.get_price import getHistoricalData
-# from tp.TradeUtil import  prep_ticker_list, prep_debug_list
-# from tp.market.get_price import sleep_sec
+    prep_ticker_list
+from tp.market.mrkt_data_client import get_ticker_info
+from tp.market.mrkt_data_updater import DEBUG_TICKERS
+
 from tp.market.validate_ticker import _validate_ticker, ignore_ticker
+from tp.market.yahoo_based_info import getHistoricalData
+from tp.lib.mrkt_include import MARKET_FIELD_SPECS
 
 RefreshInterval = 7
 
@@ -21,26 +20,8 @@ import builtins
 print = builtins.print
 
 
-def get_my_symbols_df():
-    return pd.read_excel(my_symbol_xls_file)
-
-
-def prep_ticker_list():
-    # Read both Excel files (assume first column contains tickers)
-    df1 = pd.read_excel(sp_500_file)
-    df2 = pd.read_excel(nasd_100_file)
-    df3 = pd.read_csv(ticker_file)
-    df_my = get_my_symbols_df()
-
-    # Combine tickers from both sheets, remove duplicates, drop NaN
-    tickers = pd.concat([df1, df2, df3, df_my], ignore_index=True).iloc[:, 0].dropna().unique().tolist()
-    # tickers = ['MBLY', 'LMT', 'NGD', 'avxx', 'orcl', 'orcx', 'hmy']
-    tickers = sorted(tickers)
-    return tickers
-
-
 def prep_debug_list():
-    df_my = get_my_symbols_df()
+    df_my = pd.read_excel(my_symbol_xls_file)
     tickers = df_my.iloc[:, 0].dropna().unique().tolist()
     tickers = sorted(tickers)
     return tickers
@@ -49,7 +30,7 @@ def getTickerInfo(tkr):
     if ignore_ticker(tkr):
         return None
     try:
-        mrk_data = MarketDataForTicker(tkr)
+        mrk_data = MarketDataForTickerRedis(tkr)
         if not mrk_data:
             print("Error getting info for ", tkr)
             return None
@@ -60,15 +41,6 @@ def getTickerInfo(tkr):
     except:
         print("Error getting info for ", tkr)
         return None
-
-def getHistoricalData(tickers):
-    if not isinstance(tickers, list):
-        return False
-    print("downloading data for ", tickers)
-    print("Total tickers ....",  len(tickers))
-    data = yf.download(tickers, period="30d", interval="1d", group_by="ticker", auto_adjust=True, progress=False)
-    print("download complete")
-    return data
 
 @dataclass
 class MarketDataHistory(BaseObject):
@@ -86,7 +58,7 @@ class MarketDataHistory(BaseObject):
         super().__post_init__()
         # debug = kwargs.pop('debug', None)
         if self.debug:
-            self.tickers = prep_debug_list()
+            self.tickers = DEBUG_TICKERS
         else:
             self.tickers = prep_ticker_list()
 
@@ -148,11 +120,6 @@ class MarketDataHistory(BaseObject):
             tiObj = getTickerInfo(t)
             if tiObj is None:
                 continue
-            # sector = tiObj.get('sector')
-            # book_value = tiObj.get('bookValue')  # may represent equity per share or total
-            # shares = tiObj.get('sharesOutstanding')
-            # growth = tiObj.get('earningsQuarterlyGrowth')  # or another growth metric
-            # Compute BVPS if needed
             bvps = None
             if tiObj.book_value is not None and tiObj.shares is not None and tiObj.shares > 0:
                 bvps = tiObj.book_value
@@ -177,89 +144,63 @@ class MarketDataHistory(BaseObject):
         return data
 
 
-def _getTickerObj(tkr_in):
-    try:
-        tkr = yf.Ticker(tkr_in)
-        return tkr
-    except:
-        sleep_sec(1)
+def to_float(v):
+    if v in ("", None):
         return None
+    return float(v)
 
-def getTickerObj(tkr):
-    tries = 0
-    while tries < 3:
-        tries += 1
-        tkr = _getTickerObj(tkr)
-        if tkr:
-            break
-    return tkr
-
-pct_cols = [
-    "ROE",
-    "DividendYield",
-    "ProfitMargin",
-    "OperatingMargin",
-    "RevenueGrowth",
-    "EarningsGrowth",
-]
 @dataclass
-class MarketDataForTicker(BaseObject):
+class MarketDataForTickerRedis(BaseObject):
     ticker: str
-    info: dict = None
-    sector: str = None # = info.get('sector')
-    book_value: float = None # = info.get('bookValue')  # may represent equity per share or total
-    shares: int = None # = info.get('sharesOutstanding')
-    growth: float = None # = info.get('earningsQuarterlyGrowth')
-    quoteType : str = None # = info.get('quoteType')
-    PE : float = None # = info.get('trailingPE')
-    ForwardPE : float = None # = info.get('forwardPE')
-    DividendYield : float = None # = info.get('dividendYield')
-    ROE : float = None # = info.get('returnOnEquity')
-    PEG : float = None # = info.get('pegRatio')
-    ProfitMargin : float = None # = info.get('profitMargins')
-    OperatingMargin : float = None # = info.get('operatingMargins')
-    RevenueGrowth : float = None # = info.get('revenueGrowth')
-    EarningsGrowth : float = None # = info.get('earningsGrowth')
-    MarketCap : float = None # = info.get('marketCap')
-    RSI : float = None
+    price: float = None
+    pe: float = None
+    yield_pct: float = None
     def __post_init__(self):
-        self.tkrObj = getTickerObj(self.ticker)
-        if not self.tkrObj:
-            print("Error getting ticker object for ", self.ticker)
-            return None
-        self.info = self.tkrObj.info
-        if self.info:
-            self.sector = self.info.get('sector')
-            self.book_value = self.info.get('bookValue')
-            self.shares = self.info.get('sharesOutstanding')
-            self.growth = self.info.get('earningsQuarterlyGrowth')
-            self.quoteType = self.info.get('quoteType')
-            self.PE = self.info.get('trailingPE')
-            self.ForwardPE = self.info.get('forwardPE')
-            self.DividendYield = self.info.get('dividendYield')
-            self.ROE = self.info.get('returnOnEquity') *100
-            self.PEG = self.info.get('pegRatio')
-            self.ProfitMargin = self.info.get('profitMargins')
-            self.RevenueGrowth = self.info.get('revenueGrowth')
-            self.EarningsGrowth = self.info.get('earningsGrowth')
-            self.MarketCap = self.info.get('marketCap')
-            self.DebtToEquity = self.info.get('debtToEquity')
-            self.high_quality = self._high_quality()
-        return
+        pass
+    @classmethod
+    def from_redis(cls, d: dict):
+        return cls(
+            ticker=d["ticker"],
+            price=to_float(d["price"]),
+            pe=to_float(d["trailingPE"]),
+            yield_pct=to_float(d["dividendYield"]),
+        )
 
-    def _high_quality(self):
-        if self.quoteType == 'EQUITY':
-            if self.sector and self.book_value and self.shares and self.growth:
-                if self.ROE > 15 and self.ProfitMargin > .1 and self.PEG < 1.5 and self.DebtToEquity < 1.0:
-                    if self.EarningsGrowth > .1 and self.RevenueGrowth > .1:
-                        if self.MarketCap > 1000000000:
-                            print("High Quality Ticker ", self.ticker)
-                            return True
-        return False
+@dataclass
+class MarketDataForTickerRedis(BaseObject):
+    ticker: str | None = None
+    price: float | None = None
+    # regularMarketPrice: float | None = None
+    previousClose: float | None = None
+    trailingPE: float | None = None
+    forwardPE: float | None = None
+    pegRatio: float | None = None
+    trailingPegRatio: float | None = None
+    dividendYield: float | None = None
+    returnOnEquity: float | None = None
+    debtToEquity: float | None = None
+    marketCap: int | None = None
+    volume: int | None = None
+    averageVolume: int | None = None
+    beta: float | None = None
+    profitMargins: float | None = None
+    operatingMargins: float | None = None
+    revenueGrowth: float | None = None
+    earningsGrowth: float | None = None
+    sector: str | None = None
+    industry: str | None = None
+    avg_daily_swing: float | None = None
+    max_swing: float | None = None
+    direction_flips: int | None = None
+    is_yoyo: int | None = None
 
-    def setRSI(self, rsi):
-        self.RSI = rsi
-        return
+    @classmethod
+    def from_redis(cls, d: dict) -> "BaseMarketData":
+        kwargs = {
+            spec.attr: spec.converter(d.get(spec.redis_key))
+            for spec in MARKET_FIELD_SPECS
+        }
+        return cls(**kwargs)
 
 from ta.momentum import RSIIndicator
 RSI_WINDOW = 14
@@ -270,7 +211,33 @@ def _get_rsi(df):
     rsi = RSIIndicator(df['Close'], window=RSI_WINDOW).rsi().iloc[-1]
     return rsi
 
+def _rawToObj(rawdata)->MarketDataForTickerRedis:
+    md = MarketDataForTickerRedis.from_redis(rawdata)
+    return md
+
+def get_ticker_data(ticker_symbol)->MarketDataForTickerRedis:
+    info = get_ticker_info(ticker_symbol)
+    if info:
+        tkrObj = _rawToObj(info)
+        return tkrObj
+    return None
+
+# To support current usage - need to retire soon
+def get_market_price(ticker_symbol):
+    info = get_ticker_data(ticker_symbol)
+    if info:
+        return info.price
+    return 0
+
 if __name__ == '__main__':
+    print("test")
+    for t in DEBUG_TICKERS:
+        print(t, get_market_price(t))
+        tkrObj = get_ticker_data(t)
+        if not tkrObj:
+            continue
+        tkrObj.pretty_print_members()
+
     mrk_data = MarketDataHistory(debug=True)
     mrk_data.refreshWeeklyInfo(save_file=weekly_fundamentals_file_debug)
     for t in mrk_data.getTickers():

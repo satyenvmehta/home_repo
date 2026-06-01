@@ -18,6 +18,17 @@ def getTodayYYYYMMDD():
 def sleep_sec(s):
     time.sleep(s)
     return
+
+def to_float(v):
+    if v in ("", None):
+        return None
+    return float(v)
+
+
+def to_int(v):
+    if v in ("", None):
+        return None
+    return int(v)
 #
 from base_lib.core.sys_utils import Today
 
@@ -49,8 +60,6 @@ class BaseObject:
         return
     def __post_init__(self):
         self._init_none()
-        # self.resetDebug()
-        # self.setHeader()
         self.setClassMembers()
         return
 
@@ -129,7 +138,7 @@ class BaseObject:
             pprint(members)
         else:
             # Print only instance attributes
-            pprint(self.__dict__)
+            pprint(self.to_dict())
         return
 
     def debug(self, str_val):
@@ -250,6 +259,23 @@ class BaseObject:
         df = pd.concat([df, self.toDF()[0]], ignore_index=True)
         return df
 
+    def to_dict(self):
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if not k.startswith("_")
+        }
+
+    def to_json(self):
+        import json
+        return json.dumps(self.to_dict())
+
+    def to_redis_dict(self):
+        return {
+            k: "" if v is None else v
+            for k, v in self.to_dict().items()
+        }
+
 @dataclass
 class BaseObjectItem(BaseObject):
     _item: any
@@ -258,14 +284,6 @@ class BaseObjectItem(BaseObject):
         # super().__post_init__()
         self.setClassMembers()
         return
-#
-# @dataclass
-# class BasePath(BaseObjectItem):
-#     def isValid(self):
-#         return
-#
-#     def __post_init__(self):
-#         self.setBase
 
 @dataclass
 class BaseBool(BaseObjectItem):
@@ -474,12 +492,6 @@ class BaseString(BaseObjectItem):
     def __eq__(self, other):
         res = self.getBase() == other.getBase()
         return res
-
-# @dataclass
-# class BaseFilePath(BaseObjectItem):
-#
-
-
 
 @dataclass
 class BaseMoney(BaseFloat):

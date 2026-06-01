@@ -102,6 +102,18 @@ class ExcelFileBase(ABC):
             result = chr(65 + rem) + result
         return result
 
+    @staticmethod
+    def get_col_num_by_header(df, header_name: str) -> int:
+        """
+        Returns 1-based column number.
+        """
+        for idx, col in enumerate(df.columns, start=1):
+            if str(col).upper() == header_name.upper():
+                return idx
+        return None
+
+        # raise KeyError(f"Column not found: {header_name}")
+
     # ---------- common sheet access ----------
     def get_sheet(self, sheet: str) -> Any:
         if sheet not in self.sheets:
@@ -155,11 +167,29 @@ class ExcelFileBase(ABC):
     def save(self) -> None:
         ...
 
-
     def get_col_range(self, df, col_id):
         max_rows = df.shape[0] + 1
         range = f'{col_id}2:{col_id}{max_rows}'
         return range
+    def get_row_range(self, df, row_id):
+        max_cols = df.shape[1]
+        range = f'B{row_id}:{self.col_letter(max_cols)}{row_id}'
+        return range
+
+    def get_range_by_header(
+            self,
+            df,
+            header_name: str,
+            start_row: int = 2
+    ):
+        col_num = self.get_col_num_by_header(df, header_name)
+        if col_num is None:
+            return None
+        col_id = self.col_letter(col_num)
+
+        last_row = df.shape[0] + 1
+
+        return f"{col_id}{start_row}:{col_id}{last_row}"
 
     def tf_formatter(self, df, sheet_name, col_id):
         range = self.get_col_range(df, col_id)
@@ -213,5 +243,48 @@ class ExcelFileBase(ABC):
         )
         return
 
+    def custom_RYG_formatter(self, df, sheet_name, ryg_cond:dict):
+        col_name = ryg_cond['col_name']
+        range = self.get_range_by_header(df, col_name)
+        if not range:
+            return
+        green = ryg_cond['green']
+        red = ryg_cond['red']
+        yellow = (red-0.1, green + 0.1)
+        self.conditional_format(
+            sheet_name, range, Condition(
+                ConditionOp.GTE,
+                green,
+                FillColor.GREEN
+            ))
+        self.conditional_format(
+            sheet_name, range, Condition(
+                ConditionOp.LTE,
+                red,
+                FillColor.RED
+            ))
+        self.conditional_format(
+            sheet_name, range, Condition(
+                ConditionOp.BETWEEN,
+                yellow,
+                FillColor.YELLOW
+            ))
+        return
+
+# =========  Examples  ============
+def apply_formatter(excel, df, sheet_name):
+    excel.tf_formatter(df, sheet_name, 'C')
+    ryg = {'col_name':'noOfFlips', 'green': 5, 'red': 2}
+    excel.custom_RYG_formatter(df, sheet_name, ryg)
+    excel.bs_formatter(df, sheet_name, 'E')
+    return
 if __name__ == "__main__":
-    ExcelFileBase(filen, df_dict, apply_formatter)
+    from pathlib import Path
+    filen: Path = Path(r'C:\tmp\test.xlsx')
+    df_dict = {}
+
+    print(ExcelFileBase.col_letter(27))
+    print(ExcelFileBase.cell_to_rc('Z123'))
+    print(ExcelFileBase.cell_to_rc('AA123'))
+    # This CANT BE CREATED...
+    # ExcelFileBase(filen, df_dict)

@@ -209,8 +209,8 @@ class TradeProcessing(C.BaseObject):
         self.results.assignFormats()
         # self.results.setDataFrame(self.result_df)
         listOfInterest = {'Results':self.results.getSelf(), 'Orders':self.orders.getSelf(),
-                          'Postions': self.positions, 'Vantage': self.inteli_scans, 'History': self.historys ,
-                          'HistorySummary': self.hist_summ.summary_df}
+                          'Postions': self.positions,  #'History': self.historys ,
+                          'HistorySummary': self.hist_summ.summary_df}  # 'Vantage': self.inteli_scans,
 
         self._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, custom_formatter_method=apply_formatter)
         self.printDuplicateOrders()
