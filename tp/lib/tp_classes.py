@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from base_lib.core.base_classes import BaseObjectItem, BaseMoney, BaseString, BaseFloat, BaseDate, BaseObject
 from base_lib.core.base_container_classes import BaseSet
+from base_lib.core.sys_utils import Today
 
 OPEN = 'O'
 FILLED = 'F'
@@ -191,6 +192,10 @@ class BaseTradeSymbol(BaseObjectItem):
             return False
         if tkr.startswith('adj'):
             return False
+        if self.isOpt():
+            opt = self.getOptSymbol()
+            if opt.isExpired():
+                return False
         return True
 
 @dataclass
@@ -230,16 +235,24 @@ class BaseOptionSymbol(BaseObjectItem):
         return self.strike
     def get_type(self):
         return self.opt_type
+    def isExpired(self, ref_date=None):
+        if not ref_date:
+            ref_date = BaseDate(Today())
+        return self.exp < ref_date
+    def isCall(self):
+        return self.get_type() == "Call"
+    def isPut(self):
+        return self.get_type() == "Put"
 
     def __str__(self):
         return self.getBase()
 
 
 if __name__ == "__main__":
-    for sym in ["QUBT260206C12.5", "SPY230616P00420000", "BRK.B250620C00150000", "AAPL.250620C150", "TSLA241220P200", "QUBT260206C12.5"]:
+    for sym in ["OXY260821P55", "SPY230616P00420000", "BRK.B250620C00150000", "AAPL.250620C150", "TSLA241220P200", "QUBT260206C12.5"]:
         print("Sym ... " , sym)
         o = BaseOptionSymbol(sym)
-        print(o.get_tkr(), o.get_exp(), o.get_strike(), o.get_type())
+        print(o.get_tkr(), o.get_exp(), o.get_strike(), o.get_type(), o.isExpired())
     # o = BaseOptionSymbol("SPY230616P00420000")
     # print(o)
     # print(o.get_tkr(), o.get_exp(), o.get_strike(), o.get_type())

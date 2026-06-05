@@ -381,6 +381,11 @@ class TradeProcessing(C.BaseObject):
         symbol = self.curr_ticker
         if self.lastP:
             return
+        lastP = get_market_price(symbol)
+        if lastP:
+            self.lastP = lastP
+            print({"Found Price from MarketPrice for ": symbol, "Prices = ": self.lastP})
+            return
         if self.curr_pos_obj:
             lastP = self.curr_pos_obj.Last.getBase()
             if lastP:
@@ -391,11 +396,7 @@ class TradeProcessing(C.BaseObject):
             self.lastP = ord_based_lastP.getBase()
             return
 
-        lastP = get_market_price(symbol)
-        if lastP:
-            self.lastP = lastP
-            print({"Found Price from MarketPrice for ": symbol, "Prices = ": self.lastP})
-            return
+
         self.lastP = self.lastHistPrice
 
         # if self.tickerHasHistory():

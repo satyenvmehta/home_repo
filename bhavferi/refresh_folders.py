@@ -12,6 +12,7 @@ EXISTING_FILE = TMP + EXISTING_FILE
 NEWDATA_FILE = TMP + NEWDATA_FILE
 DELTA_FILE = TMP + DELTA_FILE
 DIFFERENT_LASTNAME_FILE = TMP + DIFFERENT_LASTNAME_FILE
+UNASSIGNED_FOLDER_FILE =  TMP +  "FoldersForUnassignedNames.csv"
 
 import re
 import pandas as pd
@@ -118,27 +119,83 @@ addr_folder_map = (
     .to_dict()
 )
 
-# street_folder_map = (
-#     existing_df
-#     .dropna(subset=["street"])
-#     .drop_duplicates("street")
-#     .assign(street_clean=lambda x: x["street"].apply(clean_str))
-#     .set_index("street_clean")["foldername"]
-#     .to_dict()
-# )
+# =========================================================
+# 3. FoldersForUnassignedNames.csv
+# Existing records where Folder is blank,
+# but folder can be assigned from same normalized street
+# =========================================================
 
-# ==========
+
+def is_blank(value):
+    return pd.isna(value) or str(value).strip() == ""
+
+
 existing_df["street_clean"] = existing_df["street"].apply(clean_street)
-new_df["street_clean"] = new_df["street"].apply(clean_street)
 
-street_folder_map = (
-    existing_df
+assigned_street_folder_map = (
+    existing_df[
+        ~existing_df["foldername"].apply(is_blank)
+    ]
     .drop_duplicates("street_clean")
     .set_index("street_clean")["foldername"]
     .to_dict()
 )
 
+unassigned_df = existing_df[
+    existing_df["foldername"].apply(is_blank)
+].copy()
 
+unassigned_df["suggested_folder"] = (
+    unassigned_df["street_clean"].map(assigned_street_folder_map)
+)
+
+folders_for_unassigned_df = unassigned_df[
+    ~unassigned_df["suggested_folder"].apply(is_blank)
+].copy()
+
+folders_for_unassigned_df["foldername"] = (
+    folders_for_unassigned_df["suggested_folder"]
+)
+
+folders_for_unassigned_df = folders_for_unassigned_df[
+    [
+        "foldername",
+        "firstname",
+        "lastname",
+        "stnum",
+        "street",
+        "city",
+        "state",
+        "zip",
+    ]
+]
+
+folders_for_unassigned_df.to_csv(
+    UNASSIGNED_FOLDER_FILE,
+    index=False
+)
+
+print(f"Created {UNASSIGNED_FOLDER_FILE}")
+print(folders_for_unassigned_df)
+# ==========
+existing_df["street_clean"] = existing_df["street"].apply(clean_street)
+new_df["street_clean"] = new_df["street"].apply(clean_street)
+
+# street_folder_map = (
+#     existing_df
+#     .drop_duplicates("street_clean")
+#     .set_index("street_clean")["foldername"]
+#     .to_dict()
+# )
+
+street_folder_map = (
+    existing_df[
+        ~existing_df["foldername"].apply(is_blank)
+    ]
+    .drop_duplicates("street_clean")
+    .set_index("street_clean")["foldername"]
+    .to_dict()
+)
 
 # =======
 

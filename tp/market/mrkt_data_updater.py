@@ -1,6 +1,7 @@
 import time
 import redis
 
+from base_lib.core.base_classes import BaseDate
 from tp.lib.mrkt_include import DEBUG_TICKERS
 from tp.market.yahoo_based_info import  _getTickerObj
 from base_lib.core.files_include import prep_ticker_list
@@ -100,6 +101,8 @@ def get_market_data(ticker: str) -> dict:
     return row
 
 def main():
+    dt = BaseDate()
+    print("Starting Market Data Updater at ", dt)
     r = redis.Redis(host="localhost", port=6379, decode_responses=True)
     tkrList = prep_ticker_list()
     if DEBUG:
@@ -137,6 +140,8 @@ def main():
             seconds = 3
         else:
             seconds = 600
+        import common_include as C
+        print("Last update at ", print(C.date_now()))
         time.sleep(seconds)
 
 
