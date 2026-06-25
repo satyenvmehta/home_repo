@@ -2,8 +2,8 @@ import re
 import pandas as pd
 
 TMP = r"C:/tmp/"
-EXISTING_FILE = TMP + "existing_folder.csv"
-OUTPUT_FILE = TMP + "existing_file_with_blank_filled.csv"
+EXISTING_FILE = TMP + "existing_folder_corrected_stname.csv"
+OUTPUT_FILE = TMP + "existing_file_with_blank_filled_v3.csv"
 
 FOLDER_COL = "foldername"
 

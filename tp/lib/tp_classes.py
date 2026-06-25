@@ -198,6 +198,12 @@ class BaseTradeSymbol(BaseObjectItem):
                 return False
         return True
 
+    @classmethod
+    def from_value(cls, value):
+        if value is None:
+            return None
+        return cls(_item=str(value).strip().upper())
+
 @dataclass
 class BaseTradePrice(BaseMoney):
     def __post_init__(self):

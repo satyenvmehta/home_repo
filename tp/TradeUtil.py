@@ -1,5 +1,21 @@
+from typing import Any, get_type_hints
+
 import common_include as C
 import pandas as pd
+
+# ============================================================
+# Common missing-value helper
+# ============================================================
+
+def is_missing(value: Any) -> bool:
+    if value is None:
+        return True
+
+    try:
+        return bool(pd.isna(value))
+    except Exception:
+        return False
+
 
 @C.dataclass
 class BaseTrade(C.BaseObject):
@@ -30,6 +46,28 @@ class BaseTrade(C.BaseObject):
     def to_dict(self):
         """ Return all attributes of the object as a dictionary """
         return vars(self)  # or self.__dict__
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        field_types = get_type_hints(cls)
+        mapped = {}
+
+        for field_name, field_type in field_types.items():
+            raw_value = d.get(field_name, None)
+            mapped[field_name] = cls.convert_value(raw_value, field_type)
+
+        c = cls(**mapped)
+        return c
+
+    @classmethod
+    def convert_value(cls, value: Any, target_type: Any):
+        if is_missing(value):
+            return None
+
+        if hasattr(target_type, "from_value"):
+            return target_type.from_value(value)
+
+        return value
 
 @C.dataclass  #
 class BaseTrades(C.BaseReaderWriter):
@@ -131,6 +169,8 @@ class BaseTrades(C.BaseReaderWriter):
         self.acctSet = C.BaseSet()
         for rec in self.getBase():
             if isinstance(rec, self.cls):
+                if rec.Account is None:
+                    continue
                 if rec.Account.isNaN():
                     continue
                 self.acctSet.append(rec.Account.getBase())

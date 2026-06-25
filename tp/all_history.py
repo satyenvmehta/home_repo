@@ -58,13 +58,13 @@ class History(BaseTrade):
             if self.isSell():
                 return self
         return None
-
-    @classmethod
-    def from_dict(cls, data_dict):
-        o =  cls(data_dict['Symbol'],	data_dict['Date'], data_dict['Quantity'],
-                   data_dict['Price'],	data_dict['Amount'],data_dict['Account'], data_dict['Description'])
-        # o.noOfDaysSinceTrans()
-        return o
+    #
+    # @classmethod
+    # def from_dict(cls, data_dict):
+    #     o =  cls(data_dict['Symbol'],	data_dict['Date'], data_dict['Quantity'],
+    #                data_dict['Price'],	data_dict['Amount'],data_dict['Account'], data_dict['Description'])
+    #     # o.noOfDaysSinceTrans()
+    #     return o
 from tp.account import AccountManager
 
 @C.dataclass
@@ -76,6 +76,15 @@ class Historys(BaseTrades):
         self.presetTrades(sort_by=sort_by, reverse=True)
         self.cls = History
         self.uniqueCols = [	Symbol,	Amount,]
+        self.column_map = {
+            # 'Symbol': 'Symbol',
+            # 'Date': 'Date',
+            'Quantity': 'Quantity',
+            'Price': 'Price',
+            'Amount': 'Amount',
+            'Account': 'Account',
+            'Description': 'Description'
+        }
         self.readFile(self.cls, self.uniqueCols, header_lines=header_lines, datafile=C.hist_file)
         df = self.getDF()
 

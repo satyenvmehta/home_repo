@@ -284,6 +284,7 @@ class BaseDF(BaseContainer):
 @dataclass
 class BaseFileObject(BaseObject):
     def __post_init__(self):
+        self.column_map = None
         return
 
     def deleteLastLine(self):
@@ -313,7 +314,10 @@ class BaseFileObject(BaseObject):
         self.df_list = None
         if cls:
             self.remove_extra_columns(self.df, extra_cols=extra_cols)
-            self.df_list = self.create_rows_to_class_list(cls, self.df.values.tolist())
+            if self.column_map:
+                self.df = self.df.rename(columns=self.column_map)
+            self.df_list = self.df_to_class_list(self.df, cls)
+            # self.df_list = self.create_rows_to_class_list(cls, self.df.values.tolist())
         else:
             self.df_list = self.df
         if index_col:
@@ -333,6 +337,10 @@ class BaseFileObject(BaseObject):
         # cls_inst._postRowRead()
         return cls_inst
 
+    def df_to_class_list(self, df: pd.DataFrame, target_class: type) -> list:
+        records = df.to_dict(orient="records")
+        return [target_class.from_dict(row) for row in records]
+
     def create_rows_to_class_list(self, cls, rows):
         class_list = []
         for row in rows:
@@ -351,6 +359,7 @@ class BaseReaderWriter(BaseDF):
         self.extra_columns = None
         self.index_cols = None
         self.export_df = pd.DataFrame()
+        self.column_map = None
         return
     def __post_init__(self):
         super(BaseReaderWriter, self).__post_init__()
@@ -386,6 +395,8 @@ class BaseReaderWriter(BaseDF):
         self.skipfooter = skipfooter
         self.fo = BaseFileObject()
         self.fo.setBase(file2read)
+        if self.column_map:
+            self.fo.column_map = self.column_map
         results = self.fo.read(skip=self.header_lines, cls=self.cls, skipfooter=skipfooter, index_col=self.index_cols, extra_cols=self.extra_columns)
         self.setBase(results)   # Override with original DataFrame from BaseDF with DF read just now
         # self._postReadProcess()

@@ -129,7 +129,7 @@ class TradeProcessing(C.BaseObject):
         self.historys, self.positions, self.orders = initRefData()
         self.hist_summ = self.historys
         self.positions.setHistorys(self.historys)
-        self.inteli_scans = InteliScans()
+        self.inteli_scans = None #InteliScans()
         self.results = Results()
         self.bs_ext = ""
         self.marketPrices = None
@@ -381,16 +381,16 @@ class TradeProcessing(C.BaseObject):
         symbol = self.curr_ticker
         if self.lastP:
             return
-        lastP = get_market_price(symbol)
-        if lastP:
-            self.lastP = lastP
-            print({"Found Price from MarketPrice for ": symbol, "Prices = ": self.lastP})
-            return
         if self.curr_pos_obj:
             lastP = self.curr_pos_obj.Last.getBase()
             if lastP:
                 self.lastP = lastP
                 return
+        lastP = get_market_price(symbol)
+        if lastP:
+            self.lastP = lastP
+            print({"Found Price from MarketPrice for ": symbol, "Prices = ": self.lastP})
+            return
         ord_based_lastP = self.orders.getLastPrice(symbol)
         if ord_based_lastP:
             self.lastP = ord_based_lastP.getBase()
@@ -584,8 +584,8 @@ class TradeProcessing(C.BaseObject):
             self.positions.print()
         if (obj == 'History' or obj == 'ALL'):
             self.historys.print()
-        if (obj == 'IntelliScan' or obj == 'ALL'):
-            self.inteli_scans.print()
+        # if (obj == 'IntelliScan' or obj == 'ALL'):
+        #     self.inteli_scans.print()
         return
 
     def ValidateOrderLimitPrices(self):
@@ -702,6 +702,7 @@ class TradeProcessing(C.BaseObject):
         return
 
     def setvantageObj(self):
+        return
         vrlist = self.inteli_scans.findSymbol(self.curr_ticker)
         if vrlist:
             self.curr_vant_obj = vrlist.getBase()[0]
@@ -911,6 +912,7 @@ class TradeProcessing(C.BaseObject):
         return
 
     def getVantageMissingPos(self):
+        return
         upos = self.positions.getUniqueSymbols()
         u_van = self.inteli_scans.getUniqueSymbols()
         self.pos_not_in_vant = list(set([x for x in upos if x not in u_van]))

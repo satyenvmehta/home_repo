@@ -45,20 +45,20 @@ class InteliScan(BaseTrade):
     LongTermTrendDir: Trend = None
     lttdays:C.BaseString = None
 
-    @classmethod
-    def from_dict(cls, data_dict):
-        cls_inst =  cls(data_dict['Market'],	data_dict['Symbol'],	data_dict['Category'],\
-        data_dict['TrplXDir'],	data_dict['TrplXDays'],	data_dict['TrplXVal'],	\
-        data_dict['NutrlTrndDir'],	data_dict['NutrlTrndDays'],	data_dict['ShrtTermDiffDir'],\
-        data_dict['ShrtTermDays'],	data_dict['MidTermDir'],	data_dict['MidTermDays'],\
-        data_dict['LongTermDir'],	data_dict['LongTermDays'],	data_dict['PredTradDir'],\
-        data_dict['Volume'],	data_dict['VolumePecAvg']
-        , data_dict['ShortTermTrendDir'], data_dict['sttdays']
-        ,	data_dict['MediumTermTrendDir'],	data_dict['mttdays']
-        ,	data_dict['LongTermTrendDir'],	data_dict['lttdays'])
-
-        cls_inst.calcScore()
-        return cls_inst
+    # @classmethod
+    # def from_dict(cls, data_dict):
+    #     cls_inst =  cls(data_dict['Market'],	data_dict['Symbol'],	data_dict['Category'],\
+    #     data_dict['TrplXDir'],	data_dict['TrplXDays'],	data_dict['TrplXVal'],	\
+    #     data_dict['NutrlTrndDir'],	data_dict['NutrlTrndDays'],	data_dict['ShrtTermDiffDir'],\
+    #     data_dict['ShrtTermDays'],	data_dict['MidTermDir'],	data_dict['MidTermDays'],\
+    #     data_dict['LongTermDir'],	data_dict['LongTermDays'],	data_dict['PredTradDir'],\
+    #     data_dict['Volume'],	data_dict['VolumePecAvg']
+    #     , data_dict['ShortTermTrendDir'], data_dict['sttdays']
+    #     ,	data_dict['MediumTermTrendDir'],	data_dict['mttdays']
+    #     ,	data_dict['LongTermTrendDir'],	data_dict['lttdays'])
+    #
+    #     cls_inst.calcScore()
+    #     return cls_inst
 
     def getTSML(self):
         res = self.TrplXDir.getBase()+"|"+self.ShrtTermDiffDir.getBase()+"|"+self.MidTermDir.getBase()+"|"+self.LongTermDir.getBase()

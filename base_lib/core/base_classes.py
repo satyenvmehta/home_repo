@@ -44,6 +44,7 @@ class Square(Rectangle):
     def __post_init__(self):
         super().__init__(self.side, self.side)
 
+
 @dataclass
 class BaseObject:
     # _item : any = None
@@ -276,14 +277,58 @@ class BaseObject:
             for k, v in self.to_dict().items()
         }
 
+# ============================================================
+# Common missing-value helper
+# ============================================================
+from typing import get_type_hints, Any
+
+def is_missing(value: Any) -> bool:
+    if value is None:
+        return True
+
+    try:
+        return bool(pd.isna(value))
+    except Exception:
+        return False
+
 @dataclass
 class BaseObjectItem(BaseObject):
     _item: any
 
+    @classmethod
+    def from_dict(cls, d: dict):
+        field_types = get_type_hints(cls)
+        mapped = {}
+
+        for field_name, field_type in field_types.items():
+            raw_value = d.get(field_name, None)
+            mapped[field_name] = cls._to_type(raw_value, field_type)
+
+        return cls(**mapped)
     def __post_init__(self):
         # super().__post_init__()
         self.setClassMembers()
         return
+
+    @classmethod
+    def from_value(cls, value):
+        """
+        Default implementation.
+        Most subclasses won't need to override this.
+        """
+        return cls(value)
+
+    @classmethod
+    def get_clean_value(cls, value: Any):
+        clean_value = (
+            str(value)
+            .replace(",", "")
+            .replace("$", "")
+            .strip()
+        )
+        if clean_value == "" or clean_value == "--":
+            return None
+        return clean_value
 
 @dataclass
 class BaseBool(BaseObjectItem):
@@ -292,6 +337,24 @@ class BaseBool(BaseObjectItem):
         return
     def __str__(self):
         return "{:7}".format(self.getBase())
+
+    @classmethod
+    def from_value(cls, value: Any):
+        if is_missing(value):
+            return None
+
+        if isinstance(value, bool):
+            return cls(Value=value)
+
+        clean_value = str(value).strip().lower()
+
+        if clean_value in ("true", "t", "1", "yes", "y"):
+            return cls(Value=True)
+
+        if clean_value in ("false", "f", "0", "no", "n"):
+            return cls(Value=False)
+
+        return cls(Value=bool(value))
 
 @dataclass
 class BaseInt(BaseObjectItem):
@@ -355,6 +418,16 @@ class BaseInt(BaseObjectItem):
             return self.getBase() != other
         return self.getBase() != other
     format_str = {'num_format': '#,##0'}
+
+    @classmethod
+    def from_value(cls, value: Any):
+        if is_missing(value):
+            return None
+        cv = BaseObjectItem.get_clean_value(value)
+        if cv is None:
+            return None
+
+        return cls(int(cv))
 
 @dataclass
 class MyInteger(int, BaseObject):  # Assuming OtherClass is defined elsewhere
@@ -461,6 +534,18 @@ class BaseFloat(BaseObjectItem):
         return format_str.format(self.getBase())
 
     format_str =  {'num_format': '#,##0.00'}
+    @classmethod
+    def from_value(cls, value: Any):
+        if is_missing(value):
+            return None
+        if value is None:
+            return None
+        cv = BaseObjectItem.get_clean_value(value)
+        if cv is None:
+            return None
+
+        return cls(float(cv))
+
 
 @dataclass
 class BasePercentage(BaseFloat):
@@ -493,6 +578,13 @@ class BaseString(BaseObjectItem):
         res = self.getBase() == other.getBase()
         return res
 
+    @classmethod
+    def from_value(cls, value: Any):
+        if is_missing(value):
+            return None
+
+        return cls(str(value).strip())
+
 @dataclass
 class BaseMoney(BaseFloat):
     def __post_init__(self):
@@ -509,6 +601,18 @@ class BaseMoney(BaseFloat):
             print("BaseMoney _str_ " + str(self.getBase()))
             return "None"
     format_str = {'num_format': '$#,##0.00'}
+
+    @classmethod
+    def from_value(cls, value):
+
+        if value is None:
+            return None
+
+        cv = BaseObjectItem.get_clean_value(value)
+        if cv is None:
+            return None
+
+        return cls(float(cv))
 
 @dataclass
 class BasePrice(BaseFloat):

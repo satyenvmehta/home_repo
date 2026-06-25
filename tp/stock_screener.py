@@ -225,6 +225,10 @@ def apply_formatter(excel, df, sheet_name):
     excel.tf_formatter(df, sheet_name, 'M')  # is_yoyo
     ryg = {'col_name': 'noOfFlips', 'green': 5, 'red': 2}
     excel.custom_RYG_formatter(df, sheet_name, ryg)
+    ryg = {'col_name': 'PE', 'green': 15, 'red': 50}
+    excel.custom_RYG_formatter(df, sheet_name, ryg)
+    ryg = {'col_name': 'RSI', 'green': 25, 'red': 2}
+    excel.custom_RYG_formatter(df, sheet_name, ryg)
     # excel.num_formatter(df, sheet_name, 'N')  # noOfFlips
 
     return

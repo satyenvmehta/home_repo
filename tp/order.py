@@ -10,6 +10,8 @@ from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice, BaseCustomStatus,
 
 import numpy as np
 
+from typing import Any, get_type_hints
+import pandas as pd
 header_lines=3
 
 #  Adjust Buy Price  or Adjust Sell Price  Parameters
@@ -24,12 +26,24 @@ class Order(BaseTrade):
     Description : C.BaseString= None   # Buy 35 Limit at $26.2
     Account : C.BaseString= None
     TIF:C.BaseString = None
+    # Status: BaseCustomStatus = None
+
+    # Order(Symbol=BaseTradeSymbol(_item='AAOI'), Last=BaseTradePrice(_item=177.19), Status=BaseCustomStatus(_item='F'),
+    #       OrderNum=BaseString(_item='27F1KQD1'), Description=BaseString(_item='Buy 5 Limit at $180.00  '),
+    #       Account=BaseString(_item='Rollover IRA (224916532)'), TIF=BaseString(_item='GTC'))
+
+    # @classmethod
+    # def from_dict(cls, d):
+    #     o = cls(Symbol = d['Symbol'],
+    #             Last = d['Last'], Status=d['Status'], OrderNum=d['Order Number'], Description=d['Trade Description'],
+    #             Account=d['Account'], TIF=d['TIF'])
+    #     # o.setDescDetails()
+    #     return o
 
 
-    @classmethod
-    def from_dict(cls, data_dict):
-        return cls(data_dict['Symbol'], data_dict['Last'], data_dict['Status'], data_dict['OrderNum'], data_dict['Description'],  data_dict['Account']
-                   , data_dict['TIF'])
+
+        # return cls(data_dict['Symbol'], data_dict['Last'], data_dict['Status'], data_dict['OrderNum'], data_dict['Description'],  data_dict['Account']
+        #            , data_dict['TIF'])
     def __post_init__(self):
         self.setDescDetails()
         return
@@ -59,7 +73,7 @@ class Order(BaseTrade):
             return
 
         self.orderQty = C.BaseInt(d_parts[1])
-        # print(str(self))
+        print(str(self))
         return
 
     def isOpen(self):
@@ -94,6 +108,15 @@ class Orders(BaseTrades):
         self.uniqueCols = ['Symbol',	'Last',	'Trade Description',	'Status',]
         header_lines = 3
 
+        self.column_map = {
+            # 'Symbol': 'Symbol',
+            # 'Last': 'Last',
+            'Trade Description': 'Description',
+            # 'Status': 'Status',
+            'Order Number': 'OrderNum',
+            # 'Account': 'Account',
+            # 'TIF': 'TIF'
+        }
         self.readFile(self.cls, self.uniqueCols, header_lines, C.order_file)
         df = self.getDF()
         self.all_symbols = np.sort(df['Symbol'].unique())

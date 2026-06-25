@@ -1,3 +1,5 @@
+from typing import get_type_hints
+
 import common_include as C
 
 from tp.TradeUtil import *
@@ -44,7 +46,7 @@ class Position(BaseTrade):
         lastActDate = Historys.getLastActivityDate(self.Symbol)
         if lastActDate is not None:
             return False
-        if isinstance(lastActDate, BaseDate):
+        if isinstance(lastActDate, C.BaseDate):
             if  lastActDate.isOlderThan(60):
                 return True
         return False
@@ -54,13 +56,18 @@ class Position(BaseTrade):
         return ps
 
     def setEarnigAlert(self):
+        self.earningAlert = None
+        return
+        if isinstance(self.EarningsDate, C.BaseString):
+            self.earningAlert = None
+            return
+        if not self.EarningsDate:
+            self.earningAlert = None
+            return
         if self.EarningsDate:
             if not self.EarningsDate.getBase():
                 self.earningAlert = None
                 return
-        if not self.EarningsDate:
-            self.earningAlert = None
-            return
         NoOfDays = self.EarningsDate.getNoDaysFromToday()
         if  NoOfDays < 10 and NoOfDays > -3:
             self.earningAlert = C.BaseInt(NoOfDays)
@@ -71,18 +78,18 @@ class Position(BaseTrade):
     # def isSmallCap(self):
     #     return self.Value.getBase() < SmallMrkCapValue
 
-    @classmethod
-    def from_dict(cls, data_dict):
-        obj =  cls(data_dict['Symbol'],	data_dict['Last'],	data_dict['PerChange'],	data_dict['PerGnL'],
-         data_dict['Quantity'],	data_dict['Account'],	data_dict['DayRange'],	data_dict['News'],
-         data_dict['Yield'], data_dict['PE'], data_dict['CloseValue'], data_dict['Year_Range'],
-        data_dict['Change'],	data_dict['Sector'],
-         data_dict['Volume'],	data_dict['PurchasePrice'],	data_dict['Value'],	data_dict['TdyGnL'],
-         data_dict['PerTdyGnL'],	data_dict['GnL']
-        , data_dict['EquityScore'],	data_dict['MarketCap'],	data_dict['EarningsDate']
-                   )
-        # obj.setEarnigAlert()
-        return obj
+    # @classmethod
+    # def from_dict(cls, data_dict):
+    #     obj =  cls(data_dict['Symbol'],	data_dict['Last'],	data_dict['PerChange'],	data_dict['PerGnL'],
+    #      data_dict['Quantity'],	data_dict['Account'],	data_dict['DayRange'],	data_dict['News'],
+    #      data_dict['Yield'], data_dict['PE'], data_dict['CloseValue'], data_dict['Year_Range'],
+    #     data_dict['Change'],	data_dict['Sector'],
+    #      data_dict['Volume'],	data_dict['PurchasePrice'],	data_dict['Value'],	data_dict['TdyGnL'],
+    #      data_dict['PerTdyGnL'],	data_dict['GnL']
+    #     , data_dict['EquityScore'],	data_dict['MarketCap'],	data_dict['EarningsDate']
+    #                )
+    #     # obj.setEarnigAlert()
+    #     return obj
 
 @C.dataclass
 class Positions(BaseTrades):
@@ -93,6 +100,30 @@ class Positions(BaseTrades):
         self.extra_columns = ['Ext Hrs Last', '% Ext Hrs Chg']
         self.cls = Position
         self.uniqueCols = ['Symbol',	'Last',	'% Chg',	'Day Range',	'Sector',	'52 Wk Range',	'Volume',]
+
+
+        self.column_map = {
+            # 'Symbol': 'Symbol',
+            # 'Last': 'Last',
+            '% Chg': 'PerChange',
+            '% G/L': 'PerGnL',
+            'Day Range': 'DayRange',
+            'P/E': 'PE',
+            '52 Wk Range': 'Year_Range',
+            'Chg': 'Change',
+            'Sector': 'Sector',
+            'Prev Close': 'CloseValue',
+            'Purchase Price': 'PurchasePrice',
+            'Tdy G/L': 'TdyGnL',
+            '% Tdy G/L': 'PerTdyGnL',
+            'Value': 'Value',
+            'G/L': 'GnL',
+            'Equity Summary Score': 'EquityScore',
+            'Market Cap': 'MarketCap',
+            'Earnings Date': 'EarningsDate',
+            'Ext Hrs Last': 'ExtHrsLast',
+            'Ext Hrs Chg': '%ExtHrsChg'
+        }
         self.readFile(self.cls, self.uniqueCols, header_lines=3, datafile=C.pos_file)
         self.acctSet = None
         self.getHoldingAccounts()
