@@ -14,8 +14,8 @@ STSellLimit = "STSellL"
 ShortTermHold = "STHold"
 ShortTermDays = 45 # No of Days to consider for Short Term
 IdleSecurityDays = 30
-ShortTermGnLPercentageBuy = 5 # 5% Gain or Loss
-ShortTermGnLPercentageSell = 5 # 5% Gain or Loss
+ShortTermGnLPercentageBuy = 4 # 5% Gain or Loss
+ShortTermGnLPercentageSell = 4 # 5% Gain or Loss
 STLPerc = 2.5 # 2.5% Loss/gain
 OrderExistSign = "+"
 

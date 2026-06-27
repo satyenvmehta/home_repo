@@ -75,22 +75,6 @@ class Position(BaseTrade):
             self.earningAlert = None
         return
 
-    # def isSmallCap(self):
-    #     return self.Value.getBase() < SmallMrkCapValue
-
-    # @classmethod
-    # def from_dict(cls, data_dict):
-    #     obj =  cls(data_dict['Symbol'],	data_dict['Last'],	data_dict['PerChange'],	data_dict['PerGnL'],
-    #      data_dict['Quantity'],	data_dict['Account'],	data_dict['DayRange'],	data_dict['News'],
-    #      data_dict['Yield'], data_dict['PE'], data_dict['CloseValue'], data_dict['Year_Range'],
-    #     data_dict['Change'],	data_dict['Sector'],
-    #      data_dict['Volume'],	data_dict['PurchasePrice'],	data_dict['Value'],	data_dict['TdyGnL'],
-    #      data_dict['PerTdyGnL'],	data_dict['GnL']
-    #     , data_dict['EquityScore'],	data_dict['MarketCap'],	data_dict['EarningsDate']
-    #                )
-    #     # obj.setEarnigAlert()
-    #     return obj
-
 @C.dataclass
 class Positions(BaseTrades):
     def __post_init__(self):

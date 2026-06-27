@@ -10,6 +10,21 @@ from datetime import  datetime
 
 import time
 
+
+# ============================================================
+# Common missing-value helper
+# ============================================================
+from typing import get_type_hints, Any
+
+def is_missing(value: Any) -> bool:
+    if value is None:
+        return True
+
+    try:
+        return bool(pd.isna(value))
+    except Exception:
+        return False
+
 def getTodayYYYYMMDD():
     # print({"DEBUG:" : type(dt) } )
     dt1 = datetime.today().strftime('%Y%m%d') 
@@ -277,19 +292,32 @@ class BaseObject:
             for k, v in self.to_dict().items()
         }
 
-# ============================================================
-# Common missing-value helper
-# ============================================================
-from typing import get_type_hints, Any
 
-def is_missing(value: Any) -> bool:
-    if value is None:
-        return True
+    # def to_dict(self):
+    #     """ Return all attributes of the object as a dictionary """
+    #     return vars(self)  # or self.__dict__
 
-    try:
-        return bool(pd.isna(value))
-    except Exception:
-        return False
+    @classmethod
+    def from_dict(cls, d: dict):
+        field_types = get_type_hints(cls)
+        mapped = {}
+
+        for field_name, field_type in field_types.items():
+            raw_value = d.get(field_name, None)
+            mapped[field_name] = cls.convert_value(raw_value, field_type)
+
+        c = cls(**mapped)
+        return c
+
+    @classmethod
+    def convert_value(cls, value: Any, target_type: Any):
+        if is_missing(value):
+            return None
+
+        if hasattr(target_type, "from_value"):
+            return target_type.from_value(value)
+
+        return value
 
 @dataclass
 class BaseObjectItem(BaseObject):

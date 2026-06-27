@@ -176,21 +176,32 @@ class TradeProcessing(C.BaseObject):
         else:
             lastP = self.lastP
 
-        if self.lastBuyPrice:
-            stDeltaBuy = round(C.getDeltaPercentage(lastP, self.lastBuyPrice), 2)
-        if self.lastSellPrice:
-            stDeltaSell = round(C.getDeltaPercentage(lastP, self.lastSellPrice), 2)
+
         self.STDeltaP = round(C.getDeltaPercentage(lastP, last_hist_price), 2)
 
-        if stDeltaBuy < -ShortTermGnLPercentageBuy:
-            self.STRecomm = ShortTermBuy + self.buy_exist
-            return
+        group = "2"
+        if self.lastBuyPrice:
+            stDeltaBuy = round(C.getDeltaPercentage(lastP, self.lastBuyPrice), 2)
+            if stDeltaBuy < -ShortTermGnLPercentageBuy:
+                if stDeltaBuy < -ShortTermGnLPercentageBuy - 5:
+                    group = "1"
+                if stDeltaBuy < -ShortTermGnLPercentageBuy - 10:
+                    group = ""
+                self.STRecomm = ShortTermBuy + group + self.buy_exist
+                return
+
         if stDeltaBuy < -STLPerc:
             self.STRecomm = STBuyLimit + self.buy_exist
             return
+
+        if self.lastSellPrice:
+            stDeltaSell = round(C.getDeltaPercentage(lastP, self.lastSellPrice), 2)
+
         if self.positions.existsForSym(self.curr_ticker):
             if stDeltaSell > ShortTermGnLPercentageSell:
-                self.STRecomm = ShortTermSell + self.sell_exist
+                if stDeltaSell > ShortTermGnLPercentageSell+5:
+                    group = "1"
+                self.STRecomm = ShortTermSell + group + self.sell_exist
                 return
             if stDeltaSell > STLPerc:
                 self.STRecomm = STSellLimit + self.sell_exist

@@ -58,13 +58,7 @@ class History(BaseTrade):
             if self.isSell():
                 return self
         return None
-    #
-    # @classmethod
-    # def from_dict(cls, data_dict):
-    #     o =  cls(data_dict['Symbol'],	data_dict['Date'], data_dict['Quantity'],
-    #                data_dict['Price'],	data_dict['Amount'],data_dict['Account'], data_dict['Description'])
-    #     # o.noOfDaysSinceTrans()
-    #     return o
+
 from tp.account import AccountManager
 
 @C.dataclass
@@ -100,11 +94,6 @@ class Historys(BaseTrades):
         if isinstance(sym, C.BaseObject):
             sym = sym.getBase()
         return self._histSumm.getValue(sym)
-
-    # def getSummaryObjForSymbol(self, sym):
-    #     if isinstance(sym, C.BaseObject):
-    #         sym = sym.getBase()
-    #     return self._histSumm.getSummaryObj(sym)
 
     def postDFProcess(self):
         self.updateDateFormat()
@@ -365,10 +354,10 @@ class Historys(BaseTrades):
         self.summary_df = self.summary_df.sort_values(by=last_trade_date, ascending=False)
         return self.summary_df
 
-    def getFloatValue(self, val):
-        return float(val.replace('$', '').replace(',', ''))
-    def getIntValue(self, val):
-        return int(val.replace('$', '').replace(', ', ''))
+    # def getFloatValue(self, val):
+    #     return float(val.replace('$', '').replace(',', ''))
+    # def getIntValue(self, val):
+    #     return int(val.replace('$', '').replace(', ', ''))
 
     def getSummary(self):
         return self.summary_df
@@ -412,15 +401,6 @@ class Historys(BaseTrades):
 
         return bestPrice
 
-    # def getHistory(self, ticker):
-    #     sym_hist = self.summary_df.loc[self.summary_df['Symbol'] == ticker]
-    #     return sym_hist
-    # def resetForNextSym(self, sym):
-    #     self.ref_price = self.getLastPrice(sym)
-    #     self.ref_qty = self.getLastQuantity(sym)
-    #     self.ref_action = self.getLastAction(sym)
-    #     self.ref_obj_list = self.getRefObjsForSymbol(sym)
-    #     pass
 
 def Dbg_DF():
     data = {

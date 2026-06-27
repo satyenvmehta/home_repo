@@ -39,35 +39,6 @@ class BaseTrade(C.BaseObject):
     def isPennyStock(self):
         return self.Last.getBase() < 2.0
 
-    @classmethod
-    def from_dict(cls, data_dict):
-        return cls(data_dict['Symbol']) #, data_dict['Status'])
-
-    def to_dict(self):
-        """ Return all attributes of the object as a dictionary """
-        return vars(self)  # or self.__dict__
-
-    @classmethod
-    def from_dict(cls, d: dict):
-        field_types = get_type_hints(cls)
-        mapped = {}
-
-        for field_name, field_type in field_types.items():
-            raw_value = d.get(field_name, None)
-            mapped[field_name] = cls.convert_value(raw_value, field_type)
-
-        c = cls(**mapped)
-        return c
-
-    @classmethod
-    def convert_value(cls, value: Any, target_type: Any):
-        if is_missing(value):
-            return None
-
-        if hasattr(target_type, "from_value"):
-            return target_type.from_value(value)
-
-        return value
 
 @C.dataclass  #
 class BaseTrades(C.BaseReaderWriter):
@@ -269,10 +240,6 @@ class OrderSampleClass(BaseTrade):
     Account : C.BaseString= None
     def __post_init__(self):
         return
-
-    @classmethod
-    def from_dict(cls, data_dict):
-        return cls(data_dict['Symbol'], data_dict['Last'], data_dict['Description'], data_dict['Status'], data_dict['Account'])
 
 @C.dataclass
 class OrdersSampleClass(BaseTrades):
