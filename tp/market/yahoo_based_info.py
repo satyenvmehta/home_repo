@@ -25,7 +25,7 @@ def _getTickerObjYF(tkr_in):
         hist_df = tkr.history(period=f"{no_days + 5}d")
         return tkr, hist_df
     except:
-        sleep_sec(1)
+        sleep_sec(4)
         return None, None
 
 # def _tkr_hist(tkr, period='30d', interval='1d'):
@@ -40,7 +40,7 @@ def _getTickerObjYF(tkr_in):
 def _getTickerObj(sym):
     tries = 0
     tkr = None
-    while tries < 3:
+    while tries < 6:
         tries += 1
         tkr, hist_df = _getTickerObjYF(sym)
         if tkr:

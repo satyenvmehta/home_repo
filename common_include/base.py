@@ -27,7 +27,7 @@ from base_lib.core.files_include import (ticker_file, sp_500_file, nasd_100_file
                                          stock_fundamentals_file, weekly_fundamentals_file_debug)
 
 
-from base_lib.core.base_classes import BaseRowModel
+# from base_lib.core.base_classes import BaseRowModel
 
 __all__ = [
     "ticker_file",
@@ -63,6 +63,6 @@ __all__ = [
     , "int_scan_file"
     , "stock_fundamentals_file"
     , "weekly_fundamentals_file_debug"
-    , "BaseRowModel"
+    # , "BaseRowModel"
 
 ]

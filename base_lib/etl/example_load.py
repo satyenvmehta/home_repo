@@ -19,9 +19,8 @@ class Trade(C.BaseObject):
         )
 
 
-from base_lib.core.base_classes import BaseRowModel
 @C.dataclass
-class Trade1(C.BaseRowModel):
+class Trade1(C.BaseObject):
     TradeId: int = None
     CustomerId: int = None
     Amount: float = None

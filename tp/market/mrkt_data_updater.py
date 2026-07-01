@@ -3,6 +3,7 @@ import redis
 
 from base_lib.core.base_classes import BaseDate
 from tp.lib.mrkt_include import DEBUG_TICKERS
+from tp.lib.tp_classes import is_option_symbol
 from tp.market.yahoo_based_info import  _getTickerObj
 from base_lib.core.files_include import prep_ticker_list
 
@@ -79,6 +80,8 @@ def _get_yoyo_metrics(df, no_days=5):
 
 def get_market_data(ticker: str) -> dict:
     # Replace this later with yfinance / API call
+    if is_option_symbol(ticker):
+        return None
     info, hist = _getTickerObj(ticker)
     row = {}
 

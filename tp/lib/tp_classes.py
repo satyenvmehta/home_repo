@@ -154,7 +154,7 @@ def robust_option_parser(symbol):
             "Strike": strike_price
         }
 
-    return "Not an Option Symbol"
+    return None # "Not an Option Symbol"
 
 @dataclass
 class BaseTradeSymbol(BaseObjectItem):
@@ -220,7 +220,7 @@ class BaseOptionSymbol(BaseObjectItem):
         self.tkr = BaseString("")
         self.exp = BaseDate("01/01/2000")
         self.strike = BaseFloat(0.0)
-        self.opt_type = BaseString("C")
+        self.opt_type = None
         self.parse()
         return
     def getDesc(self):
@@ -254,9 +254,13 @@ class BaseOptionSymbol(BaseObjectItem):
         return self.getBase()
 
 
+
 if __name__ == "__main__":
-    for sym in ["OXY260821P55", "SPY230616P00420000", "BRK.B250620C00150000", "AAPL.250620C150", "TSLA241220P200", "QUBT260206C12.5"]:
-        print("Sym ... " , sym)
+    for sym in ["OXY", "OXY260821P55", "SPY230616P00420000", "BRK.B250620C00150000", "AAPL.250620C150", "TSLA241220P200", "QUBT260206C12.5"]:
+        print("Sym ... " , sym, " Option? ", is_option_symbol(sym))
+        t = BaseTradeSymbol(sym)
+        print(t.isOpt())
+        print(t.getOptSymbol())
         o = BaseOptionSymbol(sym)
         print(o.get_tkr(), o.get_exp(), o.get_strike(), o.get_type(), o.isExpired())
     # o = BaseOptionSymbol("SPY230616P00420000")

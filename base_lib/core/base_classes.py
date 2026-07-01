@@ -352,6 +352,7 @@ class BaseObjectItem(BaseObject):
             str(value)
             .replace(",", "")
             .replace("$", "")
+            .replace("*", "")
             .strip()
         )
         if clean_value == "" or clean_value == "--":
@@ -372,17 +373,17 @@ class BaseBool(BaseObjectItem):
             return None
 
         if isinstance(value, bool):
-            return cls(Value=value)
+            return cls(_item=value)
 
         clean_value = str(value).strip().lower()
 
         if clean_value in ("true", "t", "1", "yes", "y"):
-            return cls(Value=True)
+            return cls(_item=True)
 
         if clean_value in ("false", "f", "0", "no", "n"):
-            return cls(Value=False)
+            return cls(_item=False)
 
-        return cls(Value=bool(value))
+        return cls(_item=bool(value))
 
 @dataclass
 class BaseInt(BaseObjectItem):
@@ -455,7 +456,7 @@ class BaseInt(BaseObjectItem):
         if cv is None:
             return None
 
-        return cls(int(cv))
+        return cls(_item=int(cv))
 
 @dataclass
 class MyInteger(int, BaseObject):  # Assuming OtherClass is defined elsewhere
@@ -572,7 +573,7 @@ class BaseFloat(BaseObjectItem):
         if cv is None:
             return None
 
-        return cls(float(cv))
+        return cls(_item=float(cv))
 
 
 @dataclass
@@ -589,6 +590,21 @@ class BasePercentage(BaseFloat):
         return res
 
     format_str =  {'num_format': '0.0%'} #"{:.2%}"
+
+    @classmethod
+    def from_value(cls, value: Any):
+        if is_missing(value):
+            return None
+
+        # clean_value = str(value).replace("%", "").replace(",", "").strip()
+        clean_value = BaseObjectItem.get_clean_value(value)
+        if clean_value is None:
+            return None
+
+        if clean_value == "" or clean_value == "--":
+            return None
+
+        return cls(_item=float(clean_value))
 
 @dataclass
 class BaseString(BaseObjectItem):
@@ -611,7 +627,7 @@ class BaseString(BaseObjectItem):
         if is_missing(value):
             return None
 
-        return cls(str(value).strip())
+        return cls(_item=str(value).strip())
 
 @dataclass
 class BaseMoney(BaseFloat):
@@ -640,7 +656,7 @@ class BaseMoney(BaseFloat):
         if cv is None:
             return None
 
-        return cls(float(cv))
+        return cls(_item=float(cv))
 
 @dataclass
 class BasePrice(BaseFloat):
@@ -733,17 +749,6 @@ class BaseDate(BaseObjectItem):
         # Compare the instance date with the parsed date
         return self.getBase() > other.getBase()
 
-# base_lib/core/base_row_model.py
-
-@dataclass
-class BaseRowModel(BaseObject):
-    """
-    Base class for domain/business row objects.
-    """
-
-    @classmethod
-    def from_dict(cls, d: dict):
-        return cls(**d)
 
 import logging
 
@@ -966,8 +971,33 @@ def howToInstallThisLib():
     # On App side - restart app to get latest changes
     return
 
+@dataclass
+class Trade(BaseObject):
+    trade_id: BaseString = None
+    customer_id: BaseInt = None
+    amount: BaseMoney = None
+    # symbol: BaseTradeSymbol = None
+    active: BaseBool = None
+
+def test_each_base_type_from_dict():
+    row = {
+        "trade_id": "AAAA",
+        "customer_id": "100",
+        "amount": "$50.25",
+        # "symbol": "msft",
+        "active": "Y",
+    }
+
+    trade = Trade.from_dict(row)
+
+    print(trade.trade_id._item)  # AAAA
+    print(trade.customer_id.getBase())  # 100
+    print(trade.amount.getBase())  # 50.25
+    # print(trade.symbol)  # MSFT
+    print(trade.active.getBase())  # True
 
 if __name__ == '__main__':
+    test_each_base_type_from_dict()
     from common_include import *
     # from common_include import MFList
     # print(MFList)

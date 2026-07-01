@@ -2,6 +2,8 @@ import pandas as pd
 import common_include as C
 from typing import Any, get_type_hints
 
+from base_lib.core.base_classes import BaseObject
+
 
 @C.dataclass
 class BaseRowModel(C.BaseObject):
@@ -87,7 +89,7 @@ def df_to_class_list(df: pd.DataFrame, target_class: type) -> list:
     return x
 
 @C.dataclass
-class Trade(BaseRowModel):
+class Trade(BaseObject):
     customer_id: int = None
     amount: float = None
     trade_id: str = None

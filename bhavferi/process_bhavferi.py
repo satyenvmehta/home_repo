@@ -20,13 +20,12 @@ class Trade(C.BaseObject):
         )
 
 
-from base_lib.core.base_classes import BaseRowModel
 @C.dataclass
-class Person(C.BaseRowModel):
+class Person(C.BaseObject):
     Address: str = None
     Name: str = None
 
-load_csv = C.CSVLoad(
+load_csv = CSVLoad(
     Name="Monroe",
     FilePath="Monroe_QA.txt",
     fld_sep = "\t",
