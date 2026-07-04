@@ -334,7 +334,6 @@ class BaseFileObject(BaseObject):
             data_dict[name] = typ(row[colid])
             colid = colid + 1
         cls_inst = cls.from_dict(data_dict)
-        # cls_inst._postRowRead()
         return cls_inst
 
     def df_to_class_list(self, df: pd.DataFrame, target_class: type) -> list:
@@ -384,10 +383,7 @@ class BaseReaderWriter(BaseDF):
             return self.fo.df
         return None
 
-    # def setIndexCols(self, idx_cols):
-    #     if isinstance(self.fo, BaseFileObject):
-    #         self.fo.setIndexCols(idx_cols=idx_cols)
-    #     return
+
     def read(self, header_lines, file2read, skipfooter=1):
         print("Reading " + self.cls.__name__ + " from " + file2read)
         self.df_list = None
@@ -399,7 +395,6 @@ class BaseReaderWriter(BaseDF):
             self.fo.column_map = self.column_map
         results = self.fo.read(skip=self.header_lines, cls=self.cls, skipfooter=skipfooter, index_col=self.index_cols, extra_cols=self.extra_columns)
         self.setBase(results)   # Override with original DataFrame from BaseDF with DF read just now
-        # self._postReadProcess()
         return self.getBase()
 
     def _postReadProcess(self):
@@ -435,7 +430,6 @@ class BaseReaderWriter(BaseDF):
         uvals = df[colName].unique()
         return sorted(uvals)
 
-
     def getDetailsBySymbol(self, symbol):
         for item in self.getBase():
             if isinstance(item, self.cls):
@@ -463,8 +457,6 @@ class BaseReaderWriter(BaseDF):
         return self.colFormats.getBase()
 
     def export_class_data_to_df(self):
-        # Create an empty DataFrame
-        # self.export_df = pd.DataFrame()
         if len(self.export_df) > 1:
             return self.export_df
         class_instances = self.getBase()
@@ -477,10 +469,8 @@ class BaseReaderWriter(BaseDF):
                     else:
                         val = value
                     data[key] = [val]
-                    # dtypes[key] = 'object'  #type(val)
                 else:
                     data[key] = None
-                    # dtypes[key] = 'object'
             instance_df = pd.DataFrame(data) #, dtype=dtypes)
             # frmts = self.get
             self.export_df = pd.concat([self.export_df, instance_df], ignore_index=True)
@@ -504,10 +494,6 @@ class MyObject(BaseObject):
         return
 
     def __eq__(self, other):
-        # if isinstance(self.name, BaseObject):
-        #     thisName = self.name.getBase()
-        # else:
-        #     thisName = self.name
         if self.name == other:
             return True
         return False

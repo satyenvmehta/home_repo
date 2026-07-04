@@ -176,7 +176,6 @@ class BaseObject:
         return self.is_file_locked(file_path=fullFileName)
 
     def _saveResults(self, listOfInterest, fileName, custom_formatter_method=None):
-        workbook = None
         if listOfInterest is None:
             print("Nothing to save")
             return
@@ -662,6 +661,9 @@ class BaseMoney(BaseFloat):
 class BasePrice(BaseFloat):
     def __post_init__(self):
         super().__post_init__()
+        if self.getBase() is None:
+            self.setBase(0)
+            return
         self.setBase(round(self.getBase(), 2))
         return
 
@@ -790,10 +792,6 @@ class MyObject(BaseObject):
         return
 
     def __eq__(self, other):
-        # if isinstance(self.name, BaseObject):
-        #     thisName = self.name.getBase()
-        # else:
-        #     thisName = self.name
         if self.name == other:
             return True
         return False

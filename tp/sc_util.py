@@ -149,7 +149,6 @@ class StockFilterAttributes(C.BaseObject):
         self.today_open = C.BasePrice((df['Open'].iloc[-1]))
         self.today_high = C.BasePrice((df['High'].iloc[-1]))
         self.today_low = C.BasePrice((df['Low'].iloc[-1]))
-        # self.pe = C.BaseFloat((df['PE'].iloc[-1]))
         prev_close = C.BasePrice((df['Close'].iloc[-2]))
         self.close_today = C.BasePrice((df['Close'].iloc[-1]))
         self.overnight_gap = self.today_open - prev_close
@@ -165,12 +164,11 @@ class StockFilterAttributes(C.BaseObject):
         self.bd_advise = bd_advise
         self.pos = pos
 
-        self.pe = BasePrice(tkrObj.trailingPE)
+        if tkrObj.trailingPE:
+            self.pe = BasePrice(tkrObj.trailingPE)
+        else:
+            self.pe = C.BasePrice(999999)
         self.sector = tkrObj.sector
-        # if tkrObj.is_yoyo==1:
-        #     self.is_yoyo = True
-        # else
-        #     self.is_yoyo = False
         self.is_yoyo = tkrObj.is_yoyo
         self.dir_flipts = tkrObj.direction_flips
         self.yo_max_swing = tkrObj.max_swing

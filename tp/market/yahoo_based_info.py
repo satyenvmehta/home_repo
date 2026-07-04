@@ -1,6 +1,3 @@
-# import os
-# from dataclasses import dataclass
-# from datetime import datetime
 from pprint import pprint
 import yfinance as yf
 
@@ -27,15 +24,6 @@ def _getTickerObjYF(tkr_in):
     except:
         sleep_sec(4)
         return None, None
-
-# def _tkr_hist(tkr, period='30d', interval='1d'):
-#     tkr_o = _getTickerObjYF(tkr)
-#     if not tkr_o:
-#         return None
-#     # data = tkr_o.history(period=period, interval=interval)
-#     no_days = 5
-#     df = tkr_o.history(period=f"{no_days + 5}d")
-#     return df
 
 def _getTickerObj(sym):
     tries = 0

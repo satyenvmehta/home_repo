@@ -8,7 +8,7 @@ import common_include as C
 from tp.TradeUtil import BaseTrade, BaseTrades
 from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice, BaseCustomStatus, BaseBuySell
 
-import numpy as np
+# import numpy as np
 
 from typing import Any, get_type_hints
 import pandas as pd
@@ -102,8 +102,8 @@ class Orders(BaseTrades):
             # 'TIF': 'TIF'
         }
         self.readFile(self.cls, self.uniqueCols, header_lines, C.order_file)
-        df = self.getDF()
-        self.all_symbols = np.sort(df['Symbol'].unique())
+        # df = self.getDF()
+        # self.all_symbols = np.sort(df['Symbol'].unique())
         return
 
     def getLastPrice(self, sym):
@@ -211,7 +211,7 @@ def orderFileTesting():
     # print({"AAOI S " : b.findSymbol('AAOI', bs='S').getFirst()} )
     print(b.findSymbol('XBI'))
     row2Examin = 16
-    b.examinRow(row2Examin)
+    # b.examinRow(row2Examin)
     b.saveToFile("TestSample1.xlsx")
     acct = b.getHoldingAccounts()
     print(acct)

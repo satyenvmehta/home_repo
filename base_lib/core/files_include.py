@@ -36,7 +36,7 @@ def prep_ticker_list():
 
     # Combine tickers from both sheets, remove duplicates, drop NaN
     tickers = pd.concat([df1, df2, df3, df_my], ignore_index=True).iloc[:, 0].dropna().unique().tolist()
-    # tickers = ['MBLY', 'LMT', 'NGD', 'avxx', 'orcl', 'orcx', 'hmy']
+    # tickers = ['AAA', 'ABBV', 'MBLY', 'LMT', 'NGD', 'avxx', 'orcl', 'orcx', 'hmy']
     tickers = sorted(tickers)
     return tickers
 

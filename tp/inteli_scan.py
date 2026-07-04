@@ -90,8 +90,8 @@ if __name__ == '__main__':
     b = InteliScans()
     print(b.getUniqueSymbols())
     # b.print()
-    row2Examin = 16
-    b.examinRow(row2Examin)
+    # row2Examin = 16
+    # b.examinRow(row2Examin)
     obj = b.findSymbol('AAPL')
     if isinstance(obj, InteliScan):
         print(obj.getTSML() + " " + str(obj.score))

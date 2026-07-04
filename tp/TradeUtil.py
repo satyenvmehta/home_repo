@@ -2,6 +2,8 @@ from typing import Any, get_type_hints
 
 import common_include as C
 import pandas as pd
+import numpy as np
+
 
 # ============================================================
 # Common missing-value helper
@@ -83,6 +85,8 @@ class BaseTrades(C.BaseReaderWriter):
         self.uniqueCols = uniqCols
         self._read(header_lines, datafile)  # Results in self.getBase()
         # for d in self.cls.
+        df = self.getDF()
+        self.all_symbols = np.sort(df['Symbol'].unique())
         return
 
     def getSelf(self):
@@ -262,7 +266,7 @@ def orderFileTesting():
     print(b.findSymbol('XBI', bs='B'))
     print(b.findSymbol('XBI'))
     row2Examin = 16
-    b.examinRow(row2Examin)
+    # b.examinRow(row2Examin)
     b.saveToFile("TestSample.xlsx")
     acc = b.getHoldingAccounts()
 
