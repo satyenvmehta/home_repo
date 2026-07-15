@@ -2,6 +2,15 @@
 import pandas as pd
 
 import common_include as C
+
+date_now = C.date_now("%Y-%m-%d")
+filen = r"G:\My Drive\vepar\stock_screener_" + date_now + ".xlsx"
+
+from base_lib.core.base_classes import Dbg_save_file
+
+Dbg_save_file(filen)
+
+
 from ta.momentum import RSIIndicator
 
 from base_lib.excel_utils.excel_base import FillColor
@@ -241,8 +250,8 @@ def stock_screener_exec():
     print(df_15)
     print(df_more_15)
     print(df_rest)
-    date_now = C.date_now("%Y-%m-%d")
-    filen =  r"G:\My Drive\vepar\stock_screener_" + date_now + ".xlsx"
+    # date_now = C.date_now("%Y-%m-%d")
+    # filen =  r"G:\My Drive\vepar\stock_screener_" + date_now + ".xlsx"
     # filen_2 = filen.replace(".xlsx", "_2.xlsx")
     # sheet_name = C.date_now("%b_%d")  # e.g., "Aug_09"
 

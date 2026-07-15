@@ -169,12 +169,13 @@ class BaseDict(BaseContainer):
                 self.setKeyValue(item, None)
         return self
 
-    def getValue(self, key):
+    def getValue(self, key, printErr=False):
         try:
             val = self.getBase()[key]
             return val
         except KeyError:
-            print("Key " + key + " not found")
+            if printErr:
+              print("Key " + key + " not found")
             return None
 
 

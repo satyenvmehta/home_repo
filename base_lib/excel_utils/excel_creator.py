@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from time import sleep
 from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd
@@ -248,7 +249,16 @@ class ExcelCreator(ExcelFileBase):
         self.set_auto_filter_for_df(sheet_name, df)
         # self.apply_formatter(sheet_name, df)
         return
-
+import os
+def validate_writeable_output_files(path):
+    while True:
+        try:
+            os.rename(path, path)
+            break
+        except PermissionError:
+            print("Please close already open file ..", path)
+            sleep(3)
+    return True
 
 from typing import Callable, Dict, Optional
 # Type for app custom formatter:
@@ -294,7 +304,8 @@ def create_excel(
             else:
                 df = dobj
             print("     sheet: ", sheet_name)
-            excel.add_sheet(sheet_name, df)
+            if len(df) > 0:
+                excel.add_sheet(sheet_name, df)
             # 2) App-specific formatting
             if custom_formatter_method is not None:
                 custom_formatter_method(excel, df, sheet_name)

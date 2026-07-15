@@ -10,7 +10,11 @@ from datetime import  datetime
 
 import time
 
-
+def bell():
+    import tkinter as tk
+    root = tk.Tk()
+    root.bell()
+    return
 # ============================================================
 # Common missing-value helper
 # ============================================================
@@ -181,8 +185,16 @@ class BaseObject:
             return
 
         import common_include as C
-        C.create_excel(fileName, listOfInterest, custom_formatter_method)
+        try:
+            C.create_excel(fileName, listOfInterest, custom_formatter_method)
+        except:
+            bell()
+            print("------------------------------------------------")
+            print("Please close file ", fileName)
+            print("------------------------------------------------")
 
+            bell()
+            time.sleep(15)
         return
 
     def _toListOfDict(self):
@@ -994,7 +1006,20 @@ def test_each_base_type_from_dict():
     # print(trade.symbol)  # MSFT
     print(trade.active.getBase())  # True
 
+
+def validate_file_exists(file_name):
+    fileName = r"G:\My Drive\vepar\output-Jul-15.xlsx"
+    Dbg_save_file(fileName)
+    return 
+
+def Dbg_save_file(fileName: any):
+    b = BaseObject()
+    listOfInterest = {'Results': []}
+    b._saveResults(listOfInterest=listOfInterest, fileName=fileName)
+    return
+
 if __name__ == '__main__':
+    Dbg_save_file()
     test_each_base_type_from_dict()
     from common_include import *
     # from common_include import MFList

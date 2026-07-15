@@ -27,6 +27,9 @@ alt_output_file = rootdir+"alt_output.xlsx"
 # from base_classes import BaseObject
 import pandas as pd
 
+def get_tp_output_file_name():
+    return output_file
+
 def prep_ticker_list():
     # Read both Excel files (assume first column contains tickers)
     df1 = pd.read_excel(sp_500_file)

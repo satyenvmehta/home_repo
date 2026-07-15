@@ -1,10 +1,21 @@
 import pandas as pd
 import common_include as C
-from tp.init_refs import initRefData, create_ticker_list
+from base_lib.core.base_classes import BaseObject
+
+
+def Dbg_save_file():
+    b = BaseObject()
+    listOfInterest = {'Results': []}
+    b._saveResults(listOfInterest=listOfInterest, fileName=C.output_file)
+    return
+
+Dbg_save_file()
+
+from tp.init_refs import initRefData
 from tp.market.get_price import get_market_price
 
-Debug_Ticker = "ARE"
-from inteli_scan import InteliScans, InteliScan
+Debug_Ticker = "CWVX"
+# from inteli_scan import InteliScans, InteliScan
 
 from tp.all_history import Historys
 from tp.order import Orders, Order
@@ -113,12 +124,6 @@ def apply_number_format_by_header(
             # print(col_name)
             ws.set_column(col_idx, col_idx, None, num_fmt)
 
-# hist_vals = Historys()
-# pos_vals = Positions()
-# ords_vals = Orders()
-#
-# def initRefData(h=None):
-#     return hist_vals, pos_vals, ords_vals
 
 @C.dataclass
 class TradeProcessing(C.BaseObject):
@@ -213,15 +218,21 @@ class TradeProcessing(C.BaseObject):
         list(filter(lambda x: x in uni_pos.tolist(), idle_hist_syms))
         return
 
-    def saveResults(self):
-        if  len(self.results.export_df) <=0:
+    def saveResults(self, empty_test=False):
+
+        if empty_test:
+            listOfInterest = {}
+            self._saveResults(listOfInterest=listOfInterest, fileName=C.output_file,
+                              custom_formatter_method=None)
+            return
+
+        if len(self.results.export_df) <= 0:
             print("No Results(self.results.export_df) to print")
             return
         self.results.assignFormats()
-        # self.results.setDataFrame(self.result_df)
         listOfInterest = {'Results':self.results.getSelf(), 'Orders':self.orders.getSelf(),
-                          'Postions': self.positions,  #'History': self.historys ,
-                          'HistorySummary': self.hist_summ.summary_df}  # 'Vantage': self.inteli_scans,
+                          'Postions': self.positions,
+                          'HistorySummary': self.hist_summ.summary_df}
 
         self._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, custom_formatter_method=apply_formatter)
         self.printDuplicateOrders()
@@ -300,8 +311,18 @@ class TradeProcessing(C.BaseObject):
         suggested_price = round(suggested_price, 2)
         if self.tickerHasHistory():
             hp, bp, sp = self.lastHistPrice, self.lastBuyPrice, self.lastSellPrice
-            bs = bs + "@" + str(suggested_price).strip() + \
-                 "_" + self.bs_ext + "_" + str(hp) + "_" + str(self.getLastHistQuantity())
+            bs_ext = self.bs_ext
+            if bp != sp:
+                if bs.startswith("Buy"):
+                    hp = bp
+                    bs_ext = "B"
+                else:
+                    hp = sp
+                    bs_ext = "S"
+            last_hist_qty = str(int(self.getLastHistQuantity()))
+            bs = (bs + "@" +
+                  str(suggested_price).strip() + "_" +
+                  bs_ext  + "_" + last_hist_qty + "_" + str(hp))
             if bs.startswith("Sell"):
                 if isinstance(qty, C.BaseInt):
                     qty = qty.getBase()
@@ -367,6 +388,7 @@ class TradeProcessing(C.BaseObject):
         self.curr_pos_obj = None
         self.nextBuyPrice = 0
         self.nextSellPrice = 0
+        self.category = 'NA'
         return
 
     def initRowLevel(self, tkr_act):
@@ -612,13 +634,13 @@ class TradeProcessing(C.BaseObject):
 
         return self.IdleSecurity
 
-    def analyzeSectorDistribution(self):
-        self.setvantageObj()
-        if isinstance(self.curr_vant_obj, InteliScan):
-            self.category = self.curr_vant_obj.Category.getBase().replace(',','_')
-        else:
-            self.category = 'NA'
-        return
+    # def analyzeSectorDistribution(self):
+    #     self.setvantageObj()
+    #     if isinstance(self.curr_vant_obj, InteliScan):
+    #         self.category = self.curr_vant_obj.Category.getBase().replace(',','_')
+    #     else:
+    #         self.category = 'NA'
+    #     return
 
     def get_curr_tkr_str(self):
         if isinstance(self.curr_ticker, C.BaseObject):
@@ -725,7 +747,7 @@ class TradeProcessing(C.BaseObject):
         self._debug()
         self.total_pos = C.BaseFloat(self.positions.getTotalQty(self.curr_ticker))
         self.getBestPriceForSymbol()
-        self.analyzeSectorDistribution()
+        # self.analyzeSectorDistribution()
         self._setHistBasedParams()
         return
 
@@ -813,12 +835,12 @@ class TradeProcessing(C.BaseObject):
                 continue
             if self.isAnIdleSecurity() == "True":
                 if self.tickerHasHistory():
-                    self.Action(BS, "Buy/sell Order")
+                    self.Action(BS, "Buy/sell")
                     continue
             oobjs = self.orders.findOpenOrdersForSymbol(self.curr_ticker)
             if not oobjs:
-                self.Action("BO", "Buy Order")
-                self.Action("SO", "Sell Order")
+                self.Action("BO", "Buy")
+                self.Action("SO", "Sell")
                 continue
             l = len(oobjs.getBase())
             if l > 0:
@@ -913,11 +935,11 @@ class TradeProcessing(C.BaseObject):
                 else:
                     bs = 'Buy'
                 price = round(price, 2)
-                self.Action("PC", "Adjust " + bs + " Price (" + delata.lstrip() + farFrom + ")", price, oobj.orderQty)
+                self.Action("PC", "Adjust " + bs + "(" + delata.lstrip() + farFrom + ")", price, oobj.orderQty)
         if buy_sell.isBuyOnly():
-            self.Action("SO", "Sell Order ")  # same for Buy
+            self.Action("SO", "Sell")  # same for Buy
         if buy_sell.isSellOnly():
-            self.Action("BO", "Buy Order ")  # same for Buy
+            self.Action("BO", "Buy")  # same for Buy
         if buy_sell.isBuyAndSellSet():
             self.ValidateOrderLimitPrices()
         return
@@ -945,15 +967,10 @@ class TradeProcessing(C.BaseObject):
         print("securityToBeSold .. Pending")
         return
 
-def Dbg_save_file(b):
-    listOfInterest = {'Results': []}
-    b._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, altFilename=C.alt_output_file)
-    exit(1)
-
 def tp():
+
     b = TradeProcessing()
-    # Dbg_save_file(b)
-    # b.prepareListToOperate()
+    b.saveResults(empty_test=True)
     b.resetDebug()
     b.analyzeBuySellAction()
     # b.analyzeSectorDistribution()

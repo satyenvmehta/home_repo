@@ -121,6 +121,8 @@ def main():
                 continue
             if ticker == "SYMBOL":
                 continue
+            if is_option_symbol(ticker):
+                continue
             key = make_key(ticker)
             if r.exists(key) and DEBUG:
                 r.delete(key)

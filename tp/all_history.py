@@ -250,6 +250,9 @@ class Historys(BaseTrades):
         return None
 
     def getLastPrice(self, sym):
+        bp, sp = self.findLatestBestPrices(sym=sym)
+        if bp == sp:
+            return bp
         return self.getFloatValueForSymbol(sym, 'last_trade_price')
     def getLastQuantity(self, sym):
         val = self.getSummaryAttrForSymbolFromDF(sym, 'last_trade_qty')

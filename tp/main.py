@@ -1,20 +1,10 @@
 from datetime import datetime
-import sys
 
-from tp.all_history import Historys
-from tp.init_refs import initRefData
-from tp.order import Orders
-from tp.position import Positions
-from tp.stock_screener import stock_screener_exec
+from base_lib.core.files_include import get_tp_output_file_name
+from base_lib.excel_utils.excel_creator import validate_writeable_output_files
 
-# base_lib = r'G:\My Drive\Software\PycharmProjects\base_lib'
-# sys.path.append(base_lib)
+# validate_writeable_output_files(get_tp_output_file_name())
 
-
-
-
-# from base_lib.core.base_include import *
-# from tp.market.client_fe import MarketPrice
 
 ExceptionTicker = [
 'L4135L100','SPAXX','SRNEQ','TSPH',  "FZDXX"
@@ -56,6 +46,8 @@ def pending_items():
     return
 import trade_processing
 
+from tp.init_refs import initRefData
+from tp.stock_screener import stock_screener_exec
 
 if __name__ == '__main__':
 
