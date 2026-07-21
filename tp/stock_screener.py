@@ -4,11 +4,21 @@ import pandas as pd
 import common_include as C
 
 date_now = C.date_now("%Y-%m-%d")
-filen = r"G:\My Drive\vepar\stock_screener_" + date_now + ".xlsx"
+file_name = "\stock_screener_" + date_now + ".xlsx"
+filen = r"G:\My Drive\vepar" + file_name
+local_file = r"C:\Users\satye\Downloads\Screener" + file_name
 
 from base_lib.core.base_classes import Dbg_save_file
 
-Dbg_save_file(filen)
+# Dbg_save_file(filen)
+
+# def copy_file(fromf, to):
+#     import shutil
+#     try:
+#         shutil.copyfile(fromf, to)
+#         print(f"File copied successfully from {fromf} to {to}")
+#     except Exception as e:
+#         print(f"Error copying file: {e}")
 
 
 from ta.momentum import RSIIndicator
@@ -259,6 +269,9 @@ def stock_screener_exec():
     SheetNames = [AllRecs, OC_LT_15, OC_GT_15, Rest]
     df_dict = {SheetNames[i]: df_list[i] for i in range(len(SheetNames))}
     C.create_excel(filen, df_dict, apply_formatter)
+
+    C.copy_file(filen, local_file)
+
     d = C.date_now("%Y-%m-%d %H:%M")
     print(d)
     return

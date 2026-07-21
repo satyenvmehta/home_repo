@@ -181,7 +181,6 @@ class TradeProcessing(C.BaseObject):
         else:
             lastP = self.lastP
 
-
         self.STDeltaP = round(C.getDeltaPercentage(lastP, last_hist_price), 2)
 
         group = "2"
@@ -193,6 +192,7 @@ class TradeProcessing(C.BaseObject):
                 if stDeltaBuy < -ShortTermGnLPercentageBuy - 10:
                     group = ""
                 self.STRecomm = ShortTermBuy + group + self.buy_exist
+                self.curr_vant_obj = round(stDeltaBuy)
                 return
 
         if stDeltaBuy < -STLPerc:
@@ -207,6 +207,7 @@ class TradeProcessing(C.BaseObject):
                 if stDeltaSell > ShortTermGnLPercentageSell+5:
                     group = "1"
                 self.STRecomm = ShortTermSell + group + self.sell_exist
+                self.curr_vant_obj = stDeltaSell
                 return
             if stDeltaSell > STLPerc:
                 self.STRecomm = STSellLimit + self.sell_exist
@@ -289,9 +290,10 @@ class TradeProcessing(C.BaseObject):
             return None
 
         if self.curr_vant_obj:
-            score = str(self.curr_vant_obj.score)
+            score = str(self.curr_vant_obj)
         else:
-            score = 'NA'
+            score = 0
+        # score = 'NA'
         if not self.dupAction(bs):
             return None
 
@@ -513,10 +515,6 @@ class TradeProcessing(C.BaseObject):
     def Action(self, actionFlag, message, tradePrice=None, qty=None):
         self._debug()
         self.setActionParams()
-        # if not tradePrice:
-        #     bp, bq = self.getBuyParams()
-        #     sp, sq = self.getSellParams()
-        # qty = self.getTradeQty()
 
         if actionFlag in ['BO']:
             if not self.positions.existsForSym(self.curr_ticker):
