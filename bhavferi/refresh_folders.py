@@ -1,6 +1,3 @@
-import pandas as pd
-
-
 EXISTING_FILE = "existing_folder.csv"
 NEWDATA_FILE = "newdata.csv"
 

@@ -17,7 +17,7 @@ from base_lib.core.base_container_classes import BaseDict
 
 from base_lib.core.base_container_classes import BaseTuple
 from base_lib.core.base_container_classes import BaseDF
-from base_lib.core.base_container_classes import BaseFileObject
+from base_lib.core.base_container_classes import BaseFileObject, copy_file
 from base_lib.core.base_container_classes import BaseReaderWriter
 from base_lib.core.base_app_classes import getDeltaPercentage, getNoOfBusinessDaysFromDate, clean_price
 
@@ -63,6 +63,7 @@ __all__ = [
     , "int_scan_file"
     , "stock_fundamentals_file"
     , "weekly_fundamentals_file_debug"
+    , "copy_file"
     # , "BaseRowModel"
 
 ]

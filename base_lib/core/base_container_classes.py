@@ -281,6 +281,14 @@ class BaseDF(BaseContainer):
                 print("Invalid class item in list: " + str(type(item)))
         return results
 
+def copy_file(fromf, to):
+    import shutil
+    try:
+        shutil.copyfile(fromf, to)
+        print(f"File copied successfully from {fromf} to {to}")
+    except Exception as e:
+        print(f"Error copying file: {e}")
+
 # from common_include import create_rows_to_class_list
 @dataclass
 class BaseFileObject(BaseObject):
@@ -341,15 +349,15 @@ class BaseFileObject(BaseObject):
         records = df.to_dict(orient="records")
         return [target_class.from_dict(row) for row in records]
 
-    def create_rows_to_class_list(self, cls, rows):
-        class_list = []
-        for row in rows:
-            cls_inst = self.crete_row_values_to_class(cls, row)
-            class_list.append(cls_inst)
-        return class_list
+    # def create_rows_to_class_list(self, cls, rows):
+    #     class_list = []
+    #     for row in rows:
+    #         cls_inst = self.crete_row_values_to_class(cls, row)
+    #         class_list.append(cls_inst)
+    #     return class_list
 
-    def create_classval_to_row(self, cls, row):
-        pass
+    # def create_classval_to_row(self, cls, row):
+    #     pass
 
 @dataclass
 class BaseReaderWriter(BaseDF):
