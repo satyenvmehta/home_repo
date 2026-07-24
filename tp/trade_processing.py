@@ -207,7 +207,7 @@ class TradeProcessing(C.BaseObject):
                 if stDeltaSell > ShortTermGnLPercentageSell+5:
                     group = "1"
                 self.STRecomm = ShortTermSell + group + self.sell_exist
-                self.curr_vant_obj = stDeltaSell
+                self.curr_vant_obj = round(stDeltaSell)
                 return
             if stDeltaSell > STLPerc:
                 self.STRecomm = STSellLimit + self.sell_exist
