@@ -65,6 +65,7 @@ if __name__ == '__main__':
         exit(1)
     trade_processing.tp()
     stock_screener_exec()
+
     pending_items()
 
 

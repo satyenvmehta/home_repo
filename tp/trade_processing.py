@@ -124,6 +124,7 @@ def apply_number_format_by_header(
             # print(col_name)
             ws.set_column(col_idx, col_idx, None, num_fmt)
 
+from tp.security_trade_pnl import calculate_security_pnl
 
 @C.dataclass
 class TradeProcessing(C.BaseObject):
@@ -138,6 +139,7 @@ class TradeProcessing(C.BaseObject):
         self.results = Results()
         self.bs_ext = ""
         self.marketPrices = None
+        self.pnl = calculate_security_pnl(self.historys)
 
         self.sep = ":"
         self.results.setUnitClass(Result)  # Soecial Class - not reading files but preparing here..
@@ -233,7 +235,9 @@ class TradeProcessing(C.BaseObject):
         self.results.assignFormats()
         listOfInterest = {'Results':self.results.getSelf(), 'Orders':self.orders.getSelf(),
                           'Postions': self.positions,
-                          'HistorySummary': self.hist_summ.summary_df}
+                          'HistorySummary': self.hist_summ.summary_df
+                          , 'PnL' : self.pnl
+                          }
 
         self._saveResults(listOfInterest=listOfInterest, fileName=C.output_file, custom_formatter_method=apply_formatter)
         self.printDuplicateOrders()

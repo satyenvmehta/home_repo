@@ -286,11 +286,21 @@ class BaseObject:
         df = pd.concat([df, self.toDF()[0]], ignore_index=True)
         return df
 
-    def to_dict(self):
+    # def to_dict(self):
+    #     return {
+    #         k: v
+    #         for k, v in self.__dict__.items()
+    #         if not k.startswith("_")
+    #     }
+    def to_dict(self) -> dict:
         return {
-            k: v
-            for k, v in self.__dict__.items()
-            if not k.startswith("_")
+            name: (
+                value.getBase()
+                if isinstance(value, BaseObjectItem)
+                else value
+            )
+            for name, value in self.__dict__.items()
+            if not name.startswith("_")
         }
 
     def to_json(self):
@@ -369,6 +379,11 @@ class BaseObjectItem(BaseObject):
         if clean_value == "" or clean_value == "--":
             return None
         return clean_value
+
+    def to_df(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            [row.to_dict() for row in self.getBase()]
+        )
 
 @dataclass
 class BaseBool(BaseObjectItem):
@@ -614,8 +629,14 @@ class BasePercentage(BaseFloat):
 
         if clean_value == "" or clean_value == "--":
             return None
+        
+        try:
+            clean_value = float(clean_value)
+        except ValueError:
+            print("Invalid percentage " + str(clean_value))
+            return None
 
-        return cls(_item=float(clean_value))
+        return cls(_item=(clean_value))
 
 @dataclass
 class BaseString(BaseObjectItem):

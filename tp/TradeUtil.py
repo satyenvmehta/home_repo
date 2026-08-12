@@ -89,6 +89,20 @@ class BaseTrades(C.BaseReaderWriter):
         self.all_symbols = np.sort(df['Symbol'].unique())
         return
 
+    def _build_dataframe(self):
+
+        rows = [
+            h.to_dict()
+            for h in self.items
+        ]
+
+        return pd.DataFrame(rows)
+
+    def to_df(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            [history.to_dict() for history in self.items]
+        )
+
     def getSelf(self):
         return self
 
