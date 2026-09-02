@@ -6,7 +6,7 @@ AI     26.88	'Buy 50 Limit at $26.55'  	"FILLED AT $26.55"	ROLLOVER IRA (2249165
 
 import common_include as C
 from tp.TradeUtil import BaseTrade, BaseTrades
-from tp.lib.tp_classes import BaseTradeSymbol, BaseTradePrice, BaseCustomStatus, BaseBuySell
+from tp.lib.tp_classes import  BaseCustomStatus, BaseBuySell
 
 # import numpy as np
 
@@ -48,14 +48,17 @@ class Order(BaseTrade):
         self.buySell = BaseBuySell(d_parts[0])
         lastval = d_parts[len(d_parts)-1]
         if not lastval.startswith("$"):
-            lastval = self.Last.getBase()
+            if self.Last:
+                lastval = self.Last.getBase()
         else:
             lastval = lastval.replace('$', '')
         self.orderLimitPrice = C.BaseTradePrice(lastval)
         if self.Symbol.isOpt():
             self.orderQty = d_parts[3]
             return
-
+        if self.Symbol.isSTRADDLE():
+            self.orderQty = 0
+            return
         self.orderQty = C.BaseInt(d_parts[1])
         # print(str(self))
         return

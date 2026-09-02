@@ -105,6 +105,10 @@ MutFundList = [
 
 import re
 
+def isSTRADDLE(symbol):
+    if "STRADDLE" in symbol.upper():
+        return True
+    return False
 
 def is_option_symbol(symbol):
     # Pattern: Look for digits, then 'C' or 'P', then more digits
@@ -112,7 +116,6 @@ def is_option_symbol(symbol):
     if re.search(pattern, symbol):
         return True
     return False
-
 
 import re
 
@@ -170,6 +173,8 @@ class BaseTradeSymbol(BaseObjectItem):
         # return False
     def isOpt(self):
         return is_option_symbol(self.getBase())
+    def isSTRADDLE(self):
+        return isSTRADDLE(self.getBase())
     def getOptSymbol(self):
         if self.isOpt():
             return BaseOptionSymbol(self.getBase())
@@ -186,6 +191,8 @@ class BaseTradeSymbol(BaseObjectItem):
 
     def validate(self):
         tkr = self.getBase()
+        if self.isSTRADDLE():
+            return False
         if tkr in ExceptionTicker:
             return False
         if tkr in MutFundList:

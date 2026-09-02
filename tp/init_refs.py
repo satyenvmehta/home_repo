@@ -31,7 +31,7 @@ def create_ticker_list():
     for tkr in uniqPosList:
         appendToTkrSet(tksSet, tkr)
     tksSet.sort(key=None, reverse=False)
-    tksSet.saveToCSV(C.ticker_file, header=["Symbol"])
+    # tksSet.saveToCSV(C.ticker_file, header=["Symbol"])
     return tksSet
 
 
