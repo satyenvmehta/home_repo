@@ -4,29 +4,16 @@ import pandas as pd
 import common_include as C
 
 date_now = C.date_now("%Y-%m-%d")
-file_name = "\stock_screener_" + date_now + ".xlsx"
+file_name = r"\stock_screener_" + date_now + ".xlsx"
 filen = r"G:\My Drive\vepar" + file_name
 local_file = r"C:\Users\satye\Downloads\Screener" + file_name
 
 from base_lib.core.base_classes import Dbg_save_file
 
-# Dbg_save_file(filen)
-
-# def copy_file(fromf, to):
-#     import shutil
-#     try:
-#         shutil.copyfile(fromf, to)
-#         print(f"File copied successfully from {fromf} to {to}")
-#     except Exception as e:
-#         print(f"Error copying file: {e}")
-
-
 from ta.momentum import RSIIndicator
 
 from base_lib.excel_utils.excel_base import FillColor
 from tp.market.MrktDataUtil import MarketDataHistory,  get_ticker_data
-# () ignore_ticker, prep_ticker_list, prep_debug_list
-
 
 from tp.init_refs import initRefData
 from tp.sc_util import StockFilterAttributes
@@ -39,9 +26,7 @@ RSI_OVERSOLD_MINUS = 22
 
 IntraDayKey = "Intraday %"
 # Ticker	last	BS?	Pos	Intraday %	OC_gap%	ONight Gap%	High	Low	RSI	BS_IND	Pos
-# interested_fields = ["Ticker",  "last", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND"] #, "Pos"]
-interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "noOfFlips", "max_swing", "avg_swing"] #, "Pos"]
-# interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo",  "max_swing", "avg_swing"] #, "Pos"]
+interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "noOfFlips", "max_swing", "avg_swing", 'low52', 'high52']
 
 
 
@@ -145,6 +130,8 @@ def append_filter_to_result(sfa: StockFilterAttributes, result):
              , sfa.dir_flipts
             , sfa.yo_max_swing
             , sfa.yo_avg_daily_swing
+             , sfa.low52
+             , sfa.high52
              ]
         )
         return

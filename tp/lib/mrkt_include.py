@@ -86,4 +86,7 @@ MARKET_FIELD_SPECS = [
     FieldSpec("max_swing", "max_swing", to_float),
     FieldSpec("direction_flips", "direction_flips", to_int),
     FieldSpec("is_yoyo", "is_yoyo", to_int),
+    FieldSpec("low52", "low52", to_float),
+    FieldSpec("high52", "high52", to_float),
+
 ]

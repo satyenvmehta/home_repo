@@ -193,6 +193,8 @@ class MarketDataForTickerRedis(BaseObject):
     max_swing: float | None = None
     direction_flips: int | None = None
     is_yoyo: int | None = None
+    low52: float | None = None
+    high52: float | None = None
 
     @classmethod
     def from_redis(cls, d: dict) -> "BaseMarketData":

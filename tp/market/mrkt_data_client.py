@@ -10,7 +10,6 @@ def get_ticker_info(ticker: str) -> dict | None:
 
     if raw is None:
         return None
-
     return raw
 
 

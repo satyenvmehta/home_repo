@@ -174,6 +174,8 @@ class StockFilterAttributes(C.BaseObject):
         self.yo_max_swing = tkrObj.max_swing
 
         self.yo_avg_daily_swing = tkrObj.avg_daily_swing
+        self.low52 = tkrObj.low52
+        self.high52 = tkrObj.high52
 
         return
     def __repr__(self):

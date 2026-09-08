@@ -3,7 +3,7 @@ import yfinance as yf
 
 from base_lib.core.base_classes import sleep_sec
 from tp.lib.mrkt_include import DEBUG_TICKERS
-
+from tp.lib.tp_classes import is_option_symbol
 
 def getHistoricalData(tickers):
     if not isinstance(tickers, list):
@@ -26,6 +26,9 @@ def _getTickerObjYF(tkr_in):
         return None, None
 
 def _getTickerObj(sym):
+    if is_option_symbol(sym):
+        return None, None
+
     tries = 0
     tkr = None
     while tries < 6:

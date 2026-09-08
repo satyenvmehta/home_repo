@@ -37,10 +37,12 @@ def get_quote_type_based_price(info: dict):
     else:
         return resolve_price(info)
 
-critical_fields = ["currentPrice", "trailingPE", "dividendYield", "quoteType", "regularMarketPrice", "ask"]
+ # 'fiftyTwoWeekRange': '193.46 - 311.4',
+
+critical_fields = ["currentPrice", "trailingPE", "dividendYield", "quoteType", "regularMarketPrice", "ask", "fiftyTwoWeekRange"]
 
 REQUIRED_FIELDS = [ "quoteType"]
-CLENT_FILEDS = ["trailingPE", "dividendYield",]
+CLENT_FILEDS = ["trailingPE", "dividendYield", '52low', '52high']
 
 def has_required_market_data(d: dict) -> bool:
     return any(d.get(field) is not None for field in REQUIRED_FIELDS)
@@ -94,13 +96,22 @@ def get_market_data(ticker: str) -> dict:
 
     row["ticker"] = ticker
     row["price"] = get_quote_type_based_price(info)
-    for cf in CLENT_FILEDS:
-        row[cf] = info.get(cf)
-
     if not hist.empty:
         yoyo_metrics = _get_yoyo_metrics(hist)
         if yoyo_metrics:
             row.update(yoyo_metrics)
+
+    for cf in CLENT_FILEDS:
+        row[cf] = info.get(cf)
+
+    fifty_range = info.get('fiftyTwoWeekRange')
+    if not fifty_range or ' - ' not in fifty_range:
+            print(f"Invalid fiftyTwoWeekRange for {ticker}: {fifty_range}")
+            return row
+    row['low52'] = float(fifty_range.split(' - ')[0])
+    row['high52'] = float(fifty_range.split(' - ')[1])
+
+
     return row
 
 def main():
