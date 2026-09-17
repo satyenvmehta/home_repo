@@ -687,6 +687,8 @@ class BaseMoney(BaseFloat):
         cv = BaseObjectItem.get_clean_value(value)
         if cv is None:
             return None
+        if cv.startswith("Upd"):
+            return None
 
         return cls(_item=float(cv))
 

@@ -1,7 +1,6 @@
 import time
 import redis
 
-from base_lib.core.base_classes import BaseDate
 from tp.lib.mrkt_include import DEBUG_TICKERS
 from tp.lib.tp_classes import is_option_symbol
 from tp.market.yahoo_based_info import  _getTickerObj
@@ -18,7 +17,7 @@ DEBUG=False
 @staticmethod
 def resolve_price(info: dict):
     price = (
-        info.get("currentPrice")
+        info.get("")
         or info.get("regularMarketPrice")
         or info.get("previousClose")
     )
@@ -29,7 +28,7 @@ def get_quote_type_based_price(info: dict):
     if not qt:
         return None
     if qt == 'ETF':
-        return info.get('ask')
+        return resolve_price(info)
     elif qt == 'MUTUALFUND':
         return resolve_price(info)
     elif qt == 'EQUITY':
@@ -37,7 +36,7 @@ def get_quote_type_based_price(info: dict):
     else:
         return resolve_price(info)
 
- # 'fiftyTwoWeekRange': '193.46 - 311.4',
+ # 'fiftyTwoWeekRange': '193.46 - 311.4',   
 
 critical_fields = ["currentPrice", "trailingPE", "dividendYield", "quoteType", "regularMarketPrice", "ask", "fiftyTwoWeekRange"]
 
@@ -124,7 +123,7 @@ def main():
         print("Cleared Redis")
         print("Populating Redis with market data")
         tkrList = DEBUG_TICKERS
-
+    # tkrList = ["MUU"]
     while True:
         for ticker in tkrList:
             ticker = ticker.strip().upper()

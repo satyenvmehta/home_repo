@@ -1,5 +1,5 @@
 
-DEBUG_TICKERS = ["BA260618C235", "AAPL", "CTRA", "FSNGX", "ORCX", "AGQ260320C300", "AAA", "MSFT", "KO"]
+DEBUG_TICKERS = ["MUU", "BA260618C235", "AAPL", "CTRA", "FSNGX", "ORCX", "AGQ260320C300", "AAA", "MSFT", "KO"]
 error_tickers = ['avxx', 'bmnz', 'hmy', 'orcl', 'orcx']
 
 YAHOO_USEFUL_FIELDS = [
