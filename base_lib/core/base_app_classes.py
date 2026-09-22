@@ -8,6 +8,8 @@ def getNoOfBusinessDaysFromDate(fromDate, toDate=None):
     return len(pd.bdate_range(start=fromDate, end=toDate,  freq='C', holidays=holidays))
 
 def getDeltaPercentage(p1, p2):
+    if p1 == 0:
+        return 0
     deltaP = 100 * (p1 - p2) / p1
     return deltaP
 

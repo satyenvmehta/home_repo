@@ -26,8 +26,9 @@ RSI_OVERSOLD_MINUS = 22
 
 IntraDayKey = "Intraday %"
 # Ticker	last	BS?	Pos	Intraday %	OC_gap%	ONight Gap%	High	Low	RSI	BS_IND	Pos
-interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "noOfFlips", "max_swing", "avg_swing", 'low52', 'high52']
+# interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?", "Pos", IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "noOfFlips", "max_swing", "avg_swing", 'low52', 'high52']
 
+interested_fields = ["Ticker",  "last", "PE", "High", "Low", "BS_?",  IntraDayKey, "OC_gap %", "ONight Gap %",  "RSI", "BS_IND", "is_yoyo", "noOfFlips", "max_swing", "avg_swing", 'low52', 'high52']
 
 
 def get_orders_exists(ticker, orders):
@@ -120,7 +121,7 @@ def append_filter_to_result(sfa: StockFilterAttributes, result):
                 , sfa.today_high.getBase()
                 , sfa.today_low.getBase()
                 , sfa.bd_advise
-                , sfa.pos
+                # , sfa.pos
                 , sfa.intraday_range_per.getBase()
                 , sfa.open_close_gap_per.getBase()
                 , sfa.overnight_gap.getBase()
