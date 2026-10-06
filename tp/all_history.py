@@ -333,9 +333,14 @@ class Historys(BaseTrades):
             return ltt[0]
         return None
     def isAnIdleSymbol(self, sym):
-        return self.getSummaryAttrForSymbolFromDF(sym, 'isAnIdleSymbol')
+        isIdle =  self.getSummaryAttrForSymbolFromDF(sym, 'isAnIdleSymbol')
+        if isIdle is not None:
+            idleDays = self.getSummaryAttrForSymbolFromDF(sym, 'idleDays')
+            return isIdle
     def getNoOfDaysSinceLastTrade(self, sym):
         return int(self.getSummaryAttrForSymbolFromDF(sym, 'days_since_last'))
+    def getNoOfMonthsSinceLastTrade(self, sym):
+        return int(self.getSummaryAttrForSymbolFromDF(sym, 'days_since_last') / 30)
     def getNoOfBusDaysSinceLastTrade(self, sym):
         return int(self.getSummaryAttrForSymbolFromDF(sym, 'bus_days_since_last'))
 
@@ -453,11 +458,13 @@ if __name__ == '__main__':
 
     print_history(ht)
     for sym in ht.getAllSymbols():
+        print(ht.getNoOfDaysSinceLastTrade(sym))
+        print(ht.getNoOfMonthsSinceLastTrade(sym))
         if ht.isAnIdleSymbol(sym):
             print(f"{sym} is an idle symbol")
             continue
         print(sym)
-        print(ht.getNoOfDaysSinceLastTrade(sym))
+
         print(ht.getNoOfBusDaysSinceLastTrade(sym))
         print(ht.getNoOfDaysSinceFirstTrade(sym))
         print(ht.if_last_trade_buy(sym))

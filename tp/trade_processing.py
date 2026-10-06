@@ -146,7 +146,7 @@ class TradeProcessing(C.BaseObject):
         earning = 'earningAlert' # + "ED as of " + str(Today('%b-%d'))
         self.header = ["Symbol" , "Action@Price_LastH_Price_Qty" , "Recommend",  "Qty", "PercDiff" ,  "PerGnL",
                        "ActToSell", "VPScore","IdleSecurity",  "Yield",
-                         earning,  "Limit Price/Ref Hist Prc" , "lastP"  , "VP_Ind(T|S|M|L)",  \
+                         earning,  "Limit Price/Ref Hist Prc" , "lastP"  , "VP_Ind(T|S|M|L)",
                         "Category", "MrkCap", "STRecomm", "STDeltaP"]
         self.tkr_set = C.BaseSet()
         self.getVantageMissingPos()
@@ -168,6 +168,42 @@ class TradeProcessing(C.BaseObject):
         if isinstance(last_hist_price, C.BaseTradePrice):
             last_hist_price = last_hist_price.getBase()
         return last_hist_price
+
+    def getBSRecomm(self, last_hist_price):
+        recomm = HOLD
+        # deltaBuy, deltaSell = 0, 0
+        if not self.lastP:
+            return recomm
+        if isinstance(self.lastP, C.BaseTradePrice):
+            lastP = self.lastP.getBase()
+        else:
+            lastP = self.lastP
+
+        group = "2"
+        delta = round(C.getDeltaPercentage(lastP, self.lastBuyPrice), 2)
+        if delta < -GnLPercentageBuy:
+            if delta < -GnLPercentageBuy - 5:
+                group = "1"
+            if delta < -GnLPercentageBuy - 10:
+                group = ""
+            recomm = ShortTermBuy + group + self.buy_exist
+            return recomm, delta
+        if delta > GnLPercentageSell:
+            if delta > GnLPercentageSell + 5:
+                group = "1"
+            if delta > GnLPercentageSell + 10:
+                group = ""
+            recomm = ShortTermSell + group + self.sell_exist
+            return recomm, delta
+        if delta < -STLPerc:
+            recomm = STBuyLimit + self.buy_exist
+            return recomm, delta
+        if delta > STLPerc:
+            recomm = STSellLimit + self.sell_exist
+            return recomm, delta
+
+        return recomm, delta
+
     def determineShortTermRecommend(self):
         self._debug()
         tkr = self.curr_ticker
@@ -356,7 +392,7 @@ class TradeProcessing(C.BaseObject):
         # self.earningAlert.
         result = Result(self.curr_ticker ,bs,  self.bsh , qty, deltaP, PerGnL, \
             ActToSell, score, self.IdleSecurity,  yieldVal, \
-            self.earningAlert, price ,self.lastP,  self.TSML,   self.category, self.mcap, self.STRecomm, self.STDeltaP)
+            self.earningAlert, price ,self.lastP,  "NA",   self.category, self.mcap, self.STRecomm, self.STDeltaP)
 
         bdf, bs_msg = result.toDF(sep=self.sep, header=self.header)
         if not bdf.empty:
@@ -388,7 +424,6 @@ class TradeProcessing(C.BaseObject):
         self.mcap = None
         self.curr_vant_obj = None
         self.bs_ext = ""
-        self.TSML = "NA"
         self.total_pos = C.BaseFloat(0)
         self.curr_hist_obj = None
         self.curr_pos_obj = None
@@ -435,13 +470,8 @@ class TradeProcessing(C.BaseObject):
             self.lastP = ord_based_lastP.getBase()
             return
 
-
         self.lastP = self.lastHistPrice
 
-        # if self.tickerHasHistory():
-        #     self.lastP, bp, sp = self.getLastHistPrices()
-        # if self.lastP:
-        #     print({"Found Price from history for ": symbol, "Prices = ": self.lastP})
         return
     def setActionParams(self):
         self.getBestPriceForSymbol()
@@ -633,16 +663,13 @@ class TradeProcessing(C.BaseObject):
             self.IdleSecurity = "NEW"
         else:
             self.IdleSecurity = str(self.historys.isAnIdleSymbol(self.curr_ticker))
+            if self.IdleSecurity == "True":
+                noOfMonths = self.historys.getNoOfMonthsSinceLastTrade(self.curr_ticker)
+                if noOfMonths > 1:
+                    self.IdleSecurity = str(noOfMonths) + "+M"
 
         return self.IdleSecurity
 
-    # def analyzeSectorDistribution(self):
-    #     self.setvantageObj()
-    #     if isinstance(self.curr_vant_obj, InteliScan):
-    #         self.category = self.curr_vant_obj.Category.getBase().replace(',','_')
-    #     else:
-    #         self.category = 'NA'
-    #     return
 
     def get_curr_tkr_str(self):
         if isinstance(self.curr_ticker, C.BaseObject):
@@ -713,7 +740,6 @@ class TradeProcessing(C.BaseObject):
     def setCurrentPosOrderVantage(self, acct=None):
         self.setCurrPosObj(acct)
         self.setCurrOrdObjs()
-        self.setvantageObj()
         return
 
     def setCurrOrdObjs(self):
@@ -736,14 +762,6 @@ class TradeProcessing(C.BaseObject):
         self.setReccomdExt()
         return
 
-    def setvantageObj(self):
-        return
-        vrlist = self.inteli_scans.findSymbol(self.curr_ticker)
-        if vrlist:
-            self.curr_vant_obj = vrlist.getBase()[0]
-        if self.curr_vant_obj:
-            self.TSML = self.curr_vant_obj.getTSML()
-        return
 
     def setAnayzeParams(self):
         self._debug()

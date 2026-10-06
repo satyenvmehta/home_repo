@@ -19,6 +19,9 @@ ShortTermGnLPercentageSell = 4 # 5% Gain or Loss
 STLPerc = 2.5 # 2.5% Loss/gain
 OrderExistSign = "+"
 
+GnLPercentageBuy = ShortTermGnLPercentageBuy
+GnLPercentageSell = ShortTermGnLPercentageSell
+
 # Define Col Names
 Symbol = 'Symbol'
 Date = 'Date'
